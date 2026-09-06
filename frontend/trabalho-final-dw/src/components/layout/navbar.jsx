@@ -1,7 +1,9 @@
-import React from 'react';
+import { useState } from 'react';
 import { NavLink } from "react-router-dom";
 
 function Navbar() {
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+
     return (
         <nav className="navbar navbar-expand-lg navbar-dark" id="navbar">
             <div className="container-fluid">
@@ -17,8 +19,20 @@ function Navbar() {
                                 <i className="bi bi-house-fill"></i>
                             </NavLink>
                         </li>
-                        <li className="nav-item">
-                            <NavLink className="nav-link" to="/Projetos">Projetos</NavLink>
+                        <li className="nav-item dropdown">
+                            <a 
+                                className={`nav-link dropdown-toggle ${dropdownOpen ? 'show' : ''}`} 
+                                href="#" 
+                                role="button" 
+                                onClick={(e) => { e.preventDefault(); setDropdownOpen(!dropdownOpen); }}
+                                aria-expanded={dropdownOpen}
+                            >
+                                Projetos
+                            </a>
+                            <ul className={`dropdown-menu ${dropdownOpen ? 'show' : ''}`}>
+                                <li><NavLink className="dropdown-item" to="/Projetos" onClick={() => setDropdownOpen(false)}>Seus Projetos</NavLink></li>
+                                <li><NavLink className="dropdown-item" to="/Projetos" onClick={() => setDropdownOpen(false)}>Avaliar Projetos</NavLink></li>
+                            </ul>
                         </li>
                     </ul>
                 </div>

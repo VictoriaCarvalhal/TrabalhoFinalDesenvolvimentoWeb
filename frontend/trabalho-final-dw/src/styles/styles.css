@@ -31,31 +31,20 @@ body {
 }
 
 /* Header */
-#header {
-    width: 100%;
-    background-color: #ffffff;
-    padding: 20px 30px;
-    border-bottom: 5px solid #487596;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.header-col-side {
+    flex: 1;
 }
 
-#header .logo {
-    height: 80px;
-    width: auto;
+.header-col-center {
+    flex: 2;
 }
 
-.logo-figura {
-    margin: 0;
+.header-logo {
+    max-width: 150px;
 }
 
 .header-titulo {
-    margin: 0;
-    text-align: center;
     color: #487596;
-    font-size: 22px;
-    font-weight: bold;
 }
 
 /* Navbar */
@@ -65,7 +54,7 @@ body {
     width: 100%;
 }
 
-#navbar ul {
+#navbar .navbar-nav {
     display: flex;
     padding: 0;
     margin: 0;
@@ -73,7 +62,7 @@ body {
     justify-content: space-evenly;
 }
 
-#navbar li {
+#navbar .navbar-nav > li {
     padding-top: 10px;
 }
 
@@ -109,6 +98,34 @@ body {
 
 #navbar li a.active i {
     color: #FFFFFF;
+}
+
+/* Estilos específicos para o Dropdown Menu */
+#navbar .dropdown-menu {
+    background-color: #ffffff;
+    border: 1px solid #487596;
+    padding: 0;
+}
+
+#navbar .dropdown-menu li {
+    padding-top: 0;
+}
+
+#navbar .dropdown-menu li a {
+    color: #45718C;
+    font-weight: bold;
+    padding: 10px 20px;
+    transition: all 0.2s;
+}
+
+#navbar .dropdown-menu li a:hover {
+    color: #ffffff;
+    background-color: #487596;
+}
+
+#navbar .dropdown-menu li a.active {
+    color: #ffffff;
+    background-color: #1E2D40;
 }
 
 /* Layout Flex */
