@@ -1,0 +1,263 @@
+:root {
+    --header-image: url('');
+    --body-bg-image: url('');
+    --content: '';
+}
+
+body {
+    font-family: 'Nunito', sans-serif;
+    margin: 0;
+    background-color: #6eb5e0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+#container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background-color: #ffffff;
+}
+
+#container a {
+    color: #45718C;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+#container a:hover{
+    color: #11C5D9;
+    text-decoration: underline;
+}
+
+/* Header */
+#header {
+    width: 100%;
+    background-color: #ffffff;
+    padding: 20px 30px;
+    border-bottom: 5px solid #487596;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#header .logo {
+    height: 80px;
+    width: auto;
+}
+
+.logo-figura {
+    margin: 0;
+}
+
+.header-titulo {
+    margin: 0;
+    text-align: center;
+    color: #487596;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+/* Navbar */
+#navbar {
+    padding: 12px 0;
+    background-color: #1E2D40;
+    width: 100%;
+}
+
+#navbar ul {
+    display: flex;
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+    justify-content: space-evenly;
+}
+
+#navbar li {
+    padding-top: 10px;
+}
+
+#navbar li a {
+    color: #45718C;
+    padding: 10px 15px;
+    display: inline-block;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+#navbar li a:hover {
+    color: #11C5D9;
+    text-decoration: underline;
+}
+
+/* Layout Flex */
+#flex {
+    display: flex;
+}
+
+aside {
+    background-color: #45718C;
+    width: 200px;
+    padding: 20px;
+    font-size: smaller;
+}
+
+main {
+    background-color: #F2F2F2;
+    flex: 1;
+    padding: 20px;
+    order: 2;
+}
+
+#leftSidebar {
+    order: 1;
+} 
+
+#leftSidebar > h2 {
+    color: #1E2D40;
+}
+
+#leftSidebar li {
+    margin-bottom: 10px;
+}
+
+#rightSidebar {
+    order: 3;
+}
+
+/* Typography & Utils */
+h1, h2, h3 {
+    color: #1a2730;
+}
+
+h1 {
+    font-size: 25px;
+}
+
+strong {
+    color: #1a2730;
+}
+
+.box {
+    background-color: #F2F2F2;
+    border: 1px solid #1a2730;
+    padding: 10px;
+}
+
+#topBar {
+    width: 100%;
+    height: 30px;
+    padding: 10px;
+    font-size: smaller;
+    background-color: #83c0f5;
+}
+
+/* Footer */
+#footer {
+    width: 100%;
+    background-color: #ffffff;
+    padding: 20px 30px;
+    border-top: 5px solid #487596;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+#footer .logo-footer {
+    height: 50px;
+    width: auto;
+    margin-right: 15px;
+}
+
+.footer-texto {
+    max-width: 600px;
+}
+
+.footer-linha {
+    margin: 0 0 4px 0;
+    color: #345a75;
+    font-size: 13px;
+    line-height: 1.5;
+    font-style: normal;
+}
+
+.footer-titulo {
+    margin: 0;
+    color: #487596;
+    font-size: 15px;
+}
+
+.footer-titulo2 {
+    margin: 0;
+    color: #487596;
+    font-size: 15px;
+}
+
+.footer-subtitulo {
+    margin: 0;
+    color: #000000;
+    font-size: 10px;
+}
+
+/* Responsividade celular e tablet */
+@media only screen and (max-width: 900px) {
+    #header {
+        padding: 15px 20px;
+    }
+    #header .logo {
+        height: 60px;
+    }
+    .header-titulo {
+        font-size: 18px;
+    }
+    #footer {
+        padding: 15px 20px;
+    }
+}
+
+@media only screen and (max-width: 800px) {
+    #flex {
+        flex-wrap: wrap;
+    }
+    aside {
+        width: 100%;
+    }
+    main {
+        order: 1;
+    }
+    #leftSidebar {
+        order: 2;
+    }
+    #navbar ul {
+        flex-wrap: wrap;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    #header {
+        flex-direction: column;
+        padding: 20px 15px;
+    }
+    #header .logo {
+        height: 55px;
+        margin-bottom: 12px;
+    }
+    .header-titulo {
+        font-size: 16px;
+        margin-bottom: 12px;
+    }
+    #footer {
+        flex-direction: column;
+        padding: 20px 15px;
+    }
+    #footer .logo-footer {
+        height: 45px;
+        margin-right: 0;
+        margin-bottom: 12px;
+    }
+    .footer-titulo {
+        font-size: 14px;
+    }
+}
