@@ -7,7 +7,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/styles.css';
 import App from './App.jsx'
 import Layout from './components/layout/layout.jsx';
-import Projetos from './components/projetos/projetos.jsx';
+import Projetos from './components/projetos/seusprojetos/projetos.jsx';
 import Bemvindo from './components/bemvindo/bemvindo.jsx';
 
 createRoot(document.getElementById('root')).render(
@@ -17,9 +17,11 @@ createRoot(document.getElementById('root')).render(
         <Route element ={<Layout/>}>
           <Route path="/" element={<App/>} />
           <Route path="/Bemvindo" element={<Bemvindo />} />
-          <Route path="/Projetos" element={<Projetos/>} />
+          <Route path="/Projetos">
+            <Route path="SeusProjetos" element={<Projetos />}/>
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>
-  </StrictMode>,
+  </StrictMode>
 )
