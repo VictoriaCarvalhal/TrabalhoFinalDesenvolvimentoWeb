@@ -1,12 +1,12 @@
 import { useState } from 'react'
-
+import Inicial from './components/Inicial/inicial'
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <>
       <div>
-        <h1>Bem vindo</h1>
+        <Inicial/>
       </div>
     </>
   )

@@ -5,14 +5,14 @@ import { Outlet } from "react-router-dom";
 
 function Layout() {
     return (
-        <>
-            <div className="Layout">
-                <Header />
-                <Navbar />
+        <div id="container" className="d-flex flex-column min-vh-100 bg-white">
+            <Header />
+            <Navbar />
+            <main className="flex-grow-1 px-4 py-4" style={{ order: 0 }}>
                 <Outlet />
-                <Footer />
-            </div>
-        </>
+            </main>
+            <Footer />
+        </div>
     );
 }
 

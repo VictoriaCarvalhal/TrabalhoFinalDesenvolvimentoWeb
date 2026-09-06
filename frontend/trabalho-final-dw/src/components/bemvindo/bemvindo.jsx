@@ -1,12 +1,12 @@
 import React from 'react';
 
 
-function Projetos() {
+function Bemvindo() {
     return (
         <div>
-            <h1>Projetos</h1>
+            <h1>Bem Vindo</h1>
         </div>
     );
 }
 
-export default Projetos;
+export default Bemvindo;
