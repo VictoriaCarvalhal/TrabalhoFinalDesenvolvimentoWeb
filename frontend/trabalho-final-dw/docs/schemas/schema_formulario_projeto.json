@@ -1,0 +1,91 @@
+{
+  "Projetos": {
+    "descricao": "Tabela principal (Aba: Identificação parcial). Guarda o núcleo do formulário e vincula todas as outras abas.",
+    "atributos": {
+      "id": "UUID (Primary Key)",
+      "titulo": "VARCHAR(255) (Not Null)",
+      "coordenador_matricula": "VARCHAR(20) (Not Null)",
+      "coordenador_nome": "VARCHAR(255) (Not Null)",
+      "unidade_id": "UUID (Foreign Key -> tabela de Unidades UERJ)",
+      "departamento_id": "UUID (Foreign Key -> tabela de Departamentos)",
+      "status": "VARCHAR(50) (Ex: 'Proposta Aguardando', 'Ação Aprovada')",
+      "data_criacao": "TIMESTAMP"
+    }
+  },
+  "Projeto_Contatos": {
+    "descricao": "Tabela 1:N. Resolve o problema de múltiplos E-mails e Telefones na aba Identificação.",
+    "atributos": {
+      "id": "UUID (Primary Key)",
+      "projeto_id": "UUID (Foreign Key -> Projetos)",
+      "tipo_contato": "VARCHAR(20) (Ex: 'EMAIL', 'TELEFONE')",
+      "valor": "VARCHAR(100) (O e-mail em si ou o número do telefone)",
+      "ddd": "VARCHAR(3) (Nullable - usado apenas se for telefone)",
+      "ramal": "VARCHAR(10) (Nullable)",
+      "tipo_telefone": "VARCHAR(50) (Nullable - Ex: Comercial, Celular)"
+    }
+  },
+  "Projeto_Enderecos": {
+    "descricao": "Tabela 1:1 (ou 1:N se o projeto tiver múltiplos polos). Fim da aba Identificação.",
+    "atributos": {
+      "id": "UUID (Primary Key)",
+      "projeto_id": "UUID (Foreign Key -> Projetos, Unique)",
+      "logradouro": "VARCHAR(255)",
+      "numero": "VARCHAR(20)",
+      "complemento": "VARCHAR(100) (Nullable)",
+      "bairro": "VARCHAR(100)",
+      "municipio_id": "UUID (Foreign Key -> tabela de Municípios)",
+      "cep": "VARCHAR(9)"
+    }
+  },
+  "Projeto_Caracterizacao": {
+    "descricao": "Tabela 1:1. Guarda as classificações e metadados do projeto (Aba: Caracterização).",
+    "atributos": {
+      "id": "UUID (Primary Key)",
+      "projeto_id": "UUID (Foreign Key -> Projetos, Unique)",
+      "situacao_projeto": "VARCHAR(50) (Ex: 'Novo')",
+      "vinculado_programa_extensao": "BOOLEAN",
+      "curricular": "BOOLEAN",
+      "natureza_id": "UUID (Foreign Key -> tabela de Naturezas)",
+      "abrangencia_id": "UUID (Foreign Key -> tabela de Abrangências)",
+      "publico_alvo": "TEXT",
+      "grande_area_cnpq_id": "UUID (Foreign Key -> tabela CNPq)",
+      "area_tematica_principal_id": "UUID (Foreign Key)",
+      "area_tematica_secundaria_id": "UUID (Foreign Key)",
+      "linha_extensao_id": "UUID (Foreign Key)"
+    }
+  },
+  "Projeto_Descricoes": {
+    "descricao": "Tabela 1:1. Isola os textos longos para não pesar a tabela principal (Aba: Descrição).",
+    "atributos": {
+      "id": "UUID (Primary Key)",
+      "projeto_id": "UUID (Foreign Key -> Projetos, Unique)",
+      "resumo": "VARCHAR(2000)",
+      "palavra_chave_1": "VARCHAR(150)",
+      "palavra_chave_2": "VARCHAR(150) (Nullable)",
+      "palavra_chave_3": "VARCHAR(150) (Nullable)",
+      "introducao": "VARCHAR(3000)",
+      "justificativa": "VARCHAR(2000)",
+      "objetivo_geral": "VARCHAR(500)",
+      "objetivos_especificos": "VARCHAR(1000)",
+      "metodologia_avaliacao": "VARCHAR(2000)",
+      "relacao_ensino": "BOOLEAN",
+      "relacao_pesquisa": "BOOLEAN",
+      "interacao_dialogica": "VARCHAR(1000)",
+      "interdisciplinaridade": "VARCHAR(1000)",
+      "impacto_formacao": "VARCHAR(1000)",
+      "indissociabilidade": "VARCHAR(1000)",
+      "impacto_social": "VARCHAR(1000)",
+      "referencias_bibliograficas": "VARCHAR(1600)"
+    }
+  },
+  "Projeto_Planos_Trabalho": {
+    "descricao": "Tabela 1:N. Como é um plano 'para o biênio', um projeto que dura muitos anos pode ter vários planos ao longo do tempo (Aba: Plano de Trabalho).",
+    "atributos": {
+      "id": "UUID (Primary Key)",
+      "projeto_id": "UUID (Foreign Key -> Projetos)",
+      "ano": "INT (Ex: 2026)",
+      "resultados_esperados": "VARCHAR(3000)",
+      "cronograma_atividades": "VARCHAR(3000)"
+    }
+  }
+}
