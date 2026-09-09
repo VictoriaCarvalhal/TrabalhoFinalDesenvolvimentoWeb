@@ -1,0 +1,1 @@
+- Checar se esses schemas que geramos estão de acordo com o que existe no site original ou foi alucinação da ia

@@ -1,0 +1,85 @@
+{
+    "Dominios_Institucionais": {
+        "Unidades_Academicas": {
+            "descricao": "Tabela de Faculdades/Institutos (Ex: IME, FEN, IBRAG).",
+            "atributos": {
+                "id": "INTEGER (Primary Key, Auto Increment)",
+                "sigla": "VARCHAR(10) (Ex: 'IME')",
+                "nome": "VARCHAR(255) (Ex: 'Instituto de Matemática e Estatística')",
+                "ativo": "BOOLEAN (Default TRUE)"
+            }
+        },
+        "Departamentos": {
+            "descricao": "Departamentos vinculados às Unidades.",
+            "atributos": {
+                "id": "INTEGER (Primary Key, Auto Increment)",
+                "unidade_id": "INTEGER (Foreign Key -> Unidades_Academicas)",
+                "nome": "VARCHAR(255)",
+                "ativo": "BOOLEAN (Default TRUE)"
+            }
+        },
+        "Funcoes_Equipe": {
+            "descricao": "Papéis que os membros podem assumir no projeto.",
+            "atributos": {
+                "id": "INTEGER (Primary Key, Auto Increment)",
+                "descricao": "VARCHAR(50) (Ex: 'Coordenador', 'Bolsista', 'Voluntário', 'Professor Colaborador')",
+                "ativo": "BOOLEAN (Default TRUE)"
+            }
+        },
+        "Tipos_Contato": {
+            "descricao": "Tipos de telefone ou e-mail.",
+            "atributos": {
+                "id": "INTEGER (Primary Key)",
+                "descricao": "VARCHAR(50) (Ex: 'Celular', 'Comercial', 'Residencial', 'E-mail Institucional')",
+                "ativo": "BOOLEAN (Default TRUE)"
+            }
+        }
+    },
+    "Dominios_Geograficos": {
+        "Municipios_IBGE": {
+            "descricao": "Tabela estática padrão IBGE para os locais de realização e endereços.",
+            "atributos": {
+                "id": "INTEGER (Primary Key - Usar código oficial de 7 dígitos do IBGE)",
+                "nome": "VARCHAR(255)",
+                "uf": "CHAR(2)",
+                "ativo": "BOOLEAN (Default TRUE)"
+            }
+        }
+    },
+    "Dominios_Academicos_Extensao": {
+        "Naturezas_Extensao": {
+            "descricao": "Classificação da ação de extensão.",
+            "atributos": {
+                "id": "INTEGER (Primary Key, Auto Increment)",
+                "descricao": "VARCHAR(100) (Ex: 'Programa', 'Projeto', 'Curso', 'Evento', 'Prestação de Serviço')",
+                "ativo": "BOOLEAN (Default TRUE)"
+            }
+        },
+        "Abrangencias": {
+            "descricao": "Alcance do projeto.",
+            "atributos": {
+                "id": "INTEGER (Primary Key, Auto Increment)",
+                "descricao": "VARCHAR(50) (Ex: 'Local', 'Regional', 'Nacional', 'Internacional')",
+                "ativo": "BOOLEAN (Default TRUE)"
+            }
+        },
+        "Linhas_Extensao": {
+            "descricao": "Áreas temáticas da extensão universitária (geralmente baseadas no FORPROEX).",
+            "atributos": {
+                "id": "INTEGER (Primary Key, Auto Increment)",
+                "descricao": "VARCHAR(255) (Ex: 'Alfabetização, leitura e escrita', 'Artes cênicas', 'Desenvolvimento tecnológico')",
+                "ativo": "BOOLEAN (Default TRUE)"
+            }
+        },
+        "Areas_Conhecimento_CNPq": {
+            "descricao": "Tabela em árvore (auto-relacionada) que resolve a Grande Área, Área Principal e Secundária em um único lugar.",
+            "atributos": {
+                "id": "INTEGER (Primary Key - Código oficial da tabela CNPq)",
+                "descricao": "VARCHAR(255)",
+                "area_pai_id": "INTEGER (Foreign Key -> id desta mesma tabela. Null se for Grande Área)",
+                "nivel": "INTEGER (1 = Grande Área, 2 = Área, 3 = Subárea)",
+                "ativo": "BOOLEAN (Default TRUE)"
+            }
+        }
+    }
+}

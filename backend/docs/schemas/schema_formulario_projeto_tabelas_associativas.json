@@ -1,0 +1,65 @@
+{
+    "Projeto_Unidades": {
+        "descricao": "Tabela associativa (N:M) para a aba Unidades Envolvidas. Um projeto pode envolver vários institutos, e um instituto tem vários projetos.",
+        "atributos": {
+            "projeto_id": "UUID (Foreign Key -> Projetos)",
+            "unidade_id": "UUID (Foreign Key -> Unidades_Academicas)",
+            "tipo_participacao": "VARCHAR(50) (Ex: 'Proponente', 'Apoiadora', 'Executora')"
+        }
+    },
+    "Projeto_Locais_Realizacao": {
+        "descricao": "Tabela 1:N. Indica todos os polos de atuação de um projeto específico.",
+        "atributos": {
+            "id": "UUID (Primary Key)",
+            "projeto_id": "UUID (Foreign Key -> Projetos)",
+            "nome_local": "VARCHAR(255) (Ex: 'Hospital Universitário', 'Praça da Matriz')",
+            "municipio_id": "INTEGER (Foreign Key -> Municipios_IBGE)",
+            "endereco_completo": "VARCHAR(500)"
+        }
+    },
+    "Projeto_Parcerias": {
+        "descricao": "Tabela 1:N que unifica as abas Parcerias Internas e Externas para evitar código repetido no banco.",
+        "atributos": {
+            "id": "UUID (Primary Key)",
+            "projeto_id": "UUID (Foreign Key -> Projetos)",
+            "tipo_parceria": "VARCHAR(20) (Ex: 'INTERNA', 'EXTERNA')",
+            "nome_instituicao": "VARCHAR(255) (Se interna, pode ser outro setor; se externa, uma ONG/Empresa)",
+            "cnpj": "VARCHAR(14) (Nullable - preenchido apenas se for Externa)",
+            "nome_contato": "VARCHAR(255)",
+            "formalizado_por_convenio": "BOOLEAN"
+        }
+    },
+    "Projeto_Membros_Equipe": {
+        "descricao": "Tabela associativa. Aponta para o vínculo, permitindo saber exatamente com qual matrícula/papel a pessoa atuou neste projeto.",
+        "atributos": {
+            "id": "UUID (Primary Key)",
+            "projeto_id": "UUID (Foreign Key -> Projetos)",
+            "vinculo_id": "UUID (Foreign Key -> Vinculos_Institucionais)",
+            "funcao_no_projeto": "VARCHAR(50) (Ex: 'Bolsista', 'Voluntário')",
+            "carga_horaria_semanal": "INTEGER",
+            "data_entrada": "DATE",
+            "data_saida": "DATE"
+        }
+    }, 
+    "Pessoas_Global": {
+        "descricao": "Tabela mestre contendo os dados biográficos únicos de cada indivíduo.",
+        "atributos": {
+            "id": "UUID (Primary Key)",
+            "nome_completo": "VARCHAR(255)",
+            "cpf": "VARCHAR(11) (Unique, Not Null)",
+            "email_institucional": "VARCHAR(255) (Unique)",
+            "lattes_url": "VARCHAR(255) (Nullable - Essencial para o ambiente acadêmico)"
+        }
+    },
+    "Vinculos_Institucionais": {
+        "descricao": "Tabela 1:N com Pessoas_Global. Gerencia os diferentes papéis da pessoa ao longo do tempo.",
+        "atributos": {
+            "id": "UUID (Primary Key)",
+            "pessoa_id": "UUID (Foreign Key -> Pessoas_Global)",
+            "tipo_vinculo": "VARCHAR(50) (Ex: 'ALUNO_GRADUACAO', 'PROFESSOR_ADJUNTO', 'EXTERNO')",
+            "matricula": "VARCHAR(50) (Nullable - Parceiros externos não possuem matrícula)",
+            "departamento_id": "UUID (Foreign Key -> Departamentos)",
+            "status": "VARCHAR(20) (Ex: 'ATIVO', 'EGRESSO', 'AFASTADO')"
+        }
+    }
+}

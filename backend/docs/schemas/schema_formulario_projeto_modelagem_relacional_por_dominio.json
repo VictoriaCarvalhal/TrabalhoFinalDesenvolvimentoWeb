@@ -1,14 +1,13 @@
 {
   "Projetos": {
-    "descricao": "Tabela principal (Aba: Identificação parcial). Guarda o núcleo do formulário e vincula todas as outras abas.",
+    "descricao": "Tabela principal. Agora o coordenador é referenciado por ID, garantindo que se o nome dele mudar na base global, atualiza aqui automaticamente.",
     "atributos": {
       "id": "UUID (Primary Key)",
       "titulo": "VARCHAR(255) (Not Null)",
-      "coordenador_matricula": "VARCHAR(20) (Not Null)",
-      "coordenador_nome": "VARCHAR(255) (Not Null)",
-      "unidade_id": "UUID (Foreign Key -> tabela de Unidades UERJ)",
-      "departamento_id": "UUID (Foreign Key -> tabela de Departamentos)",
-      "status": "VARCHAR(50) (Ex: 'Proposta Aguardando', 'Ação Aprovada')",
+      "coordenador_vinculo_id": "UUID (Foreign Key -> Vinculos_Institucionais)",
+      "unidade_id": "UUID (Foreign Key -> Unidades_Academicas)",
+      "departamento_id": "UUID (Foreign Key -> Departamentos)",
+      "status": "VARCHAR(50)",
       "data_criacao": "TIMESTAMP"
     }
   },
