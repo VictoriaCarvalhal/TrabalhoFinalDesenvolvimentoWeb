@@ -3,7 +3,7 @@ import Navbar from "./navbar";
 import Footer from "./footer";
 import { Outlet } from "react-router-dom";
 
-function Layout() {
+function LayoutAutenticated() {
     return (
         <div id="container" className="d-flex flex-column min-vh-100 bg-white">
             <Header />
@@ -16,4 +16,4 @@ function Layout() {
     );
 }
 
-export default Layout;
+export default LayoutAutenticated;
