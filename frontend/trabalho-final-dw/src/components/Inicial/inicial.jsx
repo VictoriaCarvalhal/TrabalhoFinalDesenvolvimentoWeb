@@ -1,9 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form'; // 1. Importando a biblioteca
+import { useAuthStore } from '../../stores/authStore'
 
 function Inicial() {
     const navigate = useNavigate();
+
+    const login = useAuthStore((state) => state.login);
 
     const {
         register,
@@ -12,7 +15,12 @@ function Inicial() {
     } = useForm();
 
     const handleLogin = (data) => {
-        console.log("Dados do formulário:", data); 
+        console.log("Dados do formulário:", data);
+        
+        const tokenFalso = "simulacao-de-token-jwt-123456";
+
+        login(tokenFalso);
+        
         navigate('/Bemvindo');
     }
 
