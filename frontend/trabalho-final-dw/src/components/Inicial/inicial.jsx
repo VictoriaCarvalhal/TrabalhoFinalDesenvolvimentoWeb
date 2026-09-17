@@ -33,7 +33,7 @@ function Inicial() {
                 <form onSubmit={handleSubmit(handleLogin)}>
 
                     <div className="mb-3">
-                        <label htmlFor="usuario" className="form-label">Usuário</label>
+                        <label htmlFor="usuario" name="usuario" className="form-label">Usuário</label>
                         <input
                             type="text"
                             className={`form-control ${errors.usuario ? 'is-invalid' : ''}`}
@@ -44,7 +44,7 @@ function Inicial() {
                     </div>
 
                     <div className="mb-3">
-                        <label htmlFor="senha" className="form-label">Senha</label>
+                        <label htmlFor="senha" name="senha" className="form-label">Senha</label>
                         <input
                             type="password"
                             className={`form-control ${errors.senha ? 'is-invalid' : ''}`}
