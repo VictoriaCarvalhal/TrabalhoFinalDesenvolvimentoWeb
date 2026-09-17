@@ -1,0 +1,32 @@
+# Usa uma imagem oficial do Python leve como base
+FROM python:3.12-slim
+
+# Define variáveis de ambiente úteis
+# Impede o Python de gerar arquivos .pyc
+ENV PYTHONDONTWRITEBYTECODE=1
+# Impede o Python de segurar os logs no buffer (facilita ver logs em tempo real)
+ENV PYTHONUNBUFFERED=1
+
+# Define o diretório de trabalho dentro do container
+WORKDIR /app
+
+# Instala dependências do sistema operacional necessárias (ex: para o PostgreSQL)
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copia apenas o requirements primeiro (para aproveitar o cache do Docker)
+COPY requirements.txt /app/
+
+# Instala as bibliotecas do projeto
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copia todo o restante do código do backend para dentro do container
+COPY . /app/
+
+# Avisa o Docker que o container vai usar a porta 8000
+EXPOSE 8000
+
+# Comando padrão para rodar o servidor de desenvolvimento
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

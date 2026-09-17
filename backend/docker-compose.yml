@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # Serviço de Banco de Dados
+  db:
+    image: postgres:15
+    container_name: postgres_backend_db
+    environment:
+      POSTGRES_DB: meubancodedados
+      POSTGRES_USER: usuario
+      POSTGRES_PASSWORD: senha_super_secreta
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Serviço do seu Backend (Django)
+  web:
+    build: .
+    container_name: django_backend_api
+    # Sobrescreve o comando para garantir que as migrações rodem antes de iniciar, caso necessário,
+    # mas por padrão no desenvolvimento deixamos rodando o servidor
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      # Espelha a pasta local no container (mudanças no código refletem na hora)
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      # O dj-database-url vai ler essa variável para conectar no banco
+      - DATABASE_URL=postgres://usuario:senha_super_secreta@db:5432/meubancodedados
+      - DEBUG=1
+    depends_on:
+      - db
+
+volumes:
+  # Volume persistente para os dados do banco não sumirem quando o container parar
+  postgres_data:

@@ -1,0 +1,35 @@
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Arquivos de cache do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Arquivos de banco de dados local (se estiver usando SQLite para testes)
+*.sqlite3
+db.sqlite3
+
+# Arquivos de variáveis de ambiente locais (segurança)
+.env
+
+# Diretórios de controle de versão
+.git/
+.gitignore
+
+# Pastas de IDE e editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Outros diretórios e arquivos temporários ou de build
+.pytest_cache/
+htmlcov/
+dist/
+build/
+*.log
