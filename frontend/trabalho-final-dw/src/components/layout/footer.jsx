@@ -9,7 +9,7 @@ function Footer() {
 
                 {/* Coluna esquerda */}
                 <div className="d-flex justify-content-center justify-content-md-start w-100" style={{ flex: 1 }}>
-                    <a href='https://www.depext.uerj.br' target="_blank" rel="noopener noreferrer"><img src={dirextLogo} alt="Logo DIREXT" className="img-fluid" style={{ maxWidth: '120px' }} /></a>
+                    <a href='https://www.depext.uerj.br' target="_blank" rel="noopener noreferrer"><img src={dirextLogo} aria-label="Logo da Diretoria de Extensão da Universidade do Estado do Rio de Janeiro com sua sigla DEPEXT e, ao lado da sigla, temos uma imagem que representa a extensão entre dois pontos a partir da formação de um fluído entre eles" alt="" title="Logo do DEPEXT" className="img-fluid" style={{ maxWidth: '120px' }} /></a>
                 </div>
 
                 {/* Coluna central */}
@@ -21,7 +21,7 @@ function Footer() {
 
                 {/* Coluna direita */}
                 <div className="d-flex justify-content-center justify-content-md-end w-100" style={{ flex: 1 }}>
-                    <a href='https://www.dgti.uerj.br' target="_blank" rel="noopener noreferrer"><img src={dgtiLogo} alt="Logo DGTI" className="img-fluid" style={{ maxWidth: '120px' }} /></a>
+                    <a href='https://www.dgti.uerj.br' target="_blank" rel="noopener noreferrer"><img src={dgtiLogo} aria-label="Logo do Departamento Geral de Tecnologia da Informação com sua sigla DGTI e contendo uma ramificação de rede acima do I" alt="" title="Logo da DGTI" className="img-fluid" style={{ maxWidth: '120px' }} /></a>
                 </div>
 
             </div>
