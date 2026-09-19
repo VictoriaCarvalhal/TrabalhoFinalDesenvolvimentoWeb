@@ -100,7 +100,6 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
 }
-}
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 
