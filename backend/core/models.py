@@ -148,12 +148,12 @@ class PessoaGlobal(AuditModel):
 
 class VinculoInstitucional(AuditModel):
     class TipoVinculo(models.TextChoices):
-        PROFESSOR_TITULAR = 'PROFESSOR_TITULAR', 'Professor(a) Titular'
-        PROFESSOR_ADJUNTO = 'PROFESSOR_ADJUNTO', 'Professor(a) Adjunto'
-        PROFESSOR_ASSOCIADO = 'PROFESSOR_ASSOCIADO', 'Professor(a) Associado'
-        TECNICO_ADMINISTRATIVO = 'TECNICO_ADMINISTRATIVO', 'Técnico(a) Administrativo'
-        ALUNO_GRADUACAO = 'ALUNO_GRADUACAO', 'Aluno(a) de Graduação'
-        ALUNO_POS_GRADUACAO = 'ALUNO_POS_GRADUACAO', 'Aluno(a) de Pós-Graduação'
+        PROFESSOR_EFETIVO = 'PROFESSOR_EFETIVO', 'Professor Efetivo'
+        PROFESSOR_VISITANTE = 'PROFESSOR_VISITANTE', 'Professor Visitante'
+        PROFESSOR_SUBSTITUTO = 'PROFESSOR_SUBSTITUTO', 'Professor Substituto/Convidado'
+        TECNICO_ADMINISTRATIVO = 'TECNICO_ADMINISTRATIVO', 'Técnico-Administrativo'
+        ALUNO_GRADUACAO = 'ALUNO_GRADUACAO', 'Aluno de Graduação Não Bolsista'
+        ALUNO_POS_GRADUACAO = 'ALUNO_POS_GRADUACAO', 'Aluno de Pós-Graduação'
         EXTERNO = 'EXTERNO', 'Externo'
 
     class StatusVinculo(models.TextChoices):
