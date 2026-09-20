@@ -15,7 +15,21 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
-AUTH_USER_MODEL = "core.PessoaGlobal"
+# Fica desligado ate PessoaGlobal virar um model de usuario de verdade
+# (AbstractBaseUser, senha, USERNAME_FIELD e a migration). Com a linha
+# ativa o Django nem sobe. Enquanto isso o login usa o usuario padrao.
+# AUTH_USER_MODEL = "core.PessoaGlobal"
+
+# Enderecos do front que podem chamar a API quando DEBUG esta desligado.
+# Na Vercel: CORS_ALLOWED_ORIGINS=https://<projeto-do-front>.vercel.app
+CORS_ALLOWED_ORIGINS = [
+    origem for origem in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if origem
+]
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
+
+# Na Vercel o Django roda atras de um proxy; sem isto ele acha que a
+# requisicao veio por http e recusa o login do admin por CSRF.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -99,7 +113,6 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
-}
 }
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
