@@ -1,0 +1,16 @@
+{
+  "builds": [
+    { "src": "api/index.py", "use": "@vercel/python" },
+    {
+      "src": "frontend/trabalho-final-dw/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/index.py" },
+    { "src": "/admin(.*)", "dest": "/api/index.py" },
+    { "src": "/(.*)", "dest": "/frontend/trabalho-final-dw/$1", "check": true },
+    { "src": "/(.*)", "dest": "/frontend/trabalho-final-dw/index.html" }
+  ]
+}
