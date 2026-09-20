@@ -32,6 +32,7 @@ function Navbar() {
                             <ul className={`dropdown-menu ${dropdownOpen ? 'show' : ''}`}>
                                 <li><NavLink className="dropdown-item" to="/Projetos/SeusProjetos" onClick={() => setDropdownOpen(false)}>Seus Projetos</NavLink></li>
                                 <li><NavLink className="dropdown-item" to="/Projetos/AvaliarProjetos" onClick={() => setDropdownOpen(false)}>Avaliar Projetos</NavLink></li>
+                                <li><NavLink className="dropdown-item" to="/Projetos/ParceriasInternas" onClick={() => setDropdownOpen(false)}>Parcerias Internas</NavLink></li>
                             </ul>
                         </li>
                     </ul>
