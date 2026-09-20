@@ -15,7 +15,10 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
-AUTH_USER_MODEL = "core.PessoaGlobal"
+# Fica desligado ate PessoaGlobal virar um model de usuario de verdade
+# (AbstractBaseUser, senha, USERNAME_FIELD e a migration). Com a linha
+# ativa o Django nem sobe. Enquanto isso o login usa o usuario padrao.
+# AUTH_USER_MODEL = "core.PessoaGlobal"
 
 # Enderecos do front que podem chamar a API quando DEBUG esta desligado.
 # Na Vercel: CORS_ALLOWED_ORIGINS=https://<projeto-do-front>.vercel.app
@@ -110,7 +113,6 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
-}
 }
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
