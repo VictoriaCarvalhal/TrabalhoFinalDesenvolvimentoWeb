@@ -1,10 +1,10 @@
 {
     "Projeto_Unidades": {
-        "descricao": "Tabela associativa (N:M) para a aba Unidades Envolvidas. Um projeto pode envolver vários institutos, e um instituto tem vários projetos.",
+        "descricao": "Tabela associativa (N:M) para a aba Unidades Envolvidas. Registra apenas unidades PARCEIRAS/APOIADORAS. A unidade proponente é inferida através do departamento do projeto.",
         "atributos": {
             "projeto_id": "UUID (Foreign Key -> Projetos)",
             "unidade_id": "UUID (Foreign Key -> Unidades_Academicas)",
-            "tipo_participacao": "VARCHAR(50) (Ex: 'Proponente', 'Apoiadora', 'Executora')"
+            "tipo_participacao": "VARCHAR(50) (Ex: 'Apoiadora', 'Executora')"
         }
     },
     "Projeto_Locais_Realizacao": {
@@ -30,12 +30,12 @@
         }
     },
     "Projeto_Membros_Equipe": {
-        "descricao": "Tabela associativa. Aponta para o vínculo, permitindo saber exatamente com qual matrícula/papel a pessoa atuou neste projeto.",
+        "descricao": "Tabela associativa. Aponta para o vínculo, permitindo saber exatamente com qual matrícula/papel a pessoa atuou. Não inclui o Coordenador, que já está na tabela Projetos.",
         "atributos": {
             "id": "UUID (Primary Key)",
             "projeto_id": "UUID (Foreign Key -> Projetos)",
             "vinculo_id": "UUID (Foreign Key -> Vinculos_Institucionais)",
-            "funcao_no_projeto": "VARCHAR(50) (Ex: 'Bolsista', 'Voluntário')",
+            "funcao_id": "INTEGER (Foreign Key -> Funcoes_Equipe)",
             "carga_horaria_semanal": "INTEGER",
             "data_entrada": "DATE",
             "data_saida": "DATE"
