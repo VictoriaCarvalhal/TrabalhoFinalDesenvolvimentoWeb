@@ -10,6 +10,7 @@ import LayoutAutenticated from './components/layout/layoutAutenticated.jsx';
 import LayoutNotAutenticated from './components/layout/layoutNotAutenticated.jsx';
 import Projetos from './components/projetos/seusprojetos/projetos.jsx';
 import ParceriasInternas from './components/projetos/seusprojetos/parceriasInternas.jsx';
+import CadastrarProjeto from './components/projetos/cadastrar_projeto/cadastrar_projeto.jsx';
 import Bemvindo from './components/bemvindo/bemvindo.jsx';
 
 createRoot(document.getElementById('root')).render(
@@ -24,6 +25,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/Projetos">
             <Route path="SeusProjetos" element={<Projetos />}/>
             <Route path="ParceriasInternas" element={<ParceriasInternas />}/>
+            <Route path="CadastrarProjeto" element={<CadastrarProjeto />}/>
           </Route>
         </Route>
       </Routes>
