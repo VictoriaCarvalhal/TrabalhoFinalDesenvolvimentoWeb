@@ -1,4 +1,5 @@
 import uuid
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 
 
@@ -129,13 +130,26 @@ class AreaConhecimentoCNPq(models.Model):
         return f'{self.codigo} - {self.descricao}'
 
 
-class PessoaGlobal(AuditModel):
+class PessoaManager(BaseUserManager):
+    def create_user(self, cpf, password=None, **extra):
+        user = self.model(cpf=cpf, **extra)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+
+class PessoaGlobal(AbstractBaseUser, AuditModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nome_completo = models.CharField(max_length=255)
     cpf = models.CharField(max_length=11, unique=True)
-    # null=True necessário pq PostgreSQL trata string vazia como valor na constraint UNIQUE
     email_institucional = models.EmailField(unique=True, blank=True, null=True)
     lattes_url = models.URLField(max_length=255, blank=True)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
+
+    objects = PessoaManager()
+    USERNAME_FIELD = 'cpf'
 
     class Meta:
         verbose_name = 'Pessoa'
