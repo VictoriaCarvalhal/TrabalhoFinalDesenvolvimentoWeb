@@ -16,20 +16,28 @@ em <id>/ para uma linha. Projeto que nao pertence ao usuario logado da 404,
 igual a projeto inexistente, para nao revelar que ele existe.
 """
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, viewsets
+from rest_framework import permissions, viewsets, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from projetos.models import (
     DemandaBolsa, LocalRealizacao, MembroEquipe, ParceriaExterna,
     ParceriaInterna, PlanoTrabalho, ProjetoUnidade,
+    ProjetoEndereco, ProjetoCaracterizacao, ProjetoDescricao,Projeto
 )
 from projetos.permissions import projetos_visiveis_para
 from projetos.serializers import (
     DemandaBolsaSerializer, LocalRealizacaoSerializer, MembroEquipeSerializer,
     ParceriaExternaSerializer, ParceriaInternaSerializer,
     PlanoTrabalhoSerializer, UnidadeEnvolvidaSerializer,
+    ProjetoResumoSerializer, ProjetoDetalheSimplesSerializer,
+    ProjetoEnderecoSerializer, ProjetoContatoSerializer,
+    ProjetoCaracterizacaoSerializer, ProjetoDescricaoSerializer
 )
+
+
+
 
 
 class ProjetoDaUrlMixin:
@@ -139,3 +147,81 @@ class AbasDoProjetoView(ProjetoDaUrlMixin, APIView):
             resposta[chave] = viewset.serializer_class(
                 linhas, many=True, context=contexto).data
         return Response(resposta)
+
+
+
+
+
+class ProjetoViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated] #dev: AllowAny | prod: IsAuthenticated
+
+    def get_queryset(self):
+        return (
+            projetos_visiveis_para(self.request.user) #dev: Projeto.objects.all() | prod: projetos_visiveis_para(self.request.user)
+            .select_related('coordenador__pessoa', 'unidade_proponente', 'endereco',
+'caracterizacao', 'descricao')
+            .prefetch_related('contatos')
+        )
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return ProjetoResumoSerializer
+        return ProjetoDetalheSimplesSerializer
+
+    def perform_create(self, serializer):
+        projeto = serializer.save()
+
+        ProjetoEndereco.objects.get_or_create(projeto=projeto)
+        ProjetoCaracterizacao.objects.get_or_create(projeto=projeto)
+        ProjetoDescricao.objects.get_or_create(projeto=projeto)
+
+    # --- endpoint para cada "Salvar" de aba simples ---
+
+    @action(detail=True, methods=['get', 'put', 'patch'])
+    def caracterizacao(self, request, pk=None):
+        projeto = self.get_object()
+        carac, _ = ProjetoCaracterizacao.objects.get_or_create(projeto=projeto)
+
+        if request.method == 'GET':
+            return Response(ProjetoCaracterizacaoSerializer(carac).data)
+
+        serializer = ProjetoCaracterizacaoSerializer(carac, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get', 'put', 'patch'])
+    def descricao(self, request, pk=None):
+        projeto = self.get_object()
+        desc, _ = ProjetoDescricao.objects.get_or_create(projeto=projeto)
+
+        if request.method == 'GET':
+            return Response(ProjetoDescricaoSerializer(desc).data)
+
+        serializer = ProjetoDescricaoSerializer(desc, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get', 'put', 'patch'])
+    def endereco(self, request, pk=None):
+        projeto = self.get_object()
+        endereco, _ = ProjetoEndereco.objects.get_or_create(projeto=projeto)
+
+        if request.method == 'GET':
+            return Response(ProjetoEnderecoSerializer(endereco).data)
+
+        serializer = ProjetoEnderecoSerializer(endereco, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+    @action(detail=True, methods=['get', 'post'])
+    def contatos(self, request, pk=None):
+        projeto = self.get_object()
+        if request.method == 'GET':
+            return Response(ProjetoContatoSerializer(projeto.contatos.all(), many=True).data)
+
+        serializer = ProjetoContatoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(projeto=projeto)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
