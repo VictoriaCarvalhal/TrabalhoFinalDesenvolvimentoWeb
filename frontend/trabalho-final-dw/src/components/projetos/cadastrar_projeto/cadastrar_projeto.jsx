@@ -4,6 +4,7 @@ import { useAuthStore } from '../../../stores/authStore';
 const ABAS = [
     {id: "identificacao", label: "Identificação"},
     {id: "caracterizacao", label: "Caracterização"},
+    {id: "parcerias-internas", label: "Parcerias Internas"},
 ];
 
 function CadastrarProjeto() {
@@ -110,6 +111,56 @@ function CadastrarProjeto() {
                         />
                     </div>
                     </fieldset>
+                )}
+
+                {abaAtiva==="parcerias-internas" && (
+                    <fieldset>
+                        <legend>
+                            Parcerias Internas
+                        </legend>
+
+                        <div className="mb-3">
+                            <label className="form-label">Nome da Instituição</label>
+                            <input
+                            type="text"
+                            className="form-control"
+                            value={form.area}
+                            onChange={(e) => atualizarCampo("area", e.target.value)}
+                            />
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label">Sigla da Intituição</label>
+                            <input
+                            type="text"
+                            className="form-control"
+                            value={form.sigla}
+                            onChange={(e) => atualizarCampo("sigla", e.target.value)}
+                            />
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label">Unidade</label><br/>
+                            <select>
+                                <option></option>
+                            </select>
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label">Departamento</label><br/>
+                            <select>
+                                <option></option>
+                            </select>
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label">Participação (no máximo 500 caracteres)</label><br/>
+                            <textarea maxlength="500" cols="35"/>
+                        </div>
+
+
+                    </fieldset>
+
                 )}
             </div>
             <div className="mt-4 p-3 border rounded bg-light">
