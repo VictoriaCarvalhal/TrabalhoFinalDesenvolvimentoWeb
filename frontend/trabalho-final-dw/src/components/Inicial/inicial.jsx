@@ -22,9 +22,9 @@ function Inicial() {
         setEnviando(true);
 
         try {
-            // O backend espera "username"/"password", o form usa "usuario"/"senha".
+            // O backend espera "cpf"/"password", o form usa "usuario"/"senha".
             const resposta = await api.post('/auth/login/', {
-                username: data.usuario,
+                cpf: data.usuario,
                 password: data.senha,
             });
 
