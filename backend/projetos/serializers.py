@@ -14,6 +14,7 @@ from rest_framework import serializers
 from projetos.models import (
     DemandaBolsa, LocalRealizacao, MembroEquipe, ParceriaExterna,
     ParceriaInterna, PlanoTrabalho, ProjetoUnidade,
+    Projeto, ProjetoEndereco, ProjetoContato, ProjetoCaracterizacao, ProjetoDescricao
 )
 
 
@@ -186,3 +187,89 @@ class PlanoTrabalhoSerializer(LinhaDoProjetoSerializer):
             raise serializers.ValidationError(
                 {'ano': 'Ja existe um plano de trabalho para este ano neste projeto.'})
         return attrs
+
+
+
+
+#------------- serializers das seções simples
+
+class ProjetoEnderecoSerializer(serializers.ModelSerializer):
+    municipio_nome = serializers.CharField(source='municipio.nome', read_only=True)
+    municipio_uf = serializers.CharField(source='municipio.uf', read_only=True)
+
+    class Meta:
+        model = ProjetoEndereco
+        fields = [
+            'id', 'logradouro', 'numero', 'complemento',
+            'bairro', 'municipio', 'municipio_nome', 'municipio_uf', 'cep'
+        ]
+
+
+class ProjetoContatoSerializer(serializers.ModelSerializer):
+    tipo_contato_display = serializers.CharField(source='get_tipo_contato_display', read_only=True)
+    tipo_telefone_display = serializers.CharField(source='get_tipo_telefone_display', read_only=True)
+
+    class Meta:
+        model = ProjetoContato
+        fields = [
+            'id', 'tipo_contato', 'tipo_contato_display',
+            'valor', 'ddd', 'ramal', 'tipo_telefone', 'tipo_telefone_display'
+        ]
+
+
+class ProjetoCaracterizacaoSerializer(serializers.ModelSerializer):
+    natureza_display = serializers.CharField(source='natureza.descricao', read_only=True)
+    linha_extensao_display = serializers.CharField(source='linha_extensao.descricao', read_only=True)
+    area_principal_display = serializers.CharField(source='area_tematica_principal.descricao', read_only=True)
+    grande_area_display = serializers.CharField(source='grande_area_cnpq.descricao', read_only=True)
+
+    class Meta:
+        model = ProjetoCaracterizacao
+        fields = [
+            'id', 'situacao_academica', 'vinculado_programa_extensao', 'curricularizado',
+            'natureza', 'natureza_display', 'abrangencia', 'publico_alvo',
+            'grande_area_cnpq', 'grande_area_display',
+            'area_tematica_principal', 'area_principal_display',
+            'area_tematica_secundaria', 'linha_extensao', 'linha_extensao_display'
+        ]
+
+
+class ProjetoDescricaoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjetoDescricao
+        fields = [
+            'id', 'resumo', 'palavras_chave', 'introducao', 'justificativa',
+            'objetivo_geral', 'objetivos_especificos', 'metodologia_avaliacao',
+            'relacao_ensino', 'relacao_pesquisa', 'interacao_dialogica',
+            'interdisciplinaridade', 'impacto_formacao', 'indissociabilidade',
+            'impacto_social', 'referencias_bibliograficas'
+        ]
+
+
+class ProjetoResumoSerializer(serializers.ModelSerializer):
+    unidade_sigla = serializers.CharField(source='unidade_proponente.sigla', read_only=True)
+    coordenador_nome = serializers.CharField(source='coordenador.pessoa.nome_completo', read_only=True)
+    situacao_display = serializers.CharField(source='get_situacao_display', read_only=True)
+
+    class Meta:
+        model = Projeto
+        fields = [
+            'id', 'ano', 'numero', 'titulo', 'situacao', 'situacao_display',
+            'unidade_sigla', 'coordenador_nome', 'created_at', 'updated_at'
+        ]
+
+
+class ProjetoDetalheSimplesSerializer(serializers.ModelSerializer):
+    endereco = ProjetoEnderecoSerializer(read_only=True)
+    contatos = ProjetoContatoSerializer(many=True, read_only=True)
+    caracterizacao = ProjetoCaracterizacaoSerializer(read_only=True)
+    descricao = ProjetoDescricaoSerializer(read_only=True)
+
+    class Meta:
+        model = Projeto
+        fields = [
+            'id', 'ano', 'numero', 'titulo', 'situacao',
+            'coordenador', 'unidade_proponente', 'departamento_proponente',
+            'endereco', 'contatos', 'caracterizacao', 'descricao'
+        ]
+     

@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '../../../stores/authStore';
+import LocaisRealizacao from './abas/LocaisRealizacao';
+import MembrosEquipe from './abas/MembrosEquipe';
 
 const ABAS = [
     {id: "identificacao", label: "Identificação"},
     {id: "caracterizacao", label: "Caracterização"},
     {id: "parcerias-internas", label: "Parcerias Internas"},
+    {id: "locais-realizacao", label: "Locais de Realização"},
+    {id: "membros-equipe", label: "Membros da Equipe"},
 ];
 
 function CadastrarProjeto() {
@@ -18,6 +22,9 @@ function CadastrarProjeto() {
         coordenador: "",
         area: "",
         publicoAlvo: "",
+        // Abas com várias linhas: cada uma entrega a lista pronta pelo onChange.
+        locaisRealizacao: [],
+        membrosEquipe: [],
     });
 
     function atualizarCampo(campo, valor) {
@@ -162,18 +169,25 @@ function CadastrarProjeto() {
                     </fieldset>
 
                 )}
+
+                {/* As abas ficam escondidas, não desmontadas, pra não perder as
+                    linhas nem recarregar o dropdown ao trocar de aba. */}
+                <div hidden={abaAtiva !== "locais-realizacao"}>
+                    <LocaisRealizacao
+                        valor={form.locaisRealizacao}
+                        onChange={(linhas) => atualizarCampo("locaisRealizacao", linhas)}
+                    />
+                </div>
+
+                <div hidden={abaAtiva !== "membros-equipe"}>
+                    <MembrosEquipe
+                        coordenador={form.coordenador}
+                        valor={form.membrosEquipe}
+                        onChange={(linhas) => atualizarCampo("membrosEquipe", linhas)}
+                    />
+                </div>
             </div>
-            <div className="mt-4 p-3 border rounded bg-light">
-                <h4 className="text-primary">Status do Zustand (Mock):</h4>
-                <p>
-                    <strong>Usuário logado? </strong>
-                    {isAutenticado ? "Sim 🟢" : "Não 🔴"}
-                </p>
-                <p>
-                    <strong>Token salvo: </strong>
-                    {token ? token : "Nenhum token encontrado"}
-                </p>
-            </div>
+
         </div>
     );
 }

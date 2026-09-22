@@ -9,6 +9,7 @@ from .views_impressao_mock import ProjetoImpressaoMockView
 PROJETO = r'projetos/(?P<projeto_id>[0-9a-f-]{36})'
 
 router = SimpleRouter()
+router.register(r'projetos', views.ProjetoViewSet, basename='projeto')
 router.register(f'{PROJETO}/unidades-envolvidas', views.UnidadeEnvolvidaViewSet, basename='unidade-envolvida')
 router.register(f'{PROJETO}/locais-realizacao', views.LocalRealizacaoViewSet, basename='local-realizacao')
 router.register(f'{PROJETO}/parcerias-internas', views.ParceriaInternaViewSet, basename='parceria-interna')

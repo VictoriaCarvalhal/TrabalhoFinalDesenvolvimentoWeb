@@ -21,11 +21,7 @@ class RegisterPessoaSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = PessoaGlobal.objects.create_user(
-            password=password, **validated_data
-        )
-        return user
+        return PessoaGlobal.objects.create_user(**validated_data)
 
 
 class PessoaPerfilSerializer(serializers.ModelSerializer):
@@ -94,3 +90,4 @@ class VinculoInstitucionalSerializer(serializers.ModelSerializer):
             'tipo_vinculo', 'tipo_vinculo_display',
             'matricula', 'departamento', 'status',
         ]
+        

@@ -12,6 +12,7 @@ router.register('dominios/areas-tematicas', views.AreaTematicaViewSet, basename=
 router.register('dominios/areas-cnpq', views.AreaConhecimentoCNPqViewSet, basename='area-cnpq')
 router.register('dominios/vinculos', views.VinculoInstitucionalViewSet, basename='vinculo')
 
+
 urlpatterns = [
     path('auth/register/', views.RegisterView.as_view(), name='auth_register'),
     path('auth/me/', views.PerfilView.as_view(), name='auth_me'),
