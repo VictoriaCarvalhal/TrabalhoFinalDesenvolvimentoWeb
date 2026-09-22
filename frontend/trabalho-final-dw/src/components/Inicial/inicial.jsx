@@ -22,9 +22,9 @@ function Inicial() {
         setEnviando(true);
 
         try {
-            // O backend espera "cpf"/"password", o form usa "usuario"/"senha".
+            // Agora o formulário e o backend usam "cpf".
             const resposta = await api.post('/auth/login/', {
-                cpf: data.usuario,
+                cpf: data.cpf,
                 password: data.senha,
             });
 
@@ -58,14 +58,14 @@ function Inicial() {
                 <form onSubmit={handleSubmit(handleLogin)}>
 
                     <div className="mb-3">
-                        <label htmlFor="usuario" name="usuario" className="form-label">Usuário</label>
+                        <label htmlFor="cpf" name="cpf" className="form-label">CPF</label>
                         <input
                             type="text"
-                            className={`form-control ${errors.usuario ? 'is-invalid' : ''}`}
-                            id="usuario"
-                            {...register("usuario", { required: "O usuário é obrigatório" })}
+                            className={`form-control ${errors.cpf ? 'is-invalid' : ''}`}
+                            id="cpf"
+                            {...register("cpf", { required: "O CPF é obrigatório" })}
                         />
-                        {errors.usuario && <div className="invalid-feedback">{errors.usuario.message}</div>}
+                        {errors.cpf && <div className="invalid-feedback">{errors.cpf.message}</div>}
                     </div>
 
                     <div className="mb-3">
