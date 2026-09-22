@@ -163,17 +163,7 @@ function CadastrarProjeto() {
 
                 )}
             </div>
-            <div className="mt-4 p-3 border rounded bg-light">
-                <h4 className="text-primary">Status do Zustand (Mock):</h4>
-                <p>
-                    <strong>Usuário logado? </strong>
-                    {isAutenticado ? "Sim 🟢" : "Não 🔴"}
-                </p>
-                <p>
-                    <strong>Token salvo: </strong>
-                    {token ? token : "Nenhum token encontrado"}
-                </p>
-            </div>
+
         </div>
     );
 }
