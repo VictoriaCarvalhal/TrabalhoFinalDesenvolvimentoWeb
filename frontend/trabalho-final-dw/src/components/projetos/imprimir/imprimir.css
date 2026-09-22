@@ -1,0 +1,74 @@
+@media print {
+    @page {
+        size: A4;
+        margin: 15mm 12mm;
+    }
+
+    /* Chrome do app e barra de ferramentas: fora do papel. */
+    #container > header,
+    #container > nav,
+    #container > footer,
+    #container > aside,
+    .no-print {
+        display: none !important;
+    }
+
+    #container,
+    #container main {
+        display: block !important;
+        background: #fff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Área do documento: sem borda de tela, texto preto. */
+    #area-impressao {
+        border: none !important;
+        padding: 0 !important;
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    #area-impressao h1,
+    #area-impressao h2,
+    #area-impressao h3,
+    #area-impressao p,
+    #area-impressao li,
+    #area-impressao strong {
+        color: #000 !important;
+    }
+
+    /* Sem parágrafo cortado no meio nem seção quebrada no título. */
+    #area-impressao section {
+        break-inside: avoid;
+    }
+
+    #area-impressao p,
+    #area-impressao li {
+        orphans: 3;
+        widows: 3;
+    }
+
+    #area-impressao h3 {
+        break-after: avoid;
+    }
+
+    /* Tabelas das listas fonte compacta, sem linha cortada. */
+    #area-impressao table {
+        font-size: 11px;
+    }
+
+    #area-impressao tr {
+        break-inside: avoid;
+    }
+
+    #area-impressao .badge {
+        border: 1px solid #000;
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    #area-impressao img {
+        max-height: 70px;
+    }
+}

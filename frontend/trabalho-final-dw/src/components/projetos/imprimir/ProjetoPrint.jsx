@@ -23,6 +23,28 @@ function Campo({ rotulo, valor }) {
     );
 }
 
+function Tabela({ colunas, linhas, renderLinha }) {
+    if (!linhas || linhas.length === 0) {
+        return <p className="mb-0">—</p>;
+    }
+    return (
+        <div className="table-responsive">
+            <table className="table table-sm table-bordered mb-0">
+                <thead>
+                    <tr>
+                        {colunas.map((coluna) => (
+                            <th key={coluna} scope="col">{coluna}</th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {linhas.map((linha, indice) => renderLinha(linha, indice))}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
 function ProjetoPrint({ dados }) {
     const projeto = dados?.projeto ?? {};
     const endereco = dados?.endereco ?? {};
@@ -30,6 +52,13 @@ function ProjetoPrint({ dados }) {
     const caracterizacao = dados?.caracterizacao ?? {};
     const descricao = dados?.descricao ?? {};
     const palavrasChave = descricao.palavras_chave ?? [];
+    const planosTrabalho = dados?.planos_trabalho ?? [];
+    const demandasBolsa = dados?.demandas_bolsa ?? [];
+    const unidadesEnvolvidas = dados?.unidades_envolvidas ?? [];
+    const locaisRealizacao = dados?.locais_realizacao ?? [];
+    const parceriasInternas = dados?.parcerias_internas ?? [];
+    const parceriasExternas = dados?.parcerias_externas ?? [];
+    const equipe = dados?.equipe ?? [];
 
     const enderecoLinha = [
         endereco.logradouro && endereco.numero
@@ -124,6 +153,124 @@ function ProjetoPrint({ dados }) {
                 <Campo rotulo="Indissociabilidade ensino-pesquisa-extensão" valor={descricao.indissociabilidade} />
                 <Campo rotulo="Impacto social" valor={descricao.impacto_social} />
                 <Campo rotulo="Referências bibliográficas" valor={descricao.referencias_bibliograficas} />
+            </Secao>
+
+            {/* Planos de trabalho */}
+            <Secao titulo="Planos de trabalho">
+                <Tabela
+                    colunas={['Ano', 'Resultados esperados', 'Cronograma de atividades']}
+                    linhas={planosTrabalho}
+                    renderLinha={(plano, indice) => (
+                        <tr key={indice}>
+                            <td>{plano?.ano ?? '—'}</td>
+                            <td>{plano?.resultados_esperados ?? '—'}</td>
+                            <td>{plano?.cronograma_atividades ?? '—'}</td>
+                        </tr>
+                    )}
+                />
+            </Secao>
+
+            {/* Demandas de bolsa */}
+            <Secao titulo="Demandas de bolsa">
+                <Tabela
+                    colunas={['Tipo', 'Quantidade', 'Justificativa']}
+                    linhas={demandasBolsa}
+                    renderLinha={(demanda, indice) => (
+                        <tr key={indice}>
+                            <td>{demanda?.tipo ?? '—'}</td>
+                            <td>{demanda?.quantidade ?? '—'}</td>
+                            <td>{demanda?.justificativa ?? '—'}</td>
+                        </tr>
+                    )}
+                />
+            </Secao>
+
+            {/* Unidades envolvidas */}
+            <Secao titulo="Unidades envolvidas">
+                <Tabela
+                    colunas={['Sigla', 'Nome', 'Participação']}
+                    linhas={unidadesEnvolvidas}
+                    renderLinha={(unidade, indice) => (
+                        <tr key={indice}>
+                            <td>{unidade?.sigla ?? '—'}</td>
+                            <td>{unidade?.nome ?? '—'}</td>
+                            <td>{unidade?.participacao ?? '—'}</td>
+                        </tr>
+                    )}
+                />
+            </Secao>
+
+            {/* Locais de realização */}
+            <Secao titulo="Locais de realização">
+                {locaisRealizacao.length === 0 ? (
+                    <p className="mb-0">—</p>
+                ) : (
+                    locaisRealizacao.map((local, indice) => (
+                        <div key={indice} className="mb-2">
+                            <p className="fw-bold mb-0">{local?.nome ?? '—'}</p>
+                            <p className="mb-0 text-muted">
+                                {local?.municipio ?? '—'}
+                                {local?.endereco_completo ? ` — ${local.endereco_completo}` : ''}
+                            </p>
+                        </div>
+                    ))
+                )}
+            </Secao>
+
+            {/* Parcerias internas */}
+            <Secao titulo="Parcerias internas">
+                {parceriasInternas.length === 0 ? (
+                    <p className="mb-0">—</p>
+                ) : (
+                    parceriasInternas.map((parceria, indice) => (
+                        <div key={indice} className="mb-2">
+                            <p className="fw-bold mb-0">
+                                {parceria?.unidade ?? '—'}
+                                {parceria?.departamento ? ` — ${parceria.departamento}` : ''}
+                            </p>
+                            <p className="mb-0">
+                                Contato: {parceria?.nome_contato ?? '—'} · Convênio formalizado: {simNao(parceria?.formalizado_convenio)}
+                            </p>
+                            <p className="mb-0 text-muted">{parceria?.descricao_contribuicao ?? '—'}</p>
+                        </div>
+                    ))
+                )}
+            </Secao>
+
+            {/* Parcerias externas */}
+            <Secao titulo="Parcerias externas">
+                {parceriasExternas.length === 0 ? (
+                    <p className="mb-0">—</p>
+                ) : (
+                    parceriasExternas.map((parceria, indice) => (
+                        <div key={indice} className="mb-2">
+                            <p className="fw-bold mb-0">
+                                {parceria?.nome_instituicao ?? '—'}
+                                {parceria?.tipo_instituicao ? ` (${parceria.tipo_instituicao})` : ''}
+                                {parceria?.cnpj ? ` — CNPJ ${parceria.cnpj}` : ''}
+                            </p>
+                            <p className="mb-0">
+                                Contato: {parceria?.nome_contato ?? '—'} · Convênio formalizado: {simNao(parceria?.formalizado_convenio)}
+                            </p>
+                            <p className="mb-0 text-muted">{parceria?.descricao_contribuicao ?? '—'}</p>
+                        </div>
+                    ))
+                )}
+            </Secao>
+
+            {/* Equipe */}
+            <Secao titulo="Equipe">
+                <Tabela
+                    colunas={['Nome', 'Função', 'Carga horária semanal (h)']}
+                    linhas={equipe}
+                    renderLinha={(membro, indice) => (
+                        <tr key={indice}>
+                            <td>{membro?.nome ?? '—'}</td>
+                            <td>{membro?.funcao ?? '—'}</td>
+                            <td>{membro?.carga_horaria_semanal ?? '—'}</td>
+                        </tr>
+                    )}
+                />
             </Secao>
         </div>
     );
