@@ -1,5 +1,8 @@
 import pr3Logo from '../../../assets/pr3_logo.png';
 
+// Documento de impressão do projeto. Componente puro: recebe o DTO e
+// renderiza. O CSS de impressão vive em imprimir.css.
+
 function simNao(valor) {
     if (valor === true) return 'Sim';
     if (valor === false) return 'Não';
@@ -70,8 +73,16 @@ function ProjetoPrint({ dados }) {
         endereco.cep ? `CEP ${endereco.cep}` : null,
     ].filter(Boolean).join(' — ') || '—';
 
+    const tituloCurto = (projeto.titulo ?? 'Sem título').length > 80
+        ? `${(projeto.titulo ?? '').slice(0, 80)}…`
+        : (projeto.titulo ?? 'Sem título');
+
     return (
         <div className="projeto-print">
+            <div className="print-cabecalho" aria-hidden="true">
+                UERJ · PR-3 — {tituloCurto} — {projeto.ano ?? '—'}/{projeto.numero ?? '—'}
+            </div>
+            <div className="print-rodape" aria-hidden="true" />
             {/* Capa institucional */}
             <header className="text-center mb-4">
                 <img src={pr3Logo} alt="PR-3 UERJ" style={{ maxHeight: '90px' }} />
