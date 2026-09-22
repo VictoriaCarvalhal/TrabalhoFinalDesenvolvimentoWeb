@@ -2,17 +2,40 @@
  * Cobre o caminho window.print(); o caminho print-js recebe as mesmas
  * regras via opção `style` em ImprimirProjeto.jsx (manter sincronizado). */
 
-/* Timbre e rodapé repetidos: invisíveis na tela, fixos no papel
- * (o Chrome repete elementos fixed em todas as páginas impressas). */
-.print-cabecalho,
-.print-rodape {
+/* Timbre repetido: invisível na tela, fixo no papel
+ * (o Chrome repete elementos fixed em todas as páginas impressas).
+ * A numeração sai na caixa de margem @bottom-right do @page. */
+.print-cabecalho {
     display: none;
+}
+
+/* Capa: logo único centralizado, colado no topo (vale para tela e papel). */
+.capa {
+    margin-top: 0;
+}
+
+.capa-logo {
+    display: block;
+    margin: 0 auto 4px;
+    max-height: 90px;
+    max-width: 100%;
+}
+
+.capa-inst {
+    text-align: center;
+    font-weight: bold;
+    margin: 0;
 }
 
 @media print {
     @page {
         size: A4;
-        margin: 30mm 12mm 20mm 12mm;
+        margin: 16mm 12mm 20mm 12mm;
+
+        @bottom-right {
+            content: 'Página ' counter(page);
+            font-size: 10px;
+        }
     }
 
     /* Chrome do app e barra de ferramentas: fora do papel. */
@@ -53,21 +76,37 @@
      * órfão no fim e nenhum parágrafo é cortado com menos de 3 linhas. */
     #area-impressao section {
         break-inside: auto;
+        margin-bottom: 16px;
+    }
+
+    #area-impressao h3 {
+        break-after: avoid;
+        margin: 0 0 8px;
+        padding-bottom: 4px;
+        border-bottom: 1px solid #000;
+    }
+
+    #area-impressao p {
+        margin: 0 0 8px;
     }
 
     #area-impressao p,
     #area-impressao li {
         orphans: 3;
         widows: 3;
+        overflow-wrap: break-word;
     }
 
     #area-impressao h3 {
         break-after: avoid;
     }
 
-    /* Tabelas: fonte compacta, cabeçalho repetido, sem linha cortada. */
+    /* Tabelas: ocupam a largura do papel, sem rolagem nem corte. */
     #area-impressao table {
+        width: 100%;
+        table-layout: fixed;
         font-size: 11px;
+        border-collapse: collapse;
     }
 
     #area-impressao thead {
@@ -76,6 +115,13 @@
 
     #area-impressao tr {
         break-inside: avoid;
+    }
+
+    #area-impressao th,
+    #area-impressao td {
+        border: 1px solid #000;
+        padding: 4px 6px;
+        overflow-wrap: anywhere;
     }
 
     #area-impressao .badge {
@@ -99,21 +145,5 @@
         border-bottom: 1px solid #000;
         padding-bottom: 4px;
         background: #fff;
-    }
-
-    .print-rodape {
-        display: block;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        font-size: 10px;
-        color: #000;
-        text-align: right;
-        background: #fff;
-    }
-
-    .print-rodape::after {
-        content: 'Página ' counter(page);
     }
 }

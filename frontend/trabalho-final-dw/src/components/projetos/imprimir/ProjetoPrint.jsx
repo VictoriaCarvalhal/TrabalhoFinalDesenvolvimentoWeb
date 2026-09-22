@@ -31,20 +31,18 @@ function Tabela({ colunas, linhas, renderLinha }) {
         return <p className="mb-0">—</p>;
     }
     return (
-        <div className="table-responsive">
-            <table className="table table-sm table-bordered mb-0">
-                <thead>
-                    <tr>
-                        {colunas.map((coluna) => (
-                            <th key={coluna} scope="col">{coluna}</th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {linhas.map((linha, indice) => renderLinha(linha, indice))}
-                </tbody>
-            </table>
-        </div>
+        <table className="table table-sm table-bordered mb-0">
+            <thead>
+                <tr>
+                    {colunas.map((coluna) => (
+                        <th key={coluna} scope="col">{coluna}</th>
+                    ))}
+                </tr>
+            </thead>
+            <tbody>
+                {linhas.map((linha, indice) => renderLinha(linha, indice))}
+            </tbody>
+        </table>
     );
 }
 
@@ -82,12 +80,10 @@ function ProjetoPrint({ dados }) {
             <div className="print-cabecalho" aria-hidden="true">
                 UERJ · PR-3 — {tituloCurto} — {projeto.ano ?? '—'}/{projeto.numero ?? '—'}
             </div>
-            <div className="print-rodape" aria-hidden="true" />
             {/* Capa institucional */}
-            <header className="text-center mb-4">
-                <img src={pr3Logo} alt="PR-3 UERJ" style={{ maxHeight: '90px' }} />
-                <p className="mt-2 mb-0 fw-bold">Universidade do Estado do Rio de Janeiro</p>
-                <p className="text-muted">Pró-Reitoria de Extensão e Cultura</p>
+            <header className="capa mb-3">
+                <img src={pr3Logo} alt="UERJ · PR-3" className="capa-logo" />
+                <p className="capa-inst">Universidade do Estado do Rio de Janeiro · Pró-Reitoria de Extensão e Cultura</p>
                 <hr />
                 <h2 className="h4 mt-3">{projeto.titulo ?? 'Sem título'}</h2>
                 <p className="mb-1">
