@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from core.models import UnidadeAcademica, Departamento
 from projetos.models import ParceriaInterna, ParceriaExterna
+from projetos.models import LocalRealizacao
 
 class ParceriaInternaSerializer(serializers.ModelSerializer):
     # Traz a sigla e o nome da unidade/departamento formatados na leitura
@@ -61,4 +62,28 @@ class ParceriaExternaSerializer(serializers.ModelSerializer):
             'id',
             'created_at',
             'updated_at' 
+        ]
+
+class LocalRealizacaoSerializer(serializers.ModelSerializer):
+    # Traz o nome e UF do município formatados para facilitar a leitura no Front-end
+    municipio_nome = serializers.ReadOnlyField(source='municipio.nome')
+    municipio_uf = serializers.ReadOnlyField(source='municipio.uf')
+
+    class Meta:
+        model = LocalRealizacao
+        fields = [
+            'id',
+            'projeto',
+            'nome_local',         # Representa a "Instituição" / Nome do local
+            'municipio',          # ID do município (Código IBGE recebido no POST)
+            'municipio_nome',     # Nome do município (retornado no GET)
+            'municipio_uf',       # UF do município (retornado no GET)
+            'endereco_completo',  # Opcional
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = [
+            'id',
+            'created_at',
+            'updated_at'
         ]

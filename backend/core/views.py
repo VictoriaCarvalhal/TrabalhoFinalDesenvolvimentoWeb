@@ -1,6 +1,7 @@
 from rest_framework import generics, permissions
 from core.serializers import RegisterPessoaSerializer, PessoaPerfilSerializer
-
+from core.models import MunicipioIBGE
+from core.serializers import MunicipioIBGESerializer
 
 class RegisterView(generics.CreateAPIView):
     """Endpoint público para cadastro de novas Pessoas/Usuários."""
@@ -15,3 +16,9 @@ class PerfilView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+class MunicipioIBGEListView(generics.ListAPIView):
+    """Endpoint para listar municípios (usado nos dropdowns do front-end)."""
+    queryset = MunicipioIBGE.objects.filter(ativo=True).order_by('nome')
+    serializer_class = MunicipioIBGESerializer
+    permission_classes = [permissions.AllowAny] # Pode ser AllowAny para o dropdown carregar fácil
