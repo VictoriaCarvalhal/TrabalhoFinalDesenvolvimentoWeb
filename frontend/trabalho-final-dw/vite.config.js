@@ -12,6 +12,12 @@ export default defineConfig({
     port: 5173,
     hmr: {
       clientPort: 5173
-    }
+    },
+    // No desenvolvimento, /api e /admin vao para o runserver do Django, entao
+    // o front chama a API pelo mesmo caminho relativo que usa na Vercel.
+    proxy: {
+      '/api': 'http://localhost:8000',
+      '/admin': 'http://localhost:8000',
+    },
   }
 })

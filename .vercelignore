@@ -1,0 +1,6 @@
+backend/.venv
+backend/.env
+backend/docs
+frontend/trabalho-final-dw/node_modules
+frontend/trabalho-final-dw/dist
+**/__pycache__
