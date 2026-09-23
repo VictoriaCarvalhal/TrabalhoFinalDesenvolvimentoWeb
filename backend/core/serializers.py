@@ -2,6 +2,8 @@ import re
 from rest_framework import serializers
 from core.models import PessoaGlobal
 from core.models import MunicipioIBGE
+from core.models import Departamento
+from core.models import UnidadeAcademica
 
 class RegisterPessoaSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
@@ -64,3 +66,13 @@ def validar_cpf(cpf: str) -> str:
         raise serializers.ValidationError("CPF inválido (dígito verificador incorreto).")
 
     return cpf_limpo
+
+class UnidadeAcademicaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UnidadeAcademica
+        fields = ['id', 'sigla', 'nome']
+
+class DepartamentoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Departamento
+        fields = ['id', 'nome', 'unidade']

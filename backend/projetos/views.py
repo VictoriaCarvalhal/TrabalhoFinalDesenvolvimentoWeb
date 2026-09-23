@@ -1,3 +1,4 @@
+from projetos.models import TipoInstituicaoExterna
 from rest_framework import viewsets, permissions
 from projetos.models import ParceriaInterna, ParceriaExterna
 from projetos.serializers import ParceriaInternaSerializer, ParceriaExternaSerializer
@@ -31,6 +32,15 @@ class ParceriaExternaViewSet(viewsets.ModelViewSet):
         if projeto_id:
             queryset = queryset.filter(projeto_id=projeto_id)
         return queryset
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    def opcoes_dropdown(self, request):
+        """Retorna os tipos de instituição externa para dropdown."""
+        tipos_instituicao = [
+            {'value': key, 'label': label} for key, label in TipoInstituicaoExterna.choices
+        ]
+        return Response({'tipos_instituicao': tipos_instituicao})
+
 
 class LocalRealizacaoViewSet(viewsets.ModelViewSet):
     serializer_class = LocalRealizacaoSerializer
