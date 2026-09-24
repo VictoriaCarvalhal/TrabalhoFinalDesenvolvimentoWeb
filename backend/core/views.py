@@ -1,4 +1,7 @@
-from rest_framework import generics, permissions, viewsets
+from rest_framework import generics, permissions, status, viewsets
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from core.models import (
     AreaConhecimentoCNPq, AreaTematica, Departamento,
     LinhaExtensao, MunicipioIBGE, NaturezaExtensao,
@@ -24,6 +27,23 @@ class PerfilView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class SessionCheckView(APIView):
+    """
+    Endpoint para verificar se a sessão/token JWT do usuário continua ativa e válida.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        serializer = PessoaPerfilSerializer(request.user)
+        return Response(
+            {
+                "authenticated": True,
+                "user": serializer.data
+            },
+            status=status.HTTP_200_OK
+        )
 
 
 class LookupViewSet(viewsets.ReadOnlyModelViewSet):

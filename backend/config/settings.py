@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-
+from datetime import timedelta
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "rest_framework",
     "rest_framework_simplejwt",
+    'rest_framework_simplejwt.token_blacklist',
     "drf_spectacular",
     "corsheaders",
     "core",
@@ -114,10 +115,28 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    # --- ALTERADO: Ativa a renovação/rotação do Refresh Token a cada chamada ---
+    'ROTATE_REFRESH_TOKENS': True,
+    # --- ALTERADO: Invalida o Refresh Token anterior colocando na blacklist ---
+    'BLACK_LIST_AFTER_ROTATION': True,
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+}
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "API Projetos de Extensão",
+    'DESCRIPTION': 'Documentação dos endpoints de autenticação, domínios e usuários.',
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+    },
 }
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
