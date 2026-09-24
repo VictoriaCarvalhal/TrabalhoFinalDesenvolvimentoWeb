@@ -1,36 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/authStore';
 import { useNavigate } from 'react-router-dom';
-
-function Projetos() {
-    const isAutenticado = useAuthStore((state) => state.isAutenticado);
-    const token = useAuthStore((state) => state.token);
-    const navigate = useNavigate();
-
-    function redirecionaProCadastro(){
-        navigate('/Projetos/CadastrarProjeto');
-    }
-
-    return (
-        <div className="container mt-4">
-            <h1>Projetos</h1>
-            {/* Codigo para testar a autenticacao mockada. Use isso para já programar a logica de mostrar os projetos de um especifico usuario.
-             Dessa forma quando o codigo do backend estiver pronto só precisamos adaptar e não criar do zero*/}
-
-            
-            {/*Botão p cadastrar um novo projeto, que redireciona para a aba de 'Cadastrar Projetos'*/}
-            <button onClick={redirecionaProCadastro}>Novo Projeto</button>
-            <div className="mt-4 p-3 border rounded bg-light">
-                <h4 className="text-primary">Status do Zustand (Mock):</h4>
-                <p>
-                    <strong>Usuário logado? </strong>
-                    {isAutenticado ? "Sim 🟢" : "Não 🔴"}
-                </p>
-                <p>
-                    <strong>Token salvo: </strong>
-                    {token ? token : "Nenhum token encontrado"}
-                </p>
-            </div>
 import api from '../../../services/api';
 
 function Projetos() {
@@ -39,6 +9,11 @@ function Projetos() {
     const [projetos, setProjetos] = useState([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState(null);
+    const navigate = useNavigate();
+
+    function redirecionaProCadastro(){
+        navigate('/Projetos/CadastrarProjeto');
+    }
 
     useEffect(() => {
         // Sem token não tem nem por que chamar a API.
@@ -75,7 +50,8 @@ function Projetos() {
     return (
         <div className="container mt-4">
             <h1>Seus Projetos</h1>
-
+            {/*Botão p cadastrar um novo projeto, que redireciona para a aba de 'Cadastrar Projetos'*/}
+            <button onClick={redirecionaProCadastro}>Novo Projeto</button>
             {!isAutenticado && (
                 <div className="alert alert-warning mt-3">
                     Você precisa estar logado para ver seus projetos.
