@@ -15,6 +15,19 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
+AUTH_USER_MODEL = "core.PessoaGlobal"
+
+# Enderecos do front que podem chamar a API quando DEBUG esta desligado.
+# Na Vercel: CORS_ALLOWED_ORIGINS=https://<projeto-do-front>.vercel.app
+CORS_ALLOWED_ORIGINS = [
+    origem for origem in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if origem
+]
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
+
+# Na Vercel o Django roda atras de um proxy; sem isto ele acha que a
+# requisicao veio por http e recusa o login do admin por CSRF.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -24,6 +37,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.postgres",
     "rest_framework",
+    "rest_framework_simplejwt",
+    "drf_spectacular",
     "corsheaders",
     "core",
     "projetos",
@@ -88,11 +103,21 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "API Projetos de Extensão",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
