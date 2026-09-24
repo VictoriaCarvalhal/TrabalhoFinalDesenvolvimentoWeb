@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/authStore';
+import { useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
 
 function Projetos() {
@@ -8,6 +9,11 @@ function Projetos() {
     const [projetos, setProjetos] = useState([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState(null);
+    const navigate = useNavigate();
+
+    function redirecionaProCadastro(){
+        navigate('/Projetos/CadastrarProjeto');
+    }
 
     useEffect(() => {
         // Sem token não tem nem por que chamar a API.
@@ -44,7 +50,8 @@ function Projetos() {
     return (
         <div className="container mt-4">
             <h1>Seus Projetos</h1>
-
+            {/*Botão p cadastrar um novo projeto, que redireciona para a aba de 'Cadastrar Projetos'*/}
+            <button onClick={redirecionaProCadastro}>Novo Projeto</button>
             {!isAutenticado && (
                 <div className="alert alert-warning mt-3">
                     Você precisa estar logado para ver seus projetos.
