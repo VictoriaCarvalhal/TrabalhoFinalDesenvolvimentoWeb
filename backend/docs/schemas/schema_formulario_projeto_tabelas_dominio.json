@@ -19,10 +19,10 @@
             }
         },
         "Funcoes_Equipe": {
-            "descricao": "Papéis que os membros podem assumir no projeto.",
+            "descricao": "Papéis que os membros podem assumir no projeto (exclui Coordenador, que fica na tabela Projetos).",
             "atributos": {
                 "id": "INTEGER (Primary Key, Auto Increment)",
-                "descricao": "VARCHAR(50) (Ex: 'Coordenador', 'Bolsista', 'Voluntário', 'Professor Colaborador')",
+                "descricao": "VARCHAR(50) (Ex: 'Bolsista', 'Voluntário', 'Professor Colaborador')",
                 "ativo": "BOOLEAN (Default TRUE)"
             }
         },

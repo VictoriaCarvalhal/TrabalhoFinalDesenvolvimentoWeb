@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form'; // 1. Importando a biblioteca
-import { useAuthStore } from '../../stores/authStore'
+import { useForm } from 'react-hook-form';
+import { useAuthStore } from '../../stores/authStore';
+import api from '../../services/api';
 
 function Inicial() {
     const navigate = useNavigate();
-
     const login = useAuthStore((state) => state.login);
+
+    const [erroLogin, setErroLogin] = useState(null);
+    const [enviando, setEnviando] = useState(false);
 
     const {
         register,
@@ -14,14 +17,31 @@ function Inicial() {
         formState: { errors }
     } = useForm();
 
-    const handleLogin = (data) => {
-        console.log("Dados do formulário:", data);
-        
-        const tokenFalso = "simulacao-de-token-jwt-123456";
+    const handleLogin = async (data) => {
+        setErroLogin(null);
+        setEnviando(true);
 
-        login(tokenFalso);
-        
-        navigate('/Bemvindo');
+        try {
+            // Agora o formulário e o backend usam "cpf".
+            const resposta = await api.post('/auth/login/', {
+                cpf: data.cpf,
+                password: data.senha,
+            });
+
+            login(resposta.data.access);
+            // Guarda o refresh também, pra usar depois quando o access expirar.
+            localStorage.setItem('refresh', resposta.data.refresh);
+
+            navigate('/Bemvindo');
+        } catch (err) {
+            if (err.response?.status === 401) {
+                setErroLogin('Usuário ou senha incorretos.');
+            } else {
+                setErroLogin('Não foi possível fazer login. Tente novamente.');
+            }
+        } finally {
+            setEnviando(false);
+        }
     }
 
     return (
@@ -29,18 +49,23 @@ function Inicial() {
             <div className="card-body">
                 <h5 className="card-title text-center">Login</h5>
 
-                
+                {erroLogin && (
+                    <div className="alert alert-danger py-2" role="alert">
+                        {erroLogin}
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit(handleLogin)}>
 
                     <div className="mb-3">
-                        <label htmlFor="usuario" name="usuario" className="form-label">Usuário</label>
+                        <label htmlFor="cpf" name="cpf" className="form-label">CPF</label>
                         <input
                             type="text"
-                            className={`form-control ${errors.usuario ? 'is-invalid' : ''}`}
-                            id="usuario"
-                            {...register("usuario", { required: "O usuário é obrigatório" })}
+                            className={`form-control ${errors.cpf ? 'is-invalid' : ''}`}
+                            id="cpf"
+                            {...register("cpf", { required: "O CPF é obrigatório" })}
                         />
-                        {errors.usuario && <div className="invalid-feedback">{errors.usuario.message}</div>}
+                        {errors.cpf && <div className="invalid-feedback">{errors.cpf.message}</div>}
                     </div>
 
                     <div className="mb-3">
@@ -55,7 +80,9 @@ function Inicial() {
                     </div>
 
                     <div className="text-end">
-                        <button type="submit" className="btn btn-primary">Acessar</button>
+                        <button type="submit" className="btn btn-primary" disabled={enviando}>
+                            {enviando ? 'Entrando...' : 'Acessar'}
+                        </button>
                     </div>
 
                 </form>

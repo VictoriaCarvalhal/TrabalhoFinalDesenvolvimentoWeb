@@ -5,7 +5,6 @@
       "id": "UUID (Primary Key)",
       "titulo": "VARCHAR(255) (Not Null)",
       "coordenador_vinculo_id": "UUID (Foreign Key -> Vinculos_Institucionais)",
-      "unidade_id": "UUID (Foreign Key -> Unidades_Academicas)",
       "departamento_id": "UUID (Foreign Key -> Departamentos)",
       "status": "VARCHAR(50)",
       "data_criacao": "TIMESTAMP"

@@ -1,3 +1,5 @@
+# Copia de backend/requirements.txt: a Vercel so le o da raiz e nao aceita -r.
+# Se mudar la, mude aqui.
 Django==6.1.1
 djangorestframework==3.18.1
 djangorestframework-simplejwt==5.5.1

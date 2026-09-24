@@ -62,11 +62,13 @@ class TipoParticipacaoUnidade(models.TextChoices):
 
 
 class TipoInstituicaoExterna(models.TextChoices):
-    PUBLICA = 'PUBLICA', 'Pública'
-    PRIVADA = 'PRIVADA', 'Privada'
-    ONG = 'ONG', 'ONG / Terceiro Setor'
-    ORGANISMO_INTERNACIONAL = 'ORGANISMO_INTERNACIONAL', 'Organismo Internacional'
-    OUTRO = 'OUTRO', 'Outro'
+    GOV_FEDERAL = 'GOV_FEDERAL', 'Instituição Governamental Federal'
+    GOV_ESTADUAL = 'GOV_ESTADUAL', 'Instituição Governamental Estadual'
+    GOV_MUNICIPAL = 'GOV_MUNICIPAL', 'Instituição Governamental Municipal'
+    INICIATIVA_PRIVADA = 'INICIATIVA_PRIVADA', 'Organização da Iniciativa Privada'
+    MOVIMENTO_SOCIAL = 'MOVIMENTO_SOCIAL', 'Movimento Social'
+    ONG = 'ONG', 'Organização Não Governamental'
+    OUTRO = 'OUTRO', 'Outros'
 
 
 class FuncaoMembroEquipe(models.TextChoices):
