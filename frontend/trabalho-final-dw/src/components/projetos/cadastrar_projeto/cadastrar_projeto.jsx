@@ -99,7 +99,7 @@ function CadastrarProjeto() {
                 ))}
             </ul>
             
-            <div className="p-3 border rounded bg-light">
+            <div className="p-3 border rounded bg-body-tertiary">
                 
                 {abaAtiva === "identificacao" && (
                     
