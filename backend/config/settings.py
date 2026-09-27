@@ -17,11 +17,18 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
 AUTH_USER_MODEL = "core.PessoaGlobal"
 
-# Enderecos do front que podem chamar a API quando DEBUG esta desligado.
 # Na Vercel: CORS_ALLOWED_ORIGINS=https://<projeto-do-front>.vercel.app
 CORS_ALLOWED_ORIGINS = [
     origem for origem in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if origem
 ]
+if DEBUG:
+    CORS_ALLOWED_ORIGINS.extend([
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000"
+    ])
+
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
 # Na Vercel o Django roda atras de um proxy; sem isto ele acha que a
@@ -47,6 +54,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
