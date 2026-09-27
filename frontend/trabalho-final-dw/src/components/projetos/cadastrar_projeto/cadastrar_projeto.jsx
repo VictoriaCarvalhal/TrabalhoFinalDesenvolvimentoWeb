@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/authStore';
 import LocaisRealizacao from './abas/LocaisRealizacao';
 import MembrosEquipe from './abas/MembrosEquipe';
@@ -14,8 +14,11 @@ const ABAS = [
 function CadastrarProjeto() {
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
     const token = useAuthStore((state) => state.token);
-
+    
     const [abaAtiva, setAbaAtiva] = useState("identificacao");
+
+    const [unidades, setUnidades] = useState([]); //Aqui serão armazenadas as unidades que serão obtidas da API para o dropdown
+    const [departamentos, setDepartamentos] = useState([]); //Aqui serão armazenados os departamentos que serão obtidas da API para o dropdown
 
     const [form, setForm] = useState({
         titulo: "",
@@ -23,13 +26,53 @@ function CadastrarProjeto() {
         area: "",
         publicoAlvo: "",
         // Abas com várias linhas: cada uma entrega a lista pronta pelo onChange.
+        unidade: "", //A unidade selecionada
+        departamento: "", //O departamento selecionado
         locaisRealizacao: [],
         membrosEquipe: [],
     });
 
     function atualizarCampo(campo, valor) {
-    setForm((prev) => ({ ...prev, [campo]: valor }));
+        setForm((prev) => ({ ...prev, [campo]: valor }));
     }
+
+    useEffect(() => {
+        async function carregarUnidades() {
+            try {
+                const resposta = await fetch("/api/v1/dominios/unidades/");
+
+                if (!resposta.ok) {
+                    throw new Error(`HTTP ${resposta.status}`);
+                }
+
+                const dados = await resposta.json();
+
+                setUnidades(dados);
+            } catch (erro) {
+                console.error("Erro ao carregar unidades:", erro);
+            }
+        }
+
+        async function carregarDepartamentos() {
+            try {
+                const resposta = await fetch("/api/v1/dominios/departamentos/");
+
+                if (!resposta.ok) {
+                    throw new Error(`HTTP ${resposta.status}`);
+                }
+
+                const dados = await resposta.json();
+
+                setDepartamentos(dados);
+            } catch (erro) {
+                console.error("Erro ao carregar departamentos:", erro);
+            }
+        }
+
+        carregarUnidades();
+        carregarDepartamentos();
+        
+    }, []);
 
 
     return (
@@ -148,18 +191,45 @@ function CadastrarProjeto() {
 
                         <div className="mb-3">
                             <label className="form-label">Unidade</label><br/>
-                            <select>
-                                <option></option>
+                            <select
+                                className="form-select"
+                                value={form.unidade}
+                                onChange={(e) => atualizarCampo("unidade", e.target.value)}
+                            >
+                                <option value="">Selecione uma unidade</option>
+
+                                {unidades.map((unidade) => (
+                                    <option key={unidade.id} value={unidade.id}>
+                                        {unidade.sigla} — {unidade.nome}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
                         <div className="mb-3">
-                            <label className="form-label">Departamento</label><br/>
-                            <select>
-                                <option></option>
+                            <label className="form-label">Departamento</label>
+
+                            <select
+                                className="form-select"
+                                value={form.departamento}
+                                onChange={(e) =>
+                                    atualizarCampo("departamento", e.target.value)
+                                }
+                            >
+                                <option value="">
+                                    Selecione um departamento
+                                </option>
+
+                                {departamentos.map((departamento) => (
+                                    <option
+                                        key={departamento.id}
+                                        value={departamento.id}
+                                    >
+                                        {departamento.unidade_sigla} — {departamento.nome}
+                                    </option>
+                                ))}
                             </select>
                         </div>
-
                         <div className="mb-3">
                             <label className="form-label">Participação (no máximo 500 caracteres)</label><br/>
                             <textarea maxlength="500" cols="35"/>
