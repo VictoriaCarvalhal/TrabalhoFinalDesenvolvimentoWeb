@@ -4,7 +4,7 @@ import dgtiLogo from '../../assets/dgti_logo.png';
 
 function Footer() {
     return (
-        <footer className="container-fluid py-4 border-top bg-white">
+        <footer className="container-fluid py-4 border-top" style={{ backgroundColor: 'var(--cor-fundo)' }}>
             <div className="d-flex flex-column flex-md-row align-items-center justify-content-between px-3 gap-4">
 
                 {/* Coluna esquerda */}
@@ -14,7 +14,7 @@ function Footer() {
 
                 {/* Coluna central */}
                 <div className="text-center w-100" style={{ flex: 2 }}>
-                    <p className="mb-1 fw-bold" style={{ color: '#487596' }}>Universidade do Rio de Janeiro - Sistema de Extensão</p>
+                    <p className="mb-1 fw-bold footer-titulo">Universidade do Rio de Janeiro - Sistema de Extensão</p>
                     <p className="mb-1 text-secondary" style={{ fontSize: '14px' }}>Copyright &copy; 2026/2035 - Todos os direitos reservados</p>
                     <p className="mb-0 text-muted small">Última modificação: 06/09/2026</p>
                 </div>

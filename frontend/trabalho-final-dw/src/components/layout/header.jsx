@@ -3,7 +3,7 @@ import pr3Logo from '../../assets/pr3_logo.png';
 
 function Header() {
     return (
-        <header className="container-fluid py-3 border-bottom bg-white">
+        <header className="container-fluid py-3 border-bottom" style={{ backgroundColor: 'var(--cor-fundo)' }}>
             <div className="d-flex flex-column flex-md-row align-items-center justify-content-between px-3 gap-3">
                 
                 <div className="d-flex justify-content-center justify-content-md-start w-100 header-col-side">
