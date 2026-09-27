@@ -10,7 +10,7 @@
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/index.py" },
     { "src": "/admin(.*)", "dest": "/api/index.py" },
-    { "src": "/static/(.*)", "dest": "/backend/staticfiles/$1"},
+    { "src": "/static/(.*)", "dest": "/api/index.py" },
     { "src": "/(.*)", "dest": "/frontend/trabalho-final-dw/$1", "check": true },
     { "src": "/(.*)", "dest": "/frontend/trabalho-final-dw/index.html" }
   ]
