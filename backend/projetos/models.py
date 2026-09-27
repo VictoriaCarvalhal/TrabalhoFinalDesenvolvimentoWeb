@@ -295,9 +295,9 @@ class ParceriaInterna(AuditModel):
     projeto = models.ForeignKey(Projeto, related_name='parcerias_internas', on_delete=models.CASCADE)
     unidade = models.ForeignKey(UnidadeAcademica, related_name='parcerias_internas', on_delete=models.PROTECT)
     departamento = models.ForeignKey(Departamento, null=True, blank=True, related_name='parcerias_internas', on_delete=models.PROTECT)
-    nome_contato = models.CharField(max_length=255, blank=True)
-    descricao_contribuicao = models.TextField(blank=True)
-    formalizado_convenio = models.BooleanField(default=False)
+    nome_instituicao = models.CharField(max_length=255)
+    sigla_instituicao = models.CharField(max_length=50)
+    participacao = models.CharField(max_length=500, blank=True)
 
     class Meta:
         verbose_name = 'Parceria Interna'
@@ -312,11 +312,9 @@ class ParceriaExterna(AuditModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     projeto = models.ForeignKey(Projeto, related_name='parcerias_externas', on_delete=models.CASCADE)
     nome_instituicao = models.CharField(max_length=255)
-    cnpj = models.CharField(max_length=14, blank=True)
+    sigla_instituicao = models.CharField(max_length=50, blank=True)
     tipo_instituicao = models.CharField(max_length=25, choices=TipoInstituicaoExterna.choices)
-    nome_contato = models.CharField(max_length=255, blank=True)
-    descricao_contribuicao = models.TextField(blank=True)
-    formalizado_convenio = models.BooleanField(default=False)
+    participacao = models.CharField(max_length=500, blank=True)
 
     class Meta:
         verbose_name = 'Parceria Externa'

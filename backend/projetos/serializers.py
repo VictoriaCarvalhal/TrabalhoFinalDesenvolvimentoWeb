@@ -77,16 +77,13 @@ class ParceriaInternaSerializer(LinhaDoProjetoSerializer):
     unidade_nome = serializers.CharField(source='unidade.nome', read_only=True)
     departamento_nome = serializers.CharField(
         source='departamento.nome', read_only=True, default=None)
-    # "Participacao (no maximo 500 caracteres)" no formulario
-    descricao_contribuicao = serializers.CharField(
-        max_length=500, required=False, allow_blank=True)
 
     class Meta:
         model = ParceriaInterna
         fields = [
             'id', 'unidade', 'unidade_sigla', 'unidade_nome',
             'departamento', 'departamento_nome',
-            'nome_contato', 'descricao_contribuicao', 'formalizado_convenio',
+            'nome_instituicao', 'sigla_instituicao', 'participacao',
         ]
 
     def validate(self, attrs):
@@ -103,23 +100,14 @@ class ParceriaInternaSerializer(LinhaDoProjetoSerializer):
 class ParceriaExternaSerializer(LinhaDoProjetoSerializer):
     tipo_instituicao_display = serializers.CharField(
         source='get_tipo_instituicao_display', read_only=True)
-    # Maior que o model (14) para caber a pontuacao antes de ela ser tirada.
-    cnpj = serializers.CharField(max_length=18, required=False, allow_blank=True)
 
     class Meta:
         model = ParceriaExterna
         fields = [
-            'id', 'nome_instituicao', 'cnpj',
+            'id', 'nome_instituicao', 'sigla_instituicao',
             'tipo_instituicao', 'tipo_instituicao_display',
-            'nome_contato', 'descricao_contribuicao', 'formalizado_convenio',
+            'participacao',
         ]
-
-    def validate_cnpj(self, cnpj):
-        # Aceita "12.345.678/0001-90" e guarda so os 14 digitos.
-        digitos = re.sub(r'\D', '', cnpj or '')
-        if digitos and len(digitos) != 14:
-            raise serializers.ValidationError('O CNPJ precisa ter 14 digitos.')
-        return digitos
 
 
 class MembroEquipeSerializer(LinhaDoProjetoSerializer):
