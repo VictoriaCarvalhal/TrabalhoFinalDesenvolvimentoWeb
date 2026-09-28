@@ -22,6 +22,8 @@ function CadastrarProjeto() {
     
     const [abaAtiva, setAbaAtiva] = useState("identificacao");
 
+    const [buscandoCep, setBuscandoCep] = useState(false);
+
     const [unidades, setUnidades] = useState([]); //Aqui serão armazenadas as unidades que serão obtidas da API para o dropdown
     const [departamentos, setDepartamentos] = useState([]); //Aqui serão armazenados os departamentos que serão obtidas da API para o dropdown
     
@@ -30,11 +32,19 @@ function CadastrarProjeto() {
     const [erroVinculos, setErroVinculos] = useState(null);//
     
     const [form, setForm] = useState({
+        //identificação
         titulo: "",
         coordenador: "",
         matricula_coordenador: "",
-        coordenador_vinculo: "", //
-        area: "",
+        coordenador_vinculo: "",
+        //endereço
+        cep: "",
+        logradouro: "",
+        municipio: "",
+        bairro: "",
+        complemento: "",
+        numero: "",
+        //caracterização
         publicoAlvo: "",
         vinculado_extensao: "",
         curricular: "",
@@ -45,6 +55,7 @@ function CadastrarProjeto() {
         area_tematica_principal: "",
         area_tematica_secundaria: "",
         linha_extensao: "",
+        //descrição
         resumo: "",
         palavra_chave_1: "",
         palavra_chave_2: "",
@@ -62,14 +73,39 @@ function CadastrarProjeto() {
         indissociabilidade: "",
         impacto_transformacao_social: "",
         referencias_bibliograficas: "",
+        //plano de trabalho
         resultados_esperados: "",
         cronograma_atividades: "",
+        //unidade envolvidas
         unidade: "",
         departamento: "",
         locaisRealizacao: [],
         membrosEquipe: [],
         unidadesEnvolvidas: [],
     });
+
+    const buscarCep = async (cep) => {
+        const digits = cep.replace(/\D/g, '');
+        if (digits.length !== 8) return;
+        setBuscandoCep(true);
+        try {
+            const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+            const data = await res.json();
+            if (!data.erro) {
+            setForm(f => ({
+                ...f,
+                uf: data.uf || f.uf,
+                municipio: data.localidade || f.municipio,
+                bairro: data.bairro || f.bairro,
+                logradouro: data.logradouro || f.logradouro,
+            }));
+            }
+        } catch {
+            /* silent */
+        } finally {
+            setBuscandoCep(false);
+        }
+    };
 
     function atualizarCampo(campo, valor) {
         setForm((prev) => ({ ...prev, [campo]: valor }));
@@ -260,7 +296,68 @@ function CadastrarProjeto() {
                         </fieldset>
                         <fieldset className="border rounded p-3 m-2">
                             <legend>Endereço</legend>
-
+                                <div className="mb-3">
+                                    <label className="form-label">CEP</label>
+                                    <input
+                                        className="form-control"
+                                        id="cep"
+                                        placeholder= "000000-000"
+                                        maxLength={9}
+                                        value={form.cep}
+                                            onChange={(e) => {
+                                            const v = e.target.value.replace(/\D/g, '').slice(0, 8);
+                                            const fmt = v.length > 5 ? `${v.slice(0,5)}-${v.slice(5)}` : v;
+                                            atualizarCampo('cep', fmt);
+                                            }}
+                                            onBlur={() => buscarCep(form.cep)}
+                                        />
+                                        {buscandoCep && <p className="text-muted small mt-1">Buscando CEP...</p>}
+                                </div>
+                                <div className="mb-3">
+                                    <label className="form-label">Logradouro</label>
+                                      <input
+                                            className="form-control"
+                                            id="logradouro"
+                                            value={form.logradouro}
+                                            onChange={(e) => atualizarCampo('logradouro', e.target.value)}
+                                        />
+                                </div>
+                                <div className="mb-3">
+                                    <label className="form-label">Bairro</label>
+                                    <input
+                                            className="form-control"
+                                            id="logradouro"
+                                            value={form.bairro}
+                                            onChange={(e) => atualizarCampo('bairro', e.target.value)}
+                                        />
+                                </div>
+                                <div className="mb-3">
+                                    <label className="form-label">Município</label>
+                                    <input
+                                        className="form-control"
+                                        id="municipio"
+                                        value={form.municipio}
+                                        onChange={(e) => atualizarCampo("municipio", e.target.value)}
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label className="form-label">Numero</label>
+                                    <input
+                                            className="form-control"
+                                            id="numero"
+                                            value={form.numero}
+                                            onChange={(e) => atualizarCampo('numero', e.target.value)}
+                                        />
+                                </div>
+                                <div className="mb-3">
+                                    <label className="form-label">Complemento</label>
+                                            <input
+                                            className="form-control"
+                                            id="complemento"
+                                            value={form.complemento}
+                                            onChange={(e) => atualizarCampo('complemento', e.target.value)}
+                                        />
+                                </div>
                         </fieldset>
                     </fieldset>
 
@@ -273,12 +370,12 @@ function CadastrarProjeto() {
                     </legend>
                     
                     <div className="mb-3">
-                        <label className="form-label">Área</label>
+                        <label className="form-label">Situação do Projeto</label>
                         <input
                         type="text"
                         className="form-control"
-                        value={form.area}
-                        onChange={(e) => atualizarCampo("area", e.target.value)}
+                        value="Novo"
+                        readonly
                         />
                     </div>
 
