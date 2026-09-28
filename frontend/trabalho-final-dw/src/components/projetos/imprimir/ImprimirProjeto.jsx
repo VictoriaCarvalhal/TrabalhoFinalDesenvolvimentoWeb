@@ -1,6 +1,9 @@
 import printJS from 'print-js';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useProjetoImpressao } from '../../../hooks/useProjetoImpressao';
+import { useAuthStore } from '../../../stores/authStore';
+import api from '../../../services/api';
 import ProjetoPrint from './ProjetoPrint';
 import './imprimir.css';
 
@@ -20,11 +23,53 @@ function mensagemErro(erro) {
 }
 
 
+function formatarGeradoEm(data = new Date()) {
+    return data.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
+
+
 function ImprimirProjeto() {
     const { id } = useParams();
     const { dados, loading, erro } = useProjetoImpressao(id);
+    const nomeUsuarioStore = useAuthStore((state) => state.nomeUsuario);
+    const setNomeUsuario = useAuthStore((state) => state.setNomeUsuario);
+    const [nomeFallback, setNomeFallback] = useState(null);
+    // "Gerado em" = momento do clique. Inicializa com agora para a
+    // pré-visualização e atualiza no handleImprimir antes de imprimir.
+    const [geradoEm, setGeradoEm] = useState(() => formatarGeradoEm(new Date()));
 
-    const handleImprimir = () => {
+    // Reload direto na tela de impressão: o store pode estar vazio.
+    useEffect(() => {
+        if (nomeUsuarioStore) return;
+        let cancelado = false;
+        api.get('/auth/me/')
+            .then((resposta) => {
+                const nome = resposta.data?.nome_completo ?? resposta.data?.nome ?? null;
+                if (!cancelado && nome) {
+                    setNomeFallback(nome);
+                    try {
+                        setNomeUsuario(nome);
+                    } catch {
+                        // store indisponível: segue só com o fallback local.
+                    }
+                }
+            })
+            .catch(() => {})
+            .finally(() => {});
+        return () => {
+            cancelado = true;
+        };
+    }, [nomeUsuarioStore, setNomeUsuario]);
+
+    const geradoPor = nomeUsuarioStore ?? nomeFallback ?? '—';
+
+    const executarImpressao = () => {
         try {
             printJS({
                 printable: 'area-impressao',
@@ -40,6 +85,11 @@ function ImprimirProjeto() {
         } catch {
             window.print();
         }
+    };
+
+    const handleImprimir = () => {
+        setGeradoEm(formatarGeradoEm(new Date()));
+        setTimeout(executarImpressao, 60);
     };
 
     if (loading) {
@@ -71,7 +121,7 @@ function ImprimirProjeto() {
             </div>
 
             <div id="area-impressao" className="p-3 border rounded bg-white">
-                <ProjetoPrint dados={dados} />
+                <ProjetoPrint dados={dados} geradoEm={geradoEm} geradoPor={geradoPor} />
             </div>
         </div>
     );
