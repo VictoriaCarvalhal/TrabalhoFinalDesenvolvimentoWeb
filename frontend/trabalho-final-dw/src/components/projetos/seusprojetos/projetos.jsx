@@ -15,6 +15,10 @@ function Projetos() {
         navigate('/Projetos/CadastrarProjeto');
     }
 
+    function redirecionaParaImpressao(id){
+        navigate(`/Projetos/${id}/imprimir`);
+    }
+
     useEffect(() => {
         // Sem token não tem nem por que chamar a API.
         if (!isAutenticado) {
@@ -81,6 +85,7 @@ function Projetos() {
                             <th>Unidade</th>
                             <th>Coordenador(a)</th>
                             <th>Atualizado em</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -96,6 +101,17 @@ function Projetos() {
                                     {projeto.updated_at
                                         ? new Date(projeto.updated_at).toLocaleDateString('pt-BR')
                                         : '-'}
+                                </td>
+                                <td>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-secondary"
+                                        title="Imprimir projeto"
+                                        aria-label={`Imprimir projeto ${projeto.titulo}`}
+                                        onClick={() => redirecionaParaImpressao(projeto.id)}
+                                    >
+                                        <i className="bi bi-printer"></i>
+                                    </button>
                                 </td>
                             </tr>
                         ))}

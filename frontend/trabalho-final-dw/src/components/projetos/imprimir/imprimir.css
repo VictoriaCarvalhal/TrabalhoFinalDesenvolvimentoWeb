@@ -1,0 +1,149 @@
+/* Impressão do documento do projeto.
+ * Cobre o caminho window.print(); o caminho print-js recebe as mesmas
+ * regras via opção `style` em ImprimirProjeto.jsx (manter sincronizado). */
+
+/* Timbre repetido: invisível na tela, fixo no papel
+ * (o Chrome repete elementos fixed em todas as páginas impressas).
+ * A numeração sai na caixa de margem @bottom-right do @page. */
+.print-cabecalho {
+    display: none;
+}
+
+/* Capa: logo único centralizado, colado no topo (vale para tela e papel). */
+.capa {
+    margin-top: 0;
+}
+
+.capa-logo {
+    display: block;
+    margin: 0 auto 4px;
+    max-height: 90px;
+    max-width: 100%;
+}
+
+.capa-inst {
+    text-align: center;
+    font-weight: bold;
+    margin: 0;
+}
+
+@media print {
+    @page {
+        size: A4;
+        margin: 16mm 12mm 20mm 12mm;
+
+        @bottom-right {
+            content: 'Página ' counter(page);
+            font-size: 10px;
+        }
+    }
+
+    /* Chrome do app e barra de ferramentas: fora do papel. */
+    #container > header,
+    #container > nav,
+    #container > footer,
+    #container > aside,
+    .no-print {
+        display: none !important;
+    }
+
+    #container,
+    #container main {
+        display: block !important;
+        background: #fff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Área do documento: sem borda de tela, texto preto. */
+    #area-impressao {
+        border: none !important;
+        padding: 0 !important;
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    #area-impressao h1,
+    #area-impressao h2,
+    #area-impressao h3,
+    #area-impressao p,
+    #area-impressao li,
+    #area-impressao strong {
+        color: #000 !important;
+    }
+
+    /* Seções longas podem quebrar entre páginas; o título nunca fica
+     * órfão no fim e nenhum parágrafo é cortado com menos de 3 linhas. */
+    #area-impressao section {
+        break-inside: auto;
+        margin-bottom: 16px;
+    }
+
+    #area-impressao h3 {
+        break-after: avoid;
+        margin: 0 0 8px;
+        padding-bottom: 4px;
+        border-bottom: 1px solid #000;
+    }
+
+    #area-impressao p {
+        margin: 0 0 8px;
+    }
+
+    #area-impressao p,
+    #area-impressao li {
+        orphans: 3;
+        widows: 3;
+        overflow-wrap: break-word;
+    }
+
+    #area-impressao h3 {
+        break-after: avoid;
+    }
+
+    /* Tabelas: ocupam a largura do papel, sem rolagem nem corte. */
+    #area-impressao table {
+        width: 100%;
+        table-layout: fixed;
+        font-size: 11px;
+        border-collapse: collapse;
+    }
+
+    #area-impressao thead {
+        display: table-header-group;
+    }
+
+    #area-impressao tr {
+        break-inside: avoid;
+    }
+
+    #area-impressao th,
+    #area-impressao td {
+        border: 1px solid #000;
+        padding: 4px 6px;
+        overflow-wrap: anywhere;
+    }
+
+    #area-impressao .badge {
+        border: 1px solid #000;
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    #area-impressao img {
+        max-height: 70px;
+    }
+
+    .print-cabecalho {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        font-size: 10px;
+        color: #000;
+        border-bottom: 1px solid #000;
+        padding-bottom: 4px;
+        background: #fff;
+    }
+}
