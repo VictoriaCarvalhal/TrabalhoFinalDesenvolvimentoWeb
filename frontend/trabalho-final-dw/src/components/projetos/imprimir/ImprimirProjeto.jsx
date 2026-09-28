@@ -5,6 +5,21 @@ import ProjetoPrint from './ProjetoPrint';
 import './imprimir.css';
 
 
+// Texto amigável para cada falha do GET /projetos/:id/impressao/.
+function mensagemErro(erro) {
+    if (erro === 401) {
+        return 'Sua sessão expirou. Faça login novamente.';
+    }
+    if (erro === 404) {
+        return 'Projeto não encontrado ou você não tem acesso a ele.';
+    }
+    if (erro === 'rede') {
+        return 'Não foi possível falar com o backend. Verifique se ele está rodando.';
+    }
+    return `Não foi possível carregar os dados (erro: ${erro}).`;
+}
+
+
 function ImprimirProjeto() {
     const { id } = useParams();
     const { dados, loading, erro } = useProjetoImpressao(id);
@@ -39,7 +54,7 @@ function ImprimirProjeto() {
         return (
             <div className="container mt-4">
                 <div className="alert alert-danger" role="alert">
-                    Não foi possível carregar os dados (erro: {erro}). Verifique se o backend está rodando.
+                    {mensagemErro(erro)}
                 </div>
             </div>
         );

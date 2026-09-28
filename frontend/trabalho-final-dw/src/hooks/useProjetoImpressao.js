@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import api from '../services/api';
 
 // Busca o DTO de impressão de um projeto no backend.
-// GET /api/v1/projetos/:id/impressao/ (hoje mockado, sem login).
+// GET /api/v1/projetos/:id/impressao/ (dados reais, exige login;
+// 404 se o projeto não existir ou o usuário não tiver acesso).
 // Retorna { dados, loading, erro } para a tela de impressão consumir.
 export function useProjetoImpressao(id) {
     const [dados, setDados] = useState(null);
