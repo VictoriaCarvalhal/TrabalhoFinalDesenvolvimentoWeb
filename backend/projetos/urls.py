@@ -2,7 +2,7 @@ from django.urls import path
 from rest_framework.routers import SimpleRouter
 
 from projetos import views
-from .views_impressao_mock import ProjetoImpressaoMockView
+from .views_impressao import ProjetoImpressaoView
 
 # O <projeto_id> entra no prefixo de cada rota; o router aceita regex e
 # repassa o grupo como kwarg para a view.
@@ -20,6 +20,6 @@ router.register(f'{PROJETO}/planos-trabalho', views.PlanoTrabalhoViewSet, basena
 
 urlpatterns = [
     path('projetos/<uuid:projeto_id>/abas/', views.AbasDoProjetoView.as_view(), name='projeto-abas'),
-    path('projetos/<uuid:pk>/impressao/', ProjetoImpressaoMockView.as_view(), name='projeto-impressao-mock'),
+    path('projetos/<uuid:projeto_id>/impressao/', ProjetoImpressaoView.as_view(), name='projeto-impressao'),
 ]
 urlpatterns += router.urls
