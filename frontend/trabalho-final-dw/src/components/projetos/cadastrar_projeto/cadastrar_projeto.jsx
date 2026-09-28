@@ -218,14 +218,6 @@ function CadastrarProjeto() {
                             <legend>Unidade</legend>
                             <div className="mb-3">
                                 <label className="form-label">Unidade</label>
-                                
-                                <select 
-                                className="form-select"
-                                value={form.unidade}
-                                onChange={(e) => atualizarCampo("unidade", e.target.value)}
-                                >
-
-                                </select>
                                 <select
                                     className="form-select"
                                     value={form.unidade}
