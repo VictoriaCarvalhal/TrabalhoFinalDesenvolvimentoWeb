@@ -125,13 +125,13 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1440), #Deixo aqui meu honesto pedido de desculpas para o pessoal do backend, att, Aprigio
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),                                            #Garanto que depois eu volto aqui, desfaço e arrumo uma solução no front, isso é só pra testar as requisições do frontend
     # --- ALTERADO: Ativa a renovação/rotação do Refresh Token a cada chamada ---
     'ROTATE_REFRESH_TOKENS': True,
     # --- ALTERADO: Invalida o Refresh Token anterior colocando na blacklist ---
-    'BLACK_LIST_AFTER_ROTATION': True,
-    'USER_ID_FIELD': 'id',
+    'BLACKLIST_AFTER_ROTATION': True,                                                       #Como demonstração de boa fé ajustei esse bugzin aqui, tmj.  BLACK_LIST_AFTER_ROTATION -> BLACKLIST_AFTER_ROTATION
+    'USER_ID_FIELD': 'id',                                                                  #A duração de access estava 15 minutos aqui mas na prática durava só 5 minutos, e eu penso que era isso
     'USER_ID_CLAIM': 'user_id',
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
