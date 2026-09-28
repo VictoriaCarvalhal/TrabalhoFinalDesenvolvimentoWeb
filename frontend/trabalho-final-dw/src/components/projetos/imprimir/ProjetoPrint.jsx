@@ -2,11 +2,46 @@ import pr3Logo from '../../../assets/pr3_logo.png';
 
 // Documento de impressão do projeto. Componente puro: recebe o DTO e
 // renderiza. O CSS de impressão vive em imprimir.css.
+// O DTO segue os serializers do backend: choices como código + <campo>_display
+// e FKs como id + displays desnormalizados.
 
 function simNao(valor) {
     if (valor === true) return 'Sim';
     if (valor === false) return 'Não';
     return '—';
+}
+
+// Labels para choices que o serializer retorna só como código.
+const ABRANGENCIA_LABELS = {
+    LOCAL: 'Local',
+    REGIONAL: 'Regional',
+    NACIONAL: 'Nacional',
+    INTERNACIONAL: 'Internacional',
+};
+
+const SITUACAO_ACADEMICA_LABELS = {
+    NOVO: 'Novo',
+    RENOVACAO: 'Renovação',
+    REESTRUTURACAO: 'Reestruturação',
+};
+
+function rotuloCodigo(valor, mapa) {
+    if (valor == null || valor === '') return '—';
+    return mapa[valor] ?? valor;
+}
+
+function formatarData(valor) {
+    if (!valor) return '—';
+    const data = new Date(valor);
+    if (Number.isNaN(data.getTime())) return valor;
+    return data.toLocaleDateString('pt-BR');
+}
+
+function municipioTexto(item, legado) {
+    if (item?.municipio_nome) {
+        return item.municipio_uf ? `${item.municipio_nome}/${item.municipio_uf}` : item.municipio_nome;
+    }
+    return legado ?? item?.municipio ?? '—';
 }
 
 function Secao({ titulo, children }) {
@@ -59,7 +94,14 @@ function ProjetoPrint({ dados }) {
     const locaisRealizacao = dados?.locais_realizacao ?? [];
     const parceriasInternas = dados?.parcerias_internas ?? [];
     const parceriasExternas = dados?.parcerias_externas ?? [];
-    const equipe = dados?.equipe ?? [];
+    const membrosEquipe = dados?.membros_equipe ?? dados?.equipe ?? [];
+
+    const coordenadorNome = projeto.coordenador_nome ?? projeto.coordenador ?? '—';
+    const unidadeProponenteTexto = projeto.unidade_nome
+        ? (projeto.unidade_sigla ? `${projeto.unidade_sigla} — ${projeto.unidade_nome}` : projeto.unidade_nome)
+        : (projeto.unidade_sigla ?? projeto.unidade_proponente ?? '—');
+    const departamentoProponenteTexto = projeto.departamento_nome ?? projeto.departamento_proponente ?? '—';
+    const situacaoTexto = projeto.situacao_display ?? projeto.situacao ?? '—';
 
     const enderecoLinha = [
         endereco.logradouro && endereco.numero
@@ -67,7 +109,9 @@ function ProjetoPrint({ dados }) {
             : (endereco.logradouro ?? endereco.numero ?? null),
         endereco.complemento ?? null,
         endereco.bairro ?? null,
-        endereco.municipio ?? null,
+        municipioTexto(endereco, typeof endereco.municipio === 'string' ? endereco.municipio : null) === '—'
+            ? null
+            : municipioTexto(endereco, typeof endereco.municipio === 'string' ? endereco.municipio : null),
         endereco.cep ? `CEP ${endereco.cep}` : null,
     ].filter(Boolean).join(' — ') || '—';
 
@@ -90,15 +134,15 @@ function ProjetoPrint({ dados }) {
                     <span className="badge bg-primary me-2">
                         {projeto.ano ?? '—'}/{projeto.numero ?? '—'}
                     </span>
-                    <span className="badge bg-secondary">{projeto.situacao ?? '—'}</span>
+                    <span className="badge bg-secondary">{situacaoTexto}</span>
                 </p>
-                <p className="mb-0"><strong>Coordenação:</strong> {projeto.coordenador ?? '—'}</p>
-                <p className="mb-0"><strong>Unidade proponente:</strong> {projeto.unidade_proponente ?? '—'}</p>
+                <p className="mb-0"><strong>Coordenação:</strong> {coordenadorNome}</p>
+                <p className="mb-0"><strong>Unidade proponente:</strong> {unidadeProponenteTexto}</p>
                 <p className="text-muted">
-                    <strong>Departamento:</strong> {projeto.departamento_proponente ?? '—'}
+                    <strong>Departamento:</strong> {departamentoProponenteTexto}
                 </p>
                 <p className="text-muted small mb-0">
-                    Criado em {projeto.criado_em ?? '—'} · Atualizado em {projeto.atualizado_em ?? '—'}
+                    Criado em {formatarData(projeto.created_at ?? projeto.criado_em)} · Atualizado em {formatarData(projeto.updated_at ?? projeto.atualizado_em)}
                 </p>
             </header>
 
@@ -114,12 +158,12 @@ function ProjetoPrint({ dados }) {
                 ) : (
                     <ul className="list-unstyled mb-0">
                         {contatos.map((contato, indice) => (
-                            <li key={indice}>
-                                <strong>{contato?.tipo ?? 'Contato'}:</strong> {contato?.valor ?? '—'}
+                            <li key={contato?.id ?? indice}>
+                                <strong>{contato?.tipo_contato_display ?? contato?.tipo ?? 'Contato'}:</strong> {contato?.valor ?? '—'}
                                 {contato?.ddd ? ` (DDD ${contato.ddd}` : ''}
                                 {contato?.ramal ? `, ramal ${contato.ramal}` : ''}
                                 {contato?.ddd ? ')' : ''}
-                                {contato?.tipo_telefone ? ` — ${contato.tipo_telefone}` : ''}
+                                {contato?.tipo_telefone_display ?? contato?.tipo_telefone ? ` — ${contato?.tipo_telefone_display ?? contato?.tipo_telefone}` : ''}
                             </li>
                         ))}
                     </ul>
@@ -128,16 +172,16 @@ function ProjetoPrint({ dados }) {
 
             {/* Caracterização */}
             <Secao titulo="Caracterização">
-                <Campo rotulo="Situação acadêmica" valor={caracterizacao.situacao_academica} />
+                <Campo rotulo="Situação acadêmica" valor={rotuloCodigo(caracterizacao.situacao_academica, SITUACAO_ACADEMICA_LABELS)} />
                 <Campo rotulo="Vinculado a programa de extensão" valor={simNao(caracterizacao.vinculado_programa_extensao)} />
                 <Campo rotulo="Curricularizado" valor={simNao(caracterizacao.curricularizado)} />
-                <Campo rotulo="Natureza" valor={caracterizacao.natureza} />
-                <Campo rotulo="Abrangência" valor={caracterizacao.abrangencia} />
+                <Campo rotulo="Natureza" valor={caracterizacao.natureza_display ?? caracterizacao.natureza} />
+                <Campo rotulo="Abrangência" valor={rotuloCodigo(caracterizacao.abrangencia, ABRANGENCIA_LABELS)} />
                 <Campo rotulo="Público-alvo" valor={caracterizacao.publico_alvo} />
-                <Campo rotulo="Grande área CNPq" valor={caracterizacao.grande_area_cnpq} />
-                <Campo rotulo="Área temática principal" valor={caracterizacao.area_tematica_principal} />
-                <Campo rotulo="Área temática secundária" valor={caracterizacao.area_tematica_secundaria} />
-                <Campo rotulo="Linha de extensão" valor={caracterizacao.linha_extensao} />
+                <Campo rotulo="Grande área CNPq" valor={caracterizacao.grande_area_display ?? caracterizacao.grande_area_cnpq} />
+                <Campo rotulo="Área temática principal" valor={caracterizacao.area_principal_display ?? caracterizacao.area_tematica_principal} />
+                <Campo rotulo="Área temática secundária" valor={caracterizacao.area_secundaria_display ?? caracterizacao.area_tematica_secundaria} />
+                <Campo rotulo="Linha de extensão" valor={caracterizacao.linha_extensao_display ?? caracterizacao.linha_extensao} />
             </Secao>
 
             {/* Descrição */}
@@ -168,7 +212,7 @@ function ProjetoPrint({ dados }) {
                     colunas={['Ano', 'Resultados esperados', 'Cronograma de atividades']}
                     linhas={planosTrabalho}
                     renderLinha={(plano, indice) => (
-                        <tr key={indice}>
+                        <tr key={plano?.id ?? indice}>
                             <td>{plano?.ano ?? '—'}</td>
                             <td>{plano?.resultados_esperados ?? '—'}</td>
                             <td>{plano?.cronograma_atividades ?? '—'}</td>
@@ -183,8 +227,8 @@ function ProjetoPrint({ dados }) {
                     colunas={['Tipo', 'Quantidade', 'Justificativa']}
                     linhas={demandasBolsa}
                     renderLinha={(demanda, indice) => (
-                        <tr key={indice}>
-                            <td>{demanda?.tipo ?? '—'}</td>
+                        <tr key={demanda?.id ?? indice}>
+                            <td>{demanda?.tipo_bolsa_display ?? demanda?.tipo_bolsa ?? demanda?.tipo ?? '—'}</td>
                             <td>{demanda?.quantidade ?? '—'}</td>
                             <td>{demanda?.justificativa ?? '—'}</td>
                         </tr>
@@ -198,10 +242,10 @@ function ProjetoPrint({ dados }) {
                     colunas={['Sigla', 'Nome', 'Participação']}
                     linhas={unidadesEnvolvidas}
                     renderLinha={(unidade, indice) => (
-                        <tr key={indice}>
-                            <td>{unidade?.sigla ?? '—'}</td>
-                            <td>{unidade?.nome ?? '—'}</td>
-                            <td>{unidade?.participacao ?? '—'}</td>
+                        <tr key={unidade?.id ?? indice}>
+                            <td>{unidade?.unidade_sigla ?? unidade?.sigla ?? '—'}</td>
+                            <td>{unidade?.unidade_nome ?? unidade?.nome ?? '—'}</td>
+                            <td>{unidade?.tipo_participacao_display ?? unidade?.tipo_participacao ?? unidade?.participacao ?? '—'}</td>
                         </tr>
                     )}
                 />
@@ -213,10 +257,10 @@ function ProjetoPrint({ dados }) {
                     <p className="mb-0">—</p>
                 ) : (
                     locaisRealizacao.map((local, indice) => (
-                        <div key={indice} className="mb-2">
-                            <p className="fw-bold mb-0">{local?.nome ?? '—'}</p>
+                        <div key={local?.id ?? indice} className="mb-2">
+                            <p className="fw-bold mb-0">{local?.nome_local ?? local?.nome ?? '—'}</p>
                             <p className="mb-0 text-muted">
-                                {local?.municipio ?? '—'}
+                                {municipioTexto(local, typeof local?.municipio === 'string' ? local.municipio : null)}
                                 {local?.endereco_completo ? ` — ${local.endereco_completo}` : ''}
                             </p>
                         </div>
@@ -230,15 +274,16 @@ function ProjetoPrint({ dados }) {
                     <p className="mb-0">—</p>
                 ) : (
                     parceriasInternas.map((parceria, indice) => (
-                        <div key={indice} className="mb-2">
+                        <div key={parceria?.id ?? indice} className="mb-2">
                             <p className="fw-bold mb-0">
-                                {parceria?.unidade ?? '—'}
-                                {parceria?.departamento ? ` — ${parceria.departamento}` : ''}
+                                {parceria?.unidade_sigla ?? parceria?.unidade ?? '—'}
+                                {(parceria?.departamento_nome ?? parceria?.departamento) ? ` — ${parceria?.departamento_nome ?? parceria?.departamento}` : ''}
                             </p>
                             <p className="mb-0">
-                                Contato: {parceria?.nome_contato ?? '—'} · Convênio formalizado: {simNao(parceria?.formalizado_convenio)}
+                                {parceria?.nome_instituicao ?? parceria?.unidade_nome ?? '—'}
+                                {parceria?.sigla_instituicao ? ` (${parceria.sigla_instituicao})` : ''}
                             </p>
-                            <p className="mb-0 text-muted">{parceria?.descricao_contribuicao ?? '—'}</p>
+                            <p className="mb-0 text-muted">{parceria?.participacao ?? '—'}</p>
                         </div>
                     ))
                 )}
@@ -250,16 +295,13 @@ function ProjetoPrint({ dados }) {
                     <p className="mb-0">—</p>
                 ) : (
                     parceriasExternas.map((parceria, indice) => (
-                        <div key={indice} className="mb-2">
+                        <div key={parceria?.id ?? indice} className="mb-2">
                             <p className="fw-bold mb-0">
                                 {parceria?.nome_instituicao ?? '—'}
-                                {parceria?.tipo_instituicao ? ` (${parceria.tipo_instituicao})` : ''}
-                                {parceria?.cnpj ? ` — CNPJ ${parceria.cnpj}` : ''}
+                                {parceria?.sigla_instituicao ? ` (${parceria.sigla_instituicao})` : ''}
+                                {(parceria?.tipo_instituicao_display ?? parceria?.tipo_instituicao) ? ` — ${parceria?.tipo_instituicao_display ?? parceria?.tipo_instituicao}` : ''}
                             </p>
-                            <p className="mb-0">
-                                Contato: {parceria?.nome_contato ?? '—'} · Convênio formalizado: {simNao(parceria?.formalizado_convenio)}
-                            </p>
-                            <p className="mb-0 text-muted">{parceria?.descricao_contribuicao ?? '—'}</p>
+                            <p className="mb-0 text-muted">{parceria?.participacao ?? '—'}</p>
                         </div>
                     ))
                 )}
@@ -269,11 +311,11 @@ function ProjetoPrint({ dados }) {
             <Secao titulo="Equipe">
                 <Tabela
                     colunas={['Nome', 'Função', 'Carga horária semanal (h)']}
-                    linhas={equipe}
+                    linhas={membrosEquipe}
                     renderLinha={(membro, indice) => (
-                        <tr key={indice}>
+                        <tr key={membro?.id ?? indice}>
                             <td>{membro?.nome ?? '—'}</td>
-                            <td>{membro?.funcao ?? '—'}</td>
+                            <td>{membro?.funcao_display ?? membro?.funcao ?? '—'}</td>
                             <td>{membro?.carga_horaria_semanal ?? '—'}</td>
                         </tr>
                     )}
