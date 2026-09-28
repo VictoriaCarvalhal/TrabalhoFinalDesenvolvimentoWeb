@@ -4,6 +4,7 @@ import LocaisRealizacao from './abas/LocaisRealizacao';
 import MembrosEquipe from './abas/MembrosEquipe';
 import UnidadesEnvolvidas from './abas/UnidadesEnvolvidas';
 import api from '../../../services/api';//
+import { MUNICIPIOS_RJ } from '../../../dados/municipiosRJ';
 
 const ABAS = [
     {id: "identificacao", label: "Identificação"},
@@ -23,6 +24,7 @@ function CadastrarProjeto() {
     const [abaAtiva, setAbaAtiva] = useState("identificacao");
 
     const [buscandoCep, setBuscandoCep] = useState(false);
+    const [avisoCep, setAvisoCep] = useState(null);//recado do ViaCEP quando o CEP não serve
 
     const [unidades, setUnidades] = useState([]); //Aqui serão armazenadas as unidades que serão obtidas da API para o dropdown
     const [departamentos, setDepartamentos] = useState([]); //Aqui serão armazenados os departamentos que serão obtidas da API para o dropdown
@@ -30,6 +32,11 @@ function CadastrarProjeto() {
     const [vinculosCoordenador, setVinculosCoordenador] = useState([]);//
     const [carregandoVinculos, setCarregandoVinculos] = useState(true);//
     const [erroVinculos, setErroVinculos] = useState(null);//
+
+
+    const [projetoId, setProjetoId] = useState(null);//UUID vindo do POST; as abas tambem usam
+    const [enviando, setEnviando] = useState(false);
+    const [erroEnvio, setErroEnvio] = useState(null);
     
     const [form, setForm] = useState({
         //identificação
@@ -88,18 +95,27 @@ function CadastrarProjeto() {
         const digits = cep.replace(/\D/g, '');
         if (digits.length !== 8) return;
         setBuscandoCep(true);
+        setAvisoCep(null);
         try {
             const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
             const data = await res.json();
-            if (!data.erro) {
+            if (data.erro) {
+                setAvisoCep('CEP não encontrado.');
+                return;
+            }
+            const codigo = Number(data.ibge);
+            const municipioDoRio = MUNICIPIOS_RJ.some((m) => m.codigo === codigo);
+            if (!municipioDoRio) {
+                setAvisoCep(data.localidade
+                    ? `O CEP ${digits} é de ${data.localidade}/${data.uf}, fora dos municípios do RJ.`
+                    : 'O CEP não corresponde a um município do RJ.');
+            }
             setForm(f => ({
                 ...f,
-                uf: data.uf || f.uf,
-                municipio: data.localidade || f.municipio,
+                municipio: municipioDoRio ? String(codigo) : '',
                 bairro: data.bairro || f.bairro,
                 logradouro: data.logradouro || f.logradouro,
             }));
-            }
         } catch {
             /* silent */
         } finally {
@@ -112,7 +128,7 @@ function CadastrarProjeto() {
     }
 
     // Mais tarde essa função vai ser responsável por persistir os dados
-    function listarDadosIdentificacao() {
+    async function salvarDadosIdentificacao() {
         //json projeto pronto para enviar para o backend
         const projeto = {
             ano: new Date().getFullYear(),//pega o ano atual
@@ -130,17 +146,37 @@ function CadastrarProjeto() {
             numero: form.numero,
             complemento: form.complemento,
             bairro: form.bairro,
-            municipio: null,                // FK MunicipioIBGE -> codigo_ibge (inteiro), não o nome
+            municipio: form.municipio ? Number(form.municipio) : null, // codigo_ibge (inteiro), vem do dropdown que pode ou não ser movimentado pela requisição ao viaCEP
         };
 
-        console.group('Aba Identificação — dados a enviar para o servidor');
-        console.log('POST /api/v1/projetos/', projeto);
-        console.log('PATCH /api/v1/projetos/{id}/endereco/', endereco);
-        console.log('corpo do POST (JSON):', JSON.stringify(projeto));
-        console.log('corpo do PATCH endereco (JSON):', JSON.stringify(endereco));
-        console.groupEnd();
-    }
+        //console.group('Aba Identificação — dados a enviar para o servidor');
+        //console.log('POST /api/v1/projetos/', projeto);
+        //console.log('PATCH /api/v1/projetos/{id}/endereco/', endereco);
+        //console.log('corpo do POST (JSON):', JSON.stringify(projeto));
+        //console.log('corpo do PATCH endereco (JSON):', JSON.stringify(endereco));
+        //console.groupEnd();
+        
+        setEnviando(true);
+        setErroEnvio(null);
+        try {
+            let id = projetoId; //O id virá no corpo da resposta.
+            if (!id) {
+                const resposta = await api.post('/projetos/', projeto);
+                id = resposta.data.id;
+                setProjetoId(id);//guarda: as abas e o proximo salvar dependem dele
+            }
 
+            // Endereco foi criado vazio pelo backend
+            await api.patch(`/projetos/${id}/endereco/`, endereco);
+        } catch (erro) {
+            const detalhe = erro.response?.data;
+            setErroEnvio(detalhe
+                ? Object.values(detalhe).flat().join(' ')
+                : 'Nao foi possivel salvar a identificacao.');
+        } finally {
+            setEnviando(false);
+        }
+    }
     useEffect(() => {
         async function carregarUnidades() {
             try {
@@ -331,7 +367,7 @@ function CadastrarProjeto() {
                                     <input
                                         className="form-control"
                                         id="cep"
-                                        placeholder= "000000-000"
+                                        placeholder= "00000-000"
                                         maxLength={9}
                                         value={form.cep}
                                             onChange={(e) => {
@@ -341,7 +377,6 @@ function CadastrarProjeto() {
                                             }}
                                             onBlur={() => buscarCep(form.cep)}
                                         />
-                                        {buscandoCep && <p className="text-muted small mt-1">Buscando CEP...</p>}
                                 </div>
                                 <div className="mb-3">
                                     <label className="form-label">Logradouro</label>
@@ -362,13 +397,20 @@ function CadastrarProjeto() {
                                         />
                                 </div>
                                 <div className="mb-3">
-                                    <label className="form-label">Município</label>
-                                    <input
-                                        className="form-control"
+                                    <label className="form-label" htmlFor="municipio">Município</label>
+                                    <select
+                                        className="form-select"
                                         id="municipio"
                                         value={form.municipio}
                                         onChange={(e) => atualizarCampo("municipio", e.target.value)}
-                                    />
+                                    >
+                                        <option value="">Selecione um município</option>
+                                        {MUNICIPIOS_RJ.map((m) => (
+                                            <option key={m.codigo} value={m.codigo}>
+                                                {m.nome}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div className="mb-3">
                                     <label className="form-label">Numero</label>
@@ -896,14 +938,14 @@ function CadastrarProjeto() {
                         valor={form.membrosEquipe}
                         onChange={(linhas) => atualizarCampo("membrosEquipe", linhas)}
                     />
-                    <button
-                        type="button"
-                        className="btn btn-primary"
-                        onClick={listarDadosIdentificacao} //só pra testra
-                    >
-                        Enviar formulário 
-                    </button> 
                 </div>
+                <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={salvarDadosIdentificacao} //só pra testra
+                >
+                    Enviar formulário 
+                </button> 
             </div>
 
         </div>
