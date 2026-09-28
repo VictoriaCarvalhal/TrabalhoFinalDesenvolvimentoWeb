@@ -3,6 +3,7 @@ import { useAuthStore } from '../../../stores/authStore';
 import LocaisRealizacao from './abas/LocaisRealizacao';
 import MembrosEquipe from './abas/MembrosEquipe';
 import UnidadesEnvolvidas from './abas/UnidadesEnvolvidas';
+import api from '../../../services/api';//
 
 const ABAS = [
     {id: "identificacao", label: "Identificação"},
@@ -23,11 +24,16 @@ function CadastrarProjeto() {
 
     const [unidades, setUnidades] = useState([]); //Aqui serão armazenadas as unidades que serão obtidas da API para o dropdown
     const [departamentos, setDepartamentos] = useState([]); //Aqui serão armazenados os departamentos que serão obtidas da API para o dropdown
-
+    
+    const [vinculosCoordenador, setVinculosCoordenador] = useState([]);//
+    const [carregandoVinculos, setCarregandoVinculos] = useState(true);//
+    const [erroVinculos, setErroVinculos] = useState(null);//
+    
     const [form, setForm] = useState({
         titulo: "",
         coordenador: "",
         matricula_coordenador: "",
+        coordenador_vinculo: "", //
         area: "",
         publicoAlvo: "",
         vinculado_extensao: "",
@@ -101,13 +107,32 @@ function CadastrarProjeto() {
                 console.error("Erro ao carregar departamentos:", erro);
             }
         }
+        async function carregarVinculos() {
+                 try {
+                     const perfil = await api.get('/auth/me/');//consulta dados do usuário logado
+                     const resposta = await api.get('/dominios/vinculos/');//consulta todos os vinculos
+                     const meus = resposta.data.filter(
+                         (v) => v.pessoa === perfil.data.id && v.status === 'ATIVO'//filtra os vinculos que são apenas do usuário logado
+                     );
+                     setVinculosCoordenador(meus);
 
+                     if (meus.length === 1) {//se o usuário só tem uma matricula, então já preenche 
+                         atualizarCampo('coordenador_vinculo', meus[0].id);
+                         atualizarCampo('matricula_coordenador', meus[0].matricula ?? '');
+                         atualizarCampo('coordenador', meus[0].nome_completo);
+                     }
+                 } catch (erro) {
+                     console.error('Erro ao carregar vínculos:', erro);
+                     setErroVinculos('Não foi possível carregar as matrículas');
+                 } finally {
+                     setCarregandoVinculos(false);
+                 }
+             }
+        carregarVinculos();
         carregarUnidades();
         carregarDepartamentos();
-        
     }, []);
-
-
+    
     return (
         <div className="container mt-4">
             <h1>Cadastro de Projeto</h1>
@@ -154,12 +179,29 @@ function CadastrarProjeto() {
                             <legend>Coordenador</legend>
                             <div className="mb-3">
                                 <label className="form-label">Matrícula</label>
-                                <input
+                                {/*<input
                                     type="number"
                                     className="form-control"
                                     value={form.matricula_coordenador}
                                     onChange={(e) => atualizarCampo("matricula_coordenador", e.target.value)}
-                                />
+                                />*/}
+                                <select
+                                    className="form-select"
+                                    value={form.coordenador_vinculo}
+                                    onChange={(e) => {
+                                        const v = vinculosCoordenador.find((x) => x.id === e.target.value);
+                                        atualizarCampo('coordenador_vinculo', e.target.value);
+                                        atualizarCampo('matricula_coordenador', v?.matricula ?? '');
+                                        atualizarCampo('coordenador', v?.nome_completo ?? '');
+                                    }}
+                                >
+                                    <option value="">Selecione a matrícula</option>
+                                    {vinculosCoordenador.map((v) => (
+                                        <option key={v.id} value={v.id}>
+                                            {v.matricula || 'sem matrícula'} — {v.tipo_vinculo_display}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                             <div className="mb-3">
                                 <label className="form-label">Nome</label>
@@ -167,7 +209,8 @@ function CadastrarProjeto() {
                                 type="text"
                                 className="form-control"
                                 value={form.coordenador}
-                                onChange={(e) => atualizarCampo("coordenador", e.target.value)}
+                                //onChange={(e) => atualizarCampo("coordenador", e.target.value)}
+                                readOnly
                                 />
                             </div>
                         </fieldset>
@@ -183,15 +226,41 @@ function CadastrarProjeto() {
                                 >
 
                                 </select>
+                                <select
+                                    className="form-select"
+                                    value={form.unidade}
+                                    onChange={(e) => {
+                                        atualizarCampo("unidade", e.target.value);
+                                        atualizarCampo("departamento", "");//acontece em função da unidade
+                                    }}
+                                >
+                                    <option value="">Selecione uma unidade</option>
+                                    {unidades.map((unidade) => (
+                                        <option key={unidade.id} value={unidade.id}>
+                                            {unidade.sigla} — {unidade.nome}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                             <div className="mb-3">
                                 <label className="form-label">Departamento</label>
                                 
-                                <select 
-                                className="form-select"
-                                value={form.departamento}
-                                onChange={(e) => atualizarCampo("departamento", e.target.value)}
+                                <select
+                                    className="form-select"
+                                    value={form.departamento}
+                                    disabled={!form.unidade}
+                                    onChange={(e) => atualizarCampo("departamento", e.target.value)}
                                 >
+                                    <option value="">
+                                        {form.unidade ? "Selecione um departamento" : "Escolha uma unidade primeiro"}
+                                    </option>
+                                    {departamentos
+                                        .filter((d) => String(d.unidade) === String(form.unidade))  // <- o String() do item 2
+                                        .map((d) => (
+                                            <option key={d.id} value={d.id}>
+                                                {d.nome}
+                                            </option>
+                                        ))}
                                 </select>
                         
                             </div>
