@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/authStore';
 import LocaisRealizacao from './abas/LocaisRealizacao';
 import MembrosEquipe from './abas/MembrosEquipe';
+import UnidadesEnvolvidas from './abas/UnidadesEnvolvidas';
 
 const ABAS = [
     {id: "identificacao", label: "Identificação"},
     {id: "caracterizacao", label: "Caracterização"},
+    {id: "descricao", label: "Descrição"},
+    {id: "plano-de-trabalho", label: "Plano de Trabalho"},
+    {id: "unidades-envolvidas", label: "Unidades Envolvidas"},
     {id: "parcerias-internas", label: "Parcerias Internas"},
     {id: "locais-realizacao", label: "Locais de Realização"},
     {id: "membros-equipe", label: "Membros da Equipe"},
@@ -23,13 +27,42 @@ function CadastrarProjeto() {
     const [form, setForm] = useState({
         titulo: "",
         coordenador: "",
+        matricula_coordenador: "",
         area: "",
         publicoAlvo: "",
-        // Abas com várias linhas: cada uma entrega a lista pronta pelo onChange.
-        unidade: "", //A unidade selecionada
-        departamento: "", //O departamento selecionado
+        vinculado_extensao: "",
+        curricular: "",
+        natureza: "",
+        abrangencia: "",
+        publico_alvo: "",
+        area_conhecimento_cnpq: "",
+        area_tematica_principal: "",
+        area_tematica_secundaria: "",
+        linha_extensao: "",
+        resumo: "",
+        palavra_chave_1: "",
+        palavra_chave_2: "",
+        palavra_chave_3: "",
+        introducao: "",
+        justificativa: "",
+        ojetivo_geral: "",
+        objetivo_especifico: "",
+        metodologia_avaliacao: "",
+        relacao_ensino: "",
+        relacao_pesquisa: "",
+        interacao_dialogica: "",
+        interdisciplinaridade_interprofissionalidade: "",
+        impacto_formacao: "",
+        indissociabilidade: "",
+        impacto_transformacao_social: "",
+        referencias_bibliograficas: "",
+        resultados_esperados: "",
+        cronograma_atividades: "",
+        unidade: "",
+        departamento: "",
         locaisRealizacao: [],
         membrosEquipe: [],
+        unidadesEnvolvidas: [],
     });
 
     function atualizarCampo(campo, valor) {
@@ -99,11 +132,12 @@ function CadastrarProjeto() {
                 ))}
             </ul>
             
-            <div className="p-3 border rounded bg-light">
+            <div className="p-3 border rounded bg-body-tertiary">
                 
                 {abaAtiva === "identificacao" && (
                     
                     <fieldset>
+                        <legend>Identificação</legend>
                         <fieldset className="border rounded p-3 m-2">
                             <legend>Projeto</legend>
                             <div className="mb-3">
@@ -120,7 +154,12 @@ function CadastrarProjeto() {
                             <legend>Coordenador</legend>
                             <div className="mb-3">
                                 <label className="form-label">Matrícula</label>
-                                <input type="number" className="form-control"/>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    value={form.matricula_coordenador}
+                                    onChange={(e) => atualizarCampo("matricula_coordenador", e.target.value)}
+                                />
                             </div>
                             <div className="mb-3">
                                 <label className="form-label">Nome</label>
@@ -132,7 +171,38 @@ function CadastrarProjeto() {
                                 />
                             </div>
                         </fieldset>
+                        <fieldset className="border rounded p-3 m-2">
+                            <legend>Unidade</legend>
+                            <div className="mb-3">
+                                <label className="form-label">Unidade</label>
+                                
+                                <select 
+                                className="form-select"
+                                value={form.unidade}
+                                onChange={(e) => atualizarCampo("unidade", e.target.value)}
+                                >
+
+                                </select>
+                            </div>
+                            <div className="mb-3">
+                                <label className="form-label">Departamento</label>
+                                
+                                <select 
+                                className="form-select"
+                                value={form.departamento}
+                                onChange={(e) => atualizarCampo("departamento", e.target.value)}
+                                >
+                                </select>
+                        
+                            </div>
+
+                        </fieldset>
+                        <fieldset className="border rounded p-3 m-2">
+                            <legend>Endereço</legend>
+
+                        </fieldset>
                     </fieldset>
+
                 )}
 
                 {abaAtiva === "caracterizacao" && (
@@ -140,7 +210,7 @@ function CadastrarProjeto() {
                     <legend>
                         Caracterização
                     </legend>
-
+                    
                     <div className="mb-3">
                         <label className="form-label">Área</label>
                         <input
@@ -152,15 +222,398 @@ function CadastrarProjeto() {
                     </div>
 
                     <div className="mb-3">
-                        <label className="form-label">Público-alvo</label>
-                        <input
-                        type="text"
-                        className="form-control"
-                        value={form.publicoAlvo}
-                        onChange={(e) => atualizarCampo("publicoAlvo", e.target.value)}
+                        <label className="form-label">É vinculado a Programa de Extensão?</label>
+                        <div className="form-check">
+                            <input
+                                className="form-check-input"
+                                type="radio"
+                                name="vinculado_extensao"
+                                id="vinculado_extensao_sim"
+                                value="sim"
+                                checked={form.vinculado_extensao === "sim"}
+                                onChange={(e) => atualizarCampo("vinculado_extensao", e.target.value)}
+                            />
+                            <label className="form-check-label" htmlFor="vinculado_extensao_sim">
+                                Sim
+                            </label>
+                        </div>
+                        <div className="form-check">
+                            <input
+                                className="form-check-input"
+                                type="radio"
+                                name="vinculado_extensao"
+                                id="vinculado_extensao_nao"
+                                value="nao"
+                                checked={form.vinculado_extensao === "nao"}
+                                onChange={(e) => atualizarCampo("vinculado_extensao", e.target.value)}
+                            />
+                            <label className="form-check-label" htmlFor="vinculado_extensao_nao">
+                                Não
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">É curricular?</label>
+                        <div className="form-check">
+                            <input
+                                className="form-check-input"
+                                type="radio"
+                                name="curricular"
+                                id="curricular_sim"
+                                value="sim"
+                                checked={form.curricular === "sim"}
+                                onChange={(e) => atualizarCampo("curricular", e.target.value)}
+                            />
+                            <label className="form-check-label" htmlFor="curricular_sim">
+                                Sim
+                            </label>
+                        </div>
+                        <div className="form-check">
+                            <input
+                                className="form-check-input"
+                                type="radio"
+                                name="curricular"
+                                id="curricular_nao"
+                                value="nao"
+                                checked={form.curricular === "nao"}
+                                onChange={(e) => atualizarCampo("curricular", e.target.value)}
+                            />
+                            <label className="form-check-label" htmlFor="curricular_nao">
+                                Não
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Natureza</label>
+                                    
+                        <select 
+                        className="form-select"
+                        value={form.natureza}
+                        onChange={(e) => atualizarCampo("natureza", e.target.value)}
+                        >
+
+                        </select>
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Abrangência</label>
+                                    
+                        <select 
+                        className="form-select"
+                        value={form.abrangencia}
+                        onChange={(e) => atualizarCampo("abrangencia", e.target.value)}
+                        >
+
+                        </select>
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Público Alvo</label>
+                        <textarea
+                            className="form-control"
+                            value={form.publico_alvo}
+                            onChange={(e) => atualizarCampo("publico_alvo", e.target.value)}
                         />
                     </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Grande Área de Conhecimento do CNPq</label>
+                        <select
+                            className="form-select"
+                            value={form.area_conhecimento_cnpq}
+                            onChange={(e) => atualizarCampo("area_conhecimento_cnpq", e.target.value)}
+                        >
+                            <option value="">Selecione</option>
+                        </select>
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Área Temática Principal</label>
+                        <select
+                            className="form-select"
+                            value={form.area_tematica_principal}
+                            onChange={(e) => atualizarCampo("area_tematica_principal", e.target.value)}
+                        >
+                            <option value="">Selecione</option>
+                        </select>
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Área Temática Secundária</label>
+                        <select
+                            className="form-select"
+                            value={form.area_tematica_secundaria}
+                            onChange={(e) => atualizarCampo("area_tematica_secundaria", e.target.value)}
+                        >
+                            <option value="">Selecione</option>
+                        </select>
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Linha de Extensão</label>
+                        <select
+                            className="form-select"
+                            value={form.linha_extensao}
+                            onChange={(e) => atualizarCampo("linha_extensao", e.target.value)}
+                        >
+                            <option value="">Selecione</option>
+                        </select>
+                    </div>
+
                     </fieldset>
+                )}
+
+
+                {abaAtiva === "descricao" && (
+                    <fieldset>
+                        <legend>Descrição</legend>
+                        <div className="mb-3">
+                            <label className="form-label">Resumo (no máximo 
+                                2000 caracteres)
+                            </label>
+                                <textarea class="form-control" maxlength="2000"
+                                value={form.resumo}
+                                onChange={(e) => atualizarCampo("resumo", e.target.value)}>
+                                </textarea>    
+                        </div>
+                        
+                        <div className="mb-3">
+                            <label className="form-label">Palavra Chave 1</label>
+                            <input type="text" className="form-control"
+                            value={form.palavra_chave_1}
+                            onChange={(e) => atualizarCampo("palavra_chave_1", e.target.value)}/>
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label">Palavra Chave 2</label>
+                            <input type="text" className="form-control"
+                            value={form.palavra_chave_2}
+                            onChange={(e) => atualizarCampo("palavra_chave_2", e.target.value)}/>
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label">Palavra Chave 3</label>
+                            <input type="text" className="form-control"
+                            value={form.palavra_chave_3}
+                            onChange={(e) => atualizarCampo("palavra_chave_3", e.target.value)}/>
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label">Introdução (no máximo
+                                3000 caracteres)
+                            </label>
+                                    <textarea class="form-control" maxlength="3000"
+                                    value={form.introducao}
+                                    onChange={(e) => atualizarCampo("introducao", e.target.value)}>
+                                    </textarea>    
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label">Justificativa (no máximo 
+                                2000 caracteres)
+                            </label>
+                                    <textarea class="form-control" maxlength="2000"
+                                    value={form.justificativa}
+                                    onChange={(e) => atualizarCampo("justificativa", e.target.value)}>
+                                    </textarea>    
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label">Objetivo Geral (no máximo 
+                                500 caracteres)
+                            </label>
+                                    <textarea class="form-control" maxlength="500"
+                                    value={form.objetivo_geral}
+                                    onChange={(e) => atualizarCampo("objetivo_geral", e.target.value)}>
+                                    </textarea>    
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label">Objetivos Específicos (no máximo 
+                                1000 caracteres)
+                            </label>
+                                    <textarea
+                                        className="form-control"
+                                        maxLength="1000"
+                                        value={form.objetivo_especifico}
+                                        onChange={(e) => atualizarCampo("objetivo_especifico", e.target.value)}
+                                    />    
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label">Metodologia e Avaliação (no máximo 2000 caracteres)</label>
+                            <textarea
+                                className="form-control"
+                                maxLength="2000"
+                                value={form.metodologia_avaliacao}
+                                onChange={(e) => atualizarCampo("metodologia_avaliacao", e.target.value)}
+                            />
+                        </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Tem relação com ensino?</label>
+                        <div className="form-check">
+                            <input
+                                className="form-check-input"
+                                type="radio"
+                                name="relacao_ensino"
+                                id="relacao_ensino_sim"
+                                value="sim"
+                                checked={form.relacao_ensino === "sim"}
+                                onChange={(e) => atualizarCampo("relacao_ensino", e.target.value)}
+                            />
+                            <label className="form-check-label" htmlFor="relacao_ensino_sim">
+                                Sim
+                            </label>
+                        </div>
+                        <div className="form-check">
+                            <input
+                                className="form-check-input"
+                                type="radio"
+                                name="relacao_ensino"
+                                id="relacao_ensino_nao"
+                                value="nao"
+                                checked={form.relacao_ensino === "nao"}
+                                onChange={(e) => atualizarCampo("relacao_ensino", e.target.value)}
+                            />
+                            <label className="form-check-label" htmlFor="relacao_ensino_nao">
+                                Não
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Tem relação com Pesquisa?</label>
+                        <div className="form-check">
+                            <input
+                                className="form-check-input"
+                                type="radio"
+                                name="relacao_pesquisa"
+                                id="relacao_pesquisa_sim"
+                                value="sim"
+                                checked={form.relacao_pesquisa === "sim"}
+                                onChange={(e) => atualizarCampo("relacao_pesquisa", e.target.value)}
+                            />
+                            <label className="form-check-label" htmlFor="relacao_pesquisa_sim">
+                                Sim
+                            </label>
+                        </div>
+                        <div className="form-check">
+                            <input
+                                className="form-check-input"
+                                type="radio"
+                                name="relacao_pesquisa"
+                                id="relacao_pesquisa_nao"
+                                value="nao"
+                                checked={form.relacao_pesquisa === "nao"}
+                                onChange={(e) => atualizarCampo("relacao_pesquisa", e.target.value)}
+                            />
+                            <label className="form-check-label" htmlFor="relacao_pesquisa_nao">
+                                Não
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Interação Dialógica (no máximo 1000 caracteres)</label>
+                        <textarea
+                            className="form-control"
+                            maxLength="1000"
+                            value={form.interacao_dialogica}
+                            onChange={(e) => atualizarCampo("interacao_dialogica", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Interdisciplinaridade e Interprofissionalidade (no máximo 1000 caracteres)</label>
+                        <textarea
+                            className="form-control"
+                            maxLength="1000"
+                            value={form.interdisciplinaridade_interprofissionalidade}
+                            onChange={(e) => atualizarCampo("interdisciplinaridade_interprofissionalidade", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Impacto na Formação do Estudante (no máximo 1000 caracteres)</label>
+                        <textarea
+                            className="form-control"
+                            maxLength="1000"
+                            value={form.impacto_formacao}
+                            onChange={(e) => atualizarCampo("impacto_formacao", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Indissociabilidade Ensino - Pesquisa - Extensão (no máximo 1000 caracteres)</label>
+                        <textarea
+                            className="form-control"
+                            maxLength="1000"
+                            value={form.indissociabilidade}
+                            onChange={(e) => atualizarCampo("indissociabilidade", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Impacto e Transformação Social (no máximo 1000 caracteres)</label>
+                        <textarea
+                            className="form-control"
+                            maxLength="1000"
+                            value={form.impacto_transformacao_social}
+                            onChange={(e) => atualizarCampo("impacto_transformacao_social", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Referências Bibliográficas (no máximo 1000 caracteres)</label>
+                        <textarea
+                            className="form-control"
+                            maxLength="1000"
+                            value={form.referencias_bibliograficas}
+                            onChange={(e) => atualizarCampo("referencias_bibliograficas", e.target.value)}
+                        />
+                    </div>
+
+                    </fieldset>
+                )}
+
+                {abaAtiva === "plano-de-trabalho" && (
+
+                    <fieldset>
+                        <legend>Plano de Trabalho</legend>
+
+                        <div className="mb-3">
+                            <label className="form-label">Resultados esperados para o biênio (no máximo 1000 caracteres)</label>
+                            <textarea
+                                className="form-control"
+                                maxLength="1000"
+                                value={form.resultados_esperados}
+                                onChange={(e) => atualizarCampo("resultados_esperados", e.target.value)}
+                            />
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label">Cronograma de atividades do biênio (no máximo 1000 caracteres)</label>
+                            <textarea
+                                className="form-control"
+                                maxLength="1000"
+                                value={form.cronograma_atividades}
+                                onChange={(e) => atualizarCampo("cronograma_atividades", e.target.value)}
+                            />
+                        </div>
+
+                    </fieldset>
+                )}
+
+                {abaAtiva === "unidades-envolvidas" && (
+                    <UnidadesEnvolvidas
+                        unidades={unidades}
+                        departamentos={departamentos}
+                        valor={form.unidadesEnvolvidas}
+                        onChange={(linhas) => atualizarCampo("unidadesEnvolvidas", linhas)}
+                    />
                 )}
 
                 {abaAtiva==="parcerias-internas" && (

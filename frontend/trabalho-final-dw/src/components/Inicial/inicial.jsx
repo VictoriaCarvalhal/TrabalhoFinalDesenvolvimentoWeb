@@ -7,6 +7,7 @@ import api from '../../services/api';
 function Inicial() {
     const navigate = useNavigate();
     const login = useAuthStore((state) => state.login);
+    const setNomeUsuario = useAuthStore((state) => state.setNomeUsuario);
 
     const [erroLogin, setErroLogin] = useState(null);
     const [enviando, setEnviando] = useState(false);
@@ -29,8 +30,10 @@ function Inicial() {
             });
 
             login(resposta.data.access);
-            // Guarda o refresh também, pra usar depois quando o access expirar.
             localStorage.setItem('refresh', resposta.data.refresh);
+
+            const perfil = await api.get('/auth/me/');
+            setNomeUsuario(perfil.data.nome_completo);
 
             navigate('/Bemvindo');
         } catch (err) {

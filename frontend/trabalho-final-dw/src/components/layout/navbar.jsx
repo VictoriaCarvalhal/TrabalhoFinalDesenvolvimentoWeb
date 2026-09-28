@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { NavLink } from "react-router-dom";
+import { useThemeStore } from '../../stores/themeStore';
 
 function Navbar() {
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const { tema, alternarTema } = useThemeStore();
 
     return (
         <nav className="navbar navbar-expand-lg navbar-dark" id="navbar">
@@ -36,6 +38,19 @@ function Navbar() {
                         </li>
                     </ul>
                 </div>
+
+                <ul className="navbar-nav flex-row ms-auto">
+                    <li className="nav-item">
+                        <a 
+                            href="#" 
+                            className="nav-link px-2" 
+                            onClick={(e) => { e.preventDefault(); alternarTema(); }}
+                            title={tema === 'light' ? 'Mudar para Modo Escuro' : 'Mudar para Modo Claro'}
+                        >
+                            <i className={`bi ${tema === 'light' ? 'bi-moon-fill' : 'bi-sun-fill'}`}></i>
+                        </a>
+                    </li>
+                </ul>
             </div>
         </nav>
     );
