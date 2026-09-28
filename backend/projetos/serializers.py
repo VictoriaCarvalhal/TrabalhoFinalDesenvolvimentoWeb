@@ -209,6 +209,8 @@ class ProjetoCaracterizacaoSerializer(serializers.ModelSerializer):
     natureza_display = serializers.CharField(source='natureza.descricao', read_only=True)
     linha_extensao_display = serializers.CharField(source='linha_extensao.descricao', read_only=True)
     area_principal_display = serializers.CharField(source='area_tematica_principal.descricao', read_only=True)
+    area_secundaria_display = serializers.CharField(
+        source='area_tematica_secundaria.descricao', read_only=True)
     grande_area_display = serializers.CharField(source='grande_area_cnpq.descricao', read_only=True)
 
     class Meta:
@@ -218,7 +220,8 @@ class ProjetoCaracterizacaoSerializer(serializers.ModelSerializer):
             'natureza', 'natureza_display', 'abrangencia', 'publico_alvo',
             'grande_area_cnpq', 'grande_area_display',
             'area_tematica_principal', 'area_principal_display',
-            'area_tematica_secundaria', 'linha_extensao', 'linha_extensao_display'
+            'area_tematica_secundaria', 'area_secundaria_display',
+            'linha_extensao', 'linha_extensao_display'
         ]
 
 
@@ -260,4 +263,26 @@ class ProjetoDetalheSimplesSerializer(serializers.ModelSerializer):
             'coordenador', 'unidade_proponente', 'departamento_proponente',
             'endereco', 'contatos', 'caracterizacao', 'descricao'
         ]
-     
+
+
+class ProjetoImpressaoSerializer(serializers.ModelSerializer):
+    situacao_display = serializers.CharField(
+        source='get_situacao_display', read_only=True)
+    coordenador_nome = serializers.CharField(
+        source='coordenador.pessoa.nome_completo', read_only=True)
+    unidade_sigla = serializers.CharField(
+        source='unidade_proponente.sigla', read_only=True)
+    unidade_nome = serializers.CharField(
+        source='unidade_proponente.nome', read_only=True)
+    departamento_nome = serializers.CharField(
+        source='departamento_proponente.nome', read_only=True)
+
+    class Meta:
+        model = Projeto
+        fields = [
+            'id', 'ano', 'numero', 'titulo', 'situacao', 'situacao_display',
+            'coordenador', 'coordenador_nome',
+            'unidade_proponente', 'unidade_sigla', 'unidade_nome',
+            'departamento_proponente', 'departamento_nome',
+            'created_at', 'updated_at',
+        ]
