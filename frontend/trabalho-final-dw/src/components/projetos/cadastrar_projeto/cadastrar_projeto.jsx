@@ -111,6 +111,36 @@ function CadastrarProjeto() {
         setForm((prev) => ({ ...prev, [campo]: valor }));
     }
 
+    // Mais tarde essa função vai ser responsável por persistir os dados
+    function listarDadosIdentificacao() {
+        //json projeto pronto para enviar para o backend
+        const projeto = {
+            ano: new Date().getFullYear(),//pega o ano atual
+            titulo: form.titulo,//pega o título do formulário
+            coordenador: form.coordenador_vinculo, //pega o UUID do vínculo, não a matricula do coordenador e nem o UUID do coordenador. Um bom tempo foi gasto pra perceber isso
+            unidade_proponente: form.unidade ? Number(form.unidade) : null,//pega o id da unidade
+            departamento_proponente: form.departamento ? Number(form.departamento) : null,//pega o id do departamento
+        };
+
+
+        //json endereço pronto para enviar para o backend
+        const endereco = {
+            cep: form.cep,
+            logradouro: form.logradouro,
+            numero: form.numero,
+            complemento: form.complemento,
+            bairro: form.bairro,
+            municipio: null,                // FK MunicipioIBGE -> codigo_ibge (inteiro), não o nome
+        };
+
+        console.group('Aba Identificação — dados a enviar para o servidor');
+        console.log('POST /api/v1/projetos/', projeto);
+        console.log('PATCH /api/v1/projetos/{id}/endereco/', endereco);
+        console.log('corpo do POST (JSON):', JSON.stringify(projeto));
+        console.log('corpo do PATCH endereco (JSON):', JSON.stringify(endereco));
+        console.groupEnd();
+    }
+
     useEffect(() => {
         async function carregarUnidades() {
             try {
@@ -866,6 +896,13 @@ function CadastrarProjeto() {
                         valor={form.membrosEquipe}
                         onChange={(linhas) => atualizarCampo("membrosEquipe", linhas)}
                     />
+                    <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={listarDadosIdentificacao} //só pra testra
+                    >
+                        Enviar formulário 
+                    </button> 
                 </div>
             </div>
 
