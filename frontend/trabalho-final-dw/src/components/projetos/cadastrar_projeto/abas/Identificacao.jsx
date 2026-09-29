@@ -1,7 +1,21 @@
 import React from 'react';
 import { MUNICIPIOS_RJ } from '../../../../dados/municipiosRJ';
+import CampoContato from '../CampoContato';
 
 function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, departamentos, buscarCep, buscandoCep, avisoCep }) {
+    //funções internas, não confundir com as da API
+    function adicionarContato(campo) {
+        atualizarCampo(campo, [...form[campo], '']);
+    }
+
+    function editarContato(campo, indice, valor) {
+        atualizarCampo(campo, form[campo].map((c, i) => (i === indice ? valor : c)));
+    }
+
+    function removerContato(campo, indice) {
+        atualizarCampo(campo, form[campo].filter((_, i) => i !== indice));
+    }
+    
     return (
         <fieldset>
             <legend>Identificação</legend>
@@ -99,6 +113,37 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, de
             
                 </div>
 
+            </fieldset>
+            <fieldset className="border rounded p-3 m-2">
+                <legend>Contato</legend>
+                {form.telefones.map((telefone, i) => (
+                    <CampoContato
+                        key={`telefone-${i}`}
+                        rotulo="Telefone"
+                        tipoEntrada="tel"
+                        placeholder="(00) 00000-0000"
+                        valor={telefone}
+                        indice={i}
+                        total={form.telefones.length}
+                        aoMudar={(indice, valor) => editarContato('telefones', indice, valor)}
+                        aoAdicionar={() => adicionarContato('telefones')}
+                        aoRemover={(indice) => removerContato('telefones', indice)}
+                    />
+                ))}
+                {form.emails.map((email, i) => (
+                    <CampoContato
+                        key={`email-${i}`}
+                        rotulo="E-mail"
+                        tipoEntrada="email"
+                        placeholder="nome@exemplo.com"
+                        valor={email}
+                        indice={i}
+                        total={form.emails.length}
+                        aoMudar={(indice, valor) => editarContato('emails', indice, valor)}
+                        aoAdicionar={() => adicionarContato('emails')}
+                        aoRemover={(indice) => removerContato('emails', indice)}
+                    />
+                ))}
             </fieldset>
             <fieldset className="border rounded p-3 m-2">
                 <legend>Endereço</legend>

@@ -22,3 +22,8 @@ export async function criarPlanoDeTrabalho(projeto_id, dados) {
     const resposta = await api.post(`/api/v1/projetos/{projeto_id}/planos-trabalho/`, dados);
     return resposta.data.id;
 }
+
+export async function criarContato(projeto_id, dados) {
+    const resposta = await api.post(`/projetos/${projeto_id}/contatos/`, dados);
+    return resposta.data.id;
+}

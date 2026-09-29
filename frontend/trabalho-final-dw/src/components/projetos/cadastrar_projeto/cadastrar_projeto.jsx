@@ -22,8 +22,9 @@ import { useLinhasExtensao } from '../../../hooks/useLinhasExtensao';
 
 
 import { 
-    criarProjeto, 
-    atualizarEndereco, 
+    criarProjeto,
+    atualizarEndereco,
+    criarContato,
     atualizarCaracterizacao,
     atualizarDescricao,
     criarPlanoDeTrabalho
@@ -72,6 +73,9 @@ function CadastrarProjeto() {
         coordenador: "",
         matricula_coordenador: "",
         coordenador_vinculo: "",
+        //contato: sempre começa com um campo de cada, o botão + acrescenta mais
+        telefones: [""],
+        emails: [""],
         //endereço
         cep: "",
         logradouro: "",
@@ -232,9 +236,16 @@ function CadastrarProjeto() {
             await atualizarCaracterizacao(projeto_id, caracterizacao);
             await atualizarDescricao(projeto_id, descricao);
 
-            // Plano de trabalho não
+            // Plano de trabalho e contatos não
             await criarPlanoDeTrabalho(projeto_id, plano_trabalho);
-            
+            const contatos = [
+                ...form.telefones.map((valor) => ({ tipo_contato: 'TELEFONE', valor: valor.trim() })),
+                ...form.emails.map((valor) => ({ tipo_contato: 'EMAIL', valor: valor.trim() })),
+            ].filter((c) => c.valor);
+
+            for (const contato of contatos) {
+                await criarContato(projeto_id, contato);
+            }
             
             navigate("/Projetos/SeusProjetos");
         } catch (erro) {
