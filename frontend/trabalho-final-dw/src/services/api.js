@@ -18,4 +18,17 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// Redireciona o usuário para "/" quando access expirar
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            useAuthStore.getState().logout();
+            localStorage.removeItem('refresh');
+            window.location.href = '/';
+        }
+        return Promise.reject(error);
+    }
+);
+
 export default api;

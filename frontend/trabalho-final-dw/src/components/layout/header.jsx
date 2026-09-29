@@ -1,13 +1,45 @@
 import React from 'react';
-import pr3Logo from '../../assets/pr3_logo.png';
+import uerjLogo from '../../assets/uerj_logo.png';
+import pr3Logo from '../../assets/pr3_extensao_logo.png';
 
+// As duas logos vinham numa imagem so, dentro de um link unico para a UERJ,
+// entao quem clicava na PR3 caia no site da universidade. Agora cada logo e
+// um link para o seu proprio site.
 function Header() {
     return (
-        <header className="container-fluid py-3 border-bottom bg-white">
+        <header className="container-fluid py-3 border-bottom" style={{ backgroundColor: 'var(--cor-fundo)' }}>
             <div className="d-flex flex-column flex-md-row align-items-center justify-content-between px-3 gap-3">
-                
-                <div className="d-flex justify-content-center justify-content-md-start w-100 header-col-side">
-                    <a href='https://www.uerj.br' target="_blank" rel="noopener noreferrer"><img src={pr3Logo} aria-label="Logo da Universidade do Estado do Rio de Janeiro, com uma tocha acesa e o número 75 em comemoração aos 75 anos da instituição e ao seu lado o logo da Pró Reitoria de Extensão e Cultura" alt="" title="Logos da UERJ e da PR3" className="img-fluid header-logo" /></a>
+
+                <div className="d-flex align-items-center justify-content-center justify-content-md-start w-100 header-col-side gap-3">
+                    <a
+                        href="https://www.uerj.br"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Site da UERJ (abre em nova aba)"
+                    >
+                        <img
+                            src={uerjLogo}
+                            alt="Logo da Universidade do Estado do Rio de Janeiro, com uma tocha acesa, e o número 75 dos 75 anos da instituição"
+                            title="UERJ"
+                            className="img-fluid header-logo"
+                        />
+                    </a>
+
+                    <span className="header-separador" aria-hidden="true"></span>
+
+                    <a
+                        href="https://www.pr3.uerj.br"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Site da Pró-Reitoria de Extensão e Cultura (abre em nova aba)"
+                    >
+                        <img
+                            src={pr3Logo}
+                            alt="Logo da PR3, Pró-Reitoria de Extensão e Cultura, com a marca dos 45 anos"
+                            title="PR3, Pró-Reitoria de Extensão e Cultura"
+                            className="img-fluid header-logo"
+                        />
+                    </a>
                 </div>
 
                 <div className="text-center w-100 header-col-center">

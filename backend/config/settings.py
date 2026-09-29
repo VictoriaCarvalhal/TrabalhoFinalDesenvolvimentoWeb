@@ -17,11 +17,18 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
 AUTH_USER_MODEL = "core.PessoaGlobal"
 
-# Enderecos do front que podem chamar a API quando DEBUG esta desligado.
 # Na Vercel: CORS_ALLOWED_ORIGINS=https://<projeto-do-front>.vercel.app
 CORS_ALLOWED_ORIGINS = [
     origem for origem in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if origem
 ]
+if DEBUG:
+    CORS_ALLOWED_ORIGINS.extend([
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000"
+    ])
+
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
 # Na Vercel o Django roda atras de um proxy; sem isto ele acha que a
@@ -47,6 +54,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -101,7 +109,8 @@ TIME_ZONE = "America/Sao_Paulo"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -116,13 +125,13 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1440), #Deixo aqui meu honesto pedido de desculpas para o pessoal do backend, att, Aprigio
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),                                            #Garanto que depois eu volto aqui, desfaço e arrumo uma solução no front, isso é só pra testar as requisições do frontend
     # --- ALTERADO: Ativa a renovação/rotação do Refresh Token a cada chamada ---
     'ROTATE_REFRESH_TOKENS': True,
     # --- ALTERADO: Invalida o Refresh Token anterior colocando na blacklist ---
-    'BLACK_LIST_AFTER_ROTATION': True,
-    'USER_ID_FIELD': 'id',
+    'BLACKLIST_AFTER_ROTATION': True,                                                       #Como demonstração de boa fé ajustei esse bugzin aqui, tmj.  BLACK_LIST_AFTER_ROTATION -> BLACKLIST_AFTER_ROTATION
+    'USER_ID_FIELD': 'id',                                                                  #A duração de access estava 15 minutos aqui mas na prática durava só 5 minutos, e eu penso que era isso
     'USER_ID_CLAIM': 'user_id',
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',

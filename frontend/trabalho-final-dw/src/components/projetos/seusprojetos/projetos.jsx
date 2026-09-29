@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/authStore';
+import { useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
 
 function Projetos() {
@@ -8,6 +9,15 @@ function Projetos() {
     const [projetos, setProjetos] = useState([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState(null);
+    const navigate = useNavigate();
+
+    function redirecionaProCadastro(){
+        navigate('/Projetos/CadastrarProjeto');
+    }
+
+    function redirecionaParaImpressao(id){
+        navigate(`/Projetos/${id}/imprimir`);
+    }
 
     useEffect(() => {
         // Sem token não tem nem por que chamar a API.
@@ -43,7 +53,21 @@ function Projetos() {
 
     return (
         <div className="container mt-4">
-            <h1>Seus Projetos</h1>
+            {/* O menu ja diz em que tela a pessoa esta, entao o titulo nao
+                aparece de novo aqui. Ele continua no html, escondido, porque a
+                pagina precisa de um h1 para quem usa leitor de tela. */}
+            <h1 className="visually-hidden">Seus projetos</h1>
+
+            <div className="d-flex flex-wrap align-items-center justify-content-end gap-2">
+                <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={redirecionaProCadastro}
+                >
+                    <i className="bi bi-plus-lg me-2" aria-hidden="true"></i>
+                    Novo projeto
+                </button>
+            </div>
 
             {!isAutenticado && (
                 <div className="alert alert-warning mt-3">
@@ -74,6 +98,7 @@ function Projetos() {
                             <th>Unidade</th>
                             <th>Coordenador(a)</th>
                             <th>Atualizado em</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -89,6 +114,17 @@ function Projetos() {
                                     {projeto.updated_at
                                         ? new Date(projeto.updated_at).toLocaleDateString('pt-BR')
                                         : '-'}
+                                </td>
+                                <td>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-secondary"
+                                        title="Imprimir projeto"
+                                        aria-label={`Imprimir projeto ${projeto.titulo}`}
+                                        onClick={() => redirecionaParaImpressao(projeto.id)}
+                                    >
+                                        <i className="bi bi-printer"></i>
+                                    </button>
                                 </td>
                             </tr>
                         ))}

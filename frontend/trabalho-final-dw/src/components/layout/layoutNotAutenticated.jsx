@@ -5,7 +5,7 @@ import { Outlet } from "react-router-dom";
 
 function LayoutNotAutenticated() {
     return (
-        <div id="container" className="d-flex flex-column min-vh-100 bg-white">
+        <div id="container" className="d-flex flex-column min-vh-100" style={{ backgroundColor: 'var(--cor-fundo)' }}>
             <Header />
             <main className="flex-grow-1 d-flex justify-content-center align-items-center px-4 py-4" style={{ order: 0 }}>
                 <Outlet />
