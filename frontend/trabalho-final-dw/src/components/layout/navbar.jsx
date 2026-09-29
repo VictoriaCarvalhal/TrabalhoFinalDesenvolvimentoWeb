@@ -3,9 +3,6 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from '../../stores/authStore';
 import { useThemeStore } from '../../stores/themeStore';
 
-// A navegação toda fica numa lista só, à esquerda. O botão de tema não entra
-// nela: ele é uma ação da tela, não um destino, e ficava parecendo um segundo
-// menu quando era mais um item de lista igual aos outros.
 function Navbar() {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const { tema, alternarTema } = useThemeStore();
@@ -37,7 +34,6 @@ function Navbar() {
                     <span className="navbar-toggler-icon"></span>
                 </button>
 
-                {/* Ações que ficam sempre visíveis (tema e sair) */}
                 <div className="d-flex align-items-center gap-2 d-lg-none ms-auto">
                     <button
                         type="button"
@@ -56,8 +52,6 @@ function Navbar() {
                     )}
                 </div>
 
-                {/* No celular abre pelo lado, no desktop o navbar-expand-lg
-                    transforma em layout inline automaticamente */}
                 <div className="offcanvas offcanvas-start" tabIndex="-1" id="navbarNav" style={{ backgroundColor: '#1E2D40' }}>
                     <div className="offcanvas-header">
                         <h5 className="offcanvas-title" style={{ color: '#45718C' }}>Menu</h5>
@@ -89,7 +83,6 @@ function Navbar() {
                             </li>
                         </ul>
 
-                        {/* No desktop essas ações aparecem aqui à direita */}
                         <div className="navbar-acoes ms-lg-auto d-none d-lg-flex align-items-center gap-2">
                             {isAutenticado && nomeUsuario && (
                                 <span className="navbar-usuario">{nomeUsuario}</span>
