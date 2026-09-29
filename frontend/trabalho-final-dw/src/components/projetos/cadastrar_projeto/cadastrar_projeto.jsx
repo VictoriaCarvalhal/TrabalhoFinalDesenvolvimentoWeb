@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/authStore';
+import CampoTextoLongo from './CampoTextoLongo';
 import LocaisRealizacao from './abas/LocaisRealizacao';
 import MembrosEquipe from './abas/MembrosEquipe';
 import UnidadesEnvolvidas from './abas/UnidadesEnvolvidas';
@@ -599,15 +600,14 @@ function CadastrarProjeto() {
                 {abaAtiva === "descricao" && (
                     <fieldset>
                         <legend>Descrição</legend>
-                        <div className="mb-3">
-                            <label className="form-label">Resumo (no máximo 
-                                2000 caracteres)
-                            </label>
-                                <textarea class="form-control" maxlength="2000"
-                                value={form.resumo}
-                                onChange={(e) => atualizarCampo("resumo", e.target.value)}>
-                                </textarea>    
-                        </div>
+                                                <CampoTextoLongo
+                            rotulo="Resumo"
+                            campo="resumo"
+                            limite={2000}
+                            linhas={6}
+                            valor={form.resumo}
+                            aoMudar={atualizarCampo}
+                        />
                         
                         <div className="mb-3">
                             <label className="form-label">Palavra Chave 1</label>
@@ -630,57 +630,50 @@ function CadastrarProjeto() {
                             onChange={(e) => atualizarCampo("palavra_chave_3", e.target.value)}/>
                         </div>
 
-                        <div className="mb-3">
-                            <label className="form-label">Introdução (no máximo
-                                3000 caracteres)
-                            </label>
-                                    <textarea class="form-control" maxlength="3000"
-                                    value={form.introducao}
-                                    onChange={(e) => atualizarCampo("introducao", e.target.value)}>
-                                    </textarea>    
-                        </div>
+                                                <CampoTextoLongo
+                            rotulo="Introdução"
+                            campo="introducao"
+                            limite={3000}
+                            linhas={6}
+                            valor={form.introducao}
+                            aoMudar={atualizarCampo}
+                        />
 
-                        <div className="mb-3">
-                            <label className="form-label">Justificativa (no máximo 
-                                2000 caracteres)
-                            </label>
-                                    <textarea class="form-control" maxlength="2000"
-                                    value={form.justificativa}
-                                    onChange={(e) => atualizarCampo("justificativa", e.target.value)}>
-                                    </textarea>    
-                        </div>
+                                                <CampoTextoLongo
+                            rotulo="Justificativa"
+                            campo="justificativa"
+                            limite={2000}
+                            linhas={6}
+                            valor={form.justificativa}
+                            aoMudar={atualizarCampo}
+                        />
 
-                        <div className="mb-3">
-                            <label className="form-label">Objetivo Geral (no máximo 
-                                500 caracteres)
-                            </label>
-                                    <textarea class="form-control" maxlength="500"
-                                    value={form.objetivo_geral}
-                                    onChange={(e) => atualizarCampo("objetivo_geral", e.target.value)}>
-                                    </textarea>    
-                        </div>
+                                                <CampoTextoLongo
+                            rotulo="Objetivo geral"
+                            campo="objetivo_geral"
+                            limite={500}
+                            linhas={3}
+                            valor={form.objetivo_geral}
+                            aoMudar={atualizarCampo}
+                        />
 
-                        <div className="mb-3">
-                            <label className="form-label">Objetivos Específicos (no máximo 
-                                1000 caracteres)
-                            </label>
-                                    <textarea
-                                        className="form-control"
-                                        maxLength="1000"
-                                        value={form.objetivo_especifico}
-                                        onChange={(e) => atualizarCampo("objetivo_especifico", e.target.value)}
-                                    />    
-                        </div>
+                                                <CampoTextoLongo
+                            rotulo="Objetivos específicos"
+                            campo="objetivo_especifico"
+                            limite={1000}
+                            linhas={4}
+                            valor={form.objetivo_especifico}
+                            aoMudar={atualizarCampo}
+                        />
 
-                        <div className="mb-3">
-                            <label className="form-label">Metodologia e Avaliação (no máximo 2000 caracteres)</label>
-                            <textarea
-                                className="form-control"
-                                maxLength="2000"
-                                value={form.metodologia_avaliacao}
-                                onChange={(e) => atualizarCampo("metodologia_avaliacao", e.target.value)}
-                            />
-                        </div>
+                                                <CampoTextoLongo
+                            rotulo="Metodologia e avaliação"
+                            campo="metodologia_avaliacao"
+                            limite={2000}
+                            linhas={5}
+                            valor={form.metodologia_avaliacao}
+                            aoMudar={atualizarCampo}
+                        />
 
                     <div className="mb-3">
                         <label className="form-label">Tem relação com ensino?</label>
@@ -746,65 +739,59 @@ function CadastrarProjeto() {
                         </div>
                     </div>
 
-                    <div className="mb-3">
-                        <label className="form-label">Interação Dialógica (no máximo 1000 caracteres)</label>
-                        <textarea
-                            className="form-control"
-                            maxLength="1000"
-                            value={form.interacao_dialogica}
-                            onChange={(e) => atualizarCampo("interacao_dialogica", e.target.value)}
-                        />
-                    </div>
+                                        <CampoTextoLongo
+                        rotulo="Interação dialógica"
+                        campo="interacao_dialogica"
+                        limite={1000}
+                        linhas={4}
+                        valor={form.interacao_dialogica}
+                        aoMudar={atualizarCampo}
+                    />
 
-                    <div className="mb-3">
-                        <label className="form-label">Interdisciplinaridade e Interprofissionalidade (no máximo 1000 caracteres)</label>
-                        <textarea
-                            className="form-control"
-                            maxLength="1000"
-                            value={form.interdisciplinaridade_interprofissionalidade}
-                            onChange={(e) => atualizarCampo("interdisciplinaridade_interprofissionalidade", e.target.value)}
-                        />
-                    </div>
+                                        <CampoTextoLongo
+                        rotulo="Interdisciplinaridade e interprofissionalidade"
+                        campo="interdisciplinaridade_interprofissionalidade"
+                        limite={1000}
+                        linhas={4}
+                        valor={form.interdisciplinaridade_interprofissionalidade}
+                        aoMudar={atualizarCampo}
+                    />
 
-                    <div className="mb-3">
-                        <label className="form-label">Impacto na Formação do Estudante (no máximo 1000 caracteres)</label>
-                        <textarea
-                            className="form-control"
-                            maxLength="1000"
-                            value={form.impacto_formacao}
-                            onChange={(e) => atualizarCampo("impacto_formacao", e.target.value)}
-                        />
-                    </div>
+                                        <CampoTextoLongo
+                        rotulo="Impacto na formação do estudante"
+                        campo="impacto_formacao"
+                        limite={1000}
+                        linhas={4}
+                        valor={form.impacto_formacao}
+                        aoMudar={atualizarCampo}
+                    />
 
-                    <div className="mb-3">
-                        <label className="form-label">Indissociabilidade Ensino - Pesquisa - Extensão (no máximo 1000 caracteres)</label>
-                        <textarea
-                            className="form-control"
-                            maxLength="1000"
-                            value={form.indissociabilidade}
-                            onChange={(e) => atualizarCampo("indissociabilidade", e.target.value)}
-                        />
-                    </div>
+                                        <CampoTextoLongo
+                        rotulo="Indissociabilidade entre ensino, pesquisa e extensão"
+                        campo="indissociabilidade"
+                        limite={1000}
+                        linhas={4}
+                        valor={form.indissociabilidade}
+                        aoMudar={atualizarCampo}
+                    />
 
-                    <div className="mb-3">
-                        <label className="form-label">Impacto e Transformação Social (no máximo 1000 caracteres)</label>
-                        <textarea
-                            className="form-control"
-                            maxLength="1000"
-                            value={form.impacto_transformacao_social}
-                            onChange={(e) => atualizarCampo("impacto_transformacao_social", e.target.value)}
-                        />
-                    </div>
+                                        <CampoTextoLongo
+                        rotulo="Impacto e transformação social"
+                        campo="impacto_transformacao_social"
+                        limite={1000}
+                        linhas={4}
+                        valor={form.impacto_transformacao_social}
+                        aoMudar={atualizarCampo}
+                    />
 
-                    <div className="mb-3">
-                        <label className="form-label">Referências Bibliográficas (no máximo 1000 caracteres)</label>
-                        <textarea
-                            className="form-control"
-                            maxLength="1000"
-                            value={form.referencias_bibliograficas}
-                            onChange={(e) => atualizarCampo("referencias_bibliograficas", e.target.value)}
-                        />
-                    </div>
+                                        <CampoTextoLongo
+                        rotulo="Referências bibliográficas"
+                        campo="referencias_bibliograficas"
+                        limite={1000}
+                        linhas={4}
+                        valor={form.referencias_bibliograficas}
+                        aoMudar={atualizarCampo}
+                    />
 
                     </fieldset>
                 )}
@@ -814,25 +801,23 @@ function CadastrarProjeto() {
                     <fieldset>
                         <legend>Plano de Trabalho</legend>
 
-                        <div className="mb-3">
-                            <label className="form-label">Resultados esperados para o biênio (no máximo 1000 caracteres)</label>
-                            <textarea
-                                className="form-control"
-                                maxLength="1000"
-                                value={form.resultados_esperados}
-                                onChange={(e) => atualizarCampo("resultados_esperados", e.target.value)}
-                            />
-                        </div>
+                                                <CampoTextoLongo
+                            rotulo="Resultados esperados para o biênio"
+                            campo="resultados_esperados"
+                            limite={1000}
+                            linhas={5}
+                            valor={form.resultados_esperados}
+                            aoMudar={atualizarCampo}
+                        />
 
-                        <div className="mb-3">
-                            <label className="form-label">Cronograma de atividades do biênio (no máximo 1000 caracteres)</label>
-                            <textarea
-                                className="form-control"
-                                maxLength="1000"
-                                value={form.cronograma_atividades}
-                                onChange={(e) => atualizarCampo("cronograma_atividades", e.target.value)}
-                            />
-                        </div>
+                                                <CampoTextoLongo
+                            rotulo="Cronograma de atividades do biênio"
+                            campo="cronograma_atividades"
+                            limite={1000}
+                            linhas={5}
+                            valor={form.cronograma_atividades}
+                            aoMudar={atualizarCampo}
+                        />
 
                     </fieldset>
                 )}
