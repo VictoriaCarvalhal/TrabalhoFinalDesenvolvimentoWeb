@@ -81,7 +81,7 @@ function Tabela({ colunas, linhas, renderLinha }) {
     );
 }
 
-function ProjetoPrint({ dados }) {
+function ProjetoPrint({ dados, geradoEm, geradoPor }) {
     const projeto = dados?.projeto ?? {};
     const endereco = dados?.endereco ?? {};
     const contatos = dados?.contatos ?? [];
@@ -321,6 +321,10 @@ function ProjetoPrint({ dados }) {
                     )}
                 />
             </Secao>
+            <footer className="print-rodape" aria-hidden="true">
+                <span>Gerado em {geradoEm ?? '—'} por {geradoPor ?? '—'}</span>
+                <span className="print-pagina" />
+            </footer>
         </div>
     );
 }
