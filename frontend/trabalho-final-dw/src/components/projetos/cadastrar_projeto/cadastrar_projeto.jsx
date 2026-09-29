@@ -84,6 +84,8 @@ function CadastrarProjeto() {
         //plano de trabalho
         resultados_esperados: "",
         cronograma_atividades: "",
+        //parcerias internas
+        participacao_interna: "",
         //unidade envolvidas
         unidade: "",
         departamento: "",
@@ -899,10 +901,15 @@ function CadastrarProjeto() {
                                 ))}
                             </select>
                         </div>
-                        <div className="mb-3">
-                            <label className="form-label">Participação (no máximo 500 caracteres)</label><br/>
-                            <textarea maxlength="500" cols="35"/>
-                        </div>
+                        <CampoTextoLongo
+                            rotulo="Participação da unidade no projeto"
+                            ajuda="Descreva de que forma essa unidade colabora: o que ela oferece ao projeto (pessoas, espaço, equipamento, dados) e em quais atividades participa."
+                            campo="participacao_interna"
+                            limite={500}
+                            linhas={4}
+                            valor={form.participacao_interna}
+                            aoMudar={atualizarCampo}
+                        />
 
 
                     </fieldset>
