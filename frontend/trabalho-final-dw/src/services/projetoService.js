@@ -19,7 +19,7 @@ export async function atualizarDescricao(projeto_id, dados) {
 }
 
 export async function criarPlanoDeTrabalho(projeto_id, dados) {
-    const resposta = await api.post(`/api/v1/projetos/{projeto_id}/planos-trabalho/`, dados);
+    const resposta = await api.post(`/projetos/${projeto_id}/planos-trabalho/`, dados);
     return resposta.data.id;
 }
 
