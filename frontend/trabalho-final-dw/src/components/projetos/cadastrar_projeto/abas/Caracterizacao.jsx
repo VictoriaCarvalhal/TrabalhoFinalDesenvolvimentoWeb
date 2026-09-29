@@ -1,6 +1,10 @@
 import React from 'react';
 
-function Caracterizacao({ form, atualizarCampo, naturezas, carregandoNaturezas, erroNaturezas }) {
+function Caracterizacao({ 
+        form, 
+        atualizarCampo, 
+        naturezas, carregandoNaturezas, erroNaturezas, 
+        areasCNPQ, carregandoAreasCNPQ, erroAreasCNPQ }) {
     return (
         <fieldset>
         <legend>
@@ -92,7 +96,6 @@ function Caracterizacao({ form, atualizarCampo, naturezas, carregandoNaturezas, 
                 <option value="">Selecione</option>
                 {carregandoNaturezas && <option disabled>Carregando...</option>}
                 {erroNaturezas && <option disabled>Erro ao carregar naturezas</option>}
-                {console.log(naturezas)}
                 {naturezas.map((natureza) => (
                     <option key={natureza.id} value={natureza.id}>
                         {natureza.descricao}
@@ -128,12 +131,19 @@ function Caracterizacao({ form, atualizarCampo, naturezas, carregandoNaturezas, 
 
         <div className="mb-3">
             <label className="form-label">Grande Área de Conhecimento do CNPq</label>
-            <select
+            <select 
                 className="form-select"
                 value={form.area_conhecimento_cnpq}
                 onChange={(e) => atualizarCampo("area_conhecimento_cnpq", e.target.value)}
             >
                 <option value="">Selecione</option>
+                {carregandoAreasCNPQ && <option disabled>Carregando...</option>}
+                {erroAreasCNPQ && <option disabled>Erro ao carregar Áreas do CNPQ</option>}
+                {areasCNPQ.map((areaCNPQ) => (
+                    <option key={areaCNPQ.codigo} value={areaCNPQ.codigo}>
+                        {areaCNPQ.descricao}
+                    </option>
+                ))}
             </select>
         </div>
 

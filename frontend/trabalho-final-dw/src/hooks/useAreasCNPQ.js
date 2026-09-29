@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { buscarNaturezas } from '../services/dominioService';
+import { buscarAreasCNPQ } from '../services/dominioService';
 
-export function useNaturezas() {
+export function useAreasCNPQ() {
     const [dados, setDados] = useState([]);
     const [loading, setLoading] = useState(true);
     const [erro, setErro] = useState(null);
@@ -10,10 +10,10 @@ export function useNaturezas() {
         let cancelado = false;
         setLoading(true);
         setErro(null);
-        buscarNaturezas()
+        buscarAreasCNPQ()
             .then((resposta) => {
                 if (!cancelado) {
-                    setDados(resposta.data); 
+                    setDados(resposta.data);
                 }
             })
             .catch((e) => {

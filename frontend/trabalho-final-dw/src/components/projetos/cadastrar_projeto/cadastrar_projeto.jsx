@@ -16,6 +16,8 @@ import { useUnidades } from '../../../hooks/useUnidades';
 import { useDepartamentos } from '../../../hooks/useDepartamentos';
 import { useVinculosCoordenador } from '../../../hooks/useVinculosCoordenador';
 import { useNaturezas } from '../../../hooks/useNaturezas';
+import { useAreasCNPQ } from '../../../hooks/useAreasCNPQ';
+
 import { criarProjeto, atualizarEndereco } from '../../../services/projetoService';
 
 const ABAS = [
@@ -45,6 +47,7 @@ function CadastrarProjeto() {
     const { dados: departamentos, loading: carregandoDepartamentos, erro: erroDepartamentos } = useDepartamentos();
     const { dados: vinculosCoordenador, loading: carregandoVinculos, erro: erroVinculos } = useVinculosCoordenador();
     const { dados: naturezas, loading: carregandoNaturezas, erro: erroNaturezas } = useNaturezas();
+    const { dados: areasCNPQ, loading: carregandoAreasCNPQ, erro: erroAreasCNPQ } = useAreasCNPQ();
 
     //projetoId é UUID vindo do POST; as abas tambem usam
     const [projetoId, setProjetoId] = useState(null);
@@ -245,6 +248,10 @@ function CadastrarProjeto() {
                         naturezas={naturezas}
                         carregandoNaturezas={carregandoNaturezas}
                         erroNaturezas={erroNaturezas}
+                        areasCNPQ={areasCNPQ}
+                        carregandoAreasCNPQ={carregandoAreasCNPQ}
+                        erroAreasCNPQ={erroAreasCNPQ}
+                        
                     />
                 )}
 
