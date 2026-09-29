@@ -72,8 +72,8 @@ function Descricao({ form, atualizarCampo }) {
                                                 <textarea
                                                     className="form-control"
                                                     maxLength="1000"
-                                                    value={form.objetivo_especifico}
-                                                    onChange={(e) => atualizarCampo("objetivo_especifico", e.target.value)}
+                                                    value={form.objetivos_especificos}
+                                                    onChange={(e) => atualizarCampo("objetivos_especificos", e.target.value)}
                                                 />    
                                             </div>
 
@@ -166,8 +166,8 @@ function Descricao({ form, atualizarCampo }) {
                                             <textarea
                                                 className="form-control"
                                                 maxLength="1000"
-                                                value={form.interdisciplinaridade_interprofissionalidade}
-                                                onChange={(e) => atualizarCampo("interdisciplinaridade_interprofissionalidade", e.target.value)}
+                                                value={form.interdisciplinaridade}
+                                                onChange={(e) => atualizarCampo("interdisciplinaridade", e.target.value)}
                                             />
                                         </div>
 
@@ -196,8 +196,8 @@ function Descricao({ form, atualizarCampo }) {
                                             <textarea
                                                 className="form-control"
                                                 maxLength="1000"
-                                                value={form.impacto_transformacao_social}
-                                                onChange={(e) => atualizarCampo("impacto_transformacao_social", e.target.value)}
+                                                value={form.impacto_social}
+                                                onChange={(e) => atualizarCampo("impacto_social", e.target.value)}
                                             />
                                         </div>
 

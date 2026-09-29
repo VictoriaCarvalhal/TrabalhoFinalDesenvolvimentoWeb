@@ -25,7 +25,8 @@ import {
     criarProjeto, 
     atualizarEndereco, 
     atualizarCaracterizacao,
-    atualizarDescricao
+    atualizarDescricao,
+    criarPlanoDeTrabalho
 } from '../../../services/projetoService';
 
 const ABAS = [
@@ -97,15 +98,15 @@ function CadastrarProjeto() {
         introducao: "",
         justificativa: "",
         objetivo_geral: "",
-        objetivo_especifico: "",
+        objetivos_especificos: "",
         metodologia_avaliacao: "",
         relacao_ensino: "",
         relacao_pesquisa: "",
         interacao_dialogica: "",
-        interdisciplinaridade_interprofissionalidade: "",
+        interdisciplinaridade: "",
         impacto_formacao: "",
         indissociabilidade: "",
-        impacto_transformacao_social: "",
+        impacto_social: "",
         referencias_bibliograficas: "",
         //plano de trabalho
         resultados_esperados: "",
@@ -196,31 +197,41 @@ function CadastrarProjeto() {
             introducao: form.introducao || null,
             justificativa: form.justificativa || null,
             objetivo_geral: form.objetivo_geral || null,
-            objetivos_especificos: form.objetivo_especifico || null,
+            objetivos_especificos: form.objetivos_especificos || null,
             metodologia_avaliacao: form.metodologia_avaliacao || null,
             relacao_ensino: form.relacao_ensino === "sim",
             relacao_pesquisa: form.relacao_pesquisa === "sim",
             interacao_dialogica: form.interacao_dialogica || null,
-            interdisciplinaridade: form.interdisciplinaridade_interprofissionalidade || null,
+            interdisciplinaridade: form.interdisciplinaridade || null,
             impacto_formacao: form.impacto_formacao || null,
             indissociabilidade: form.indissociabilidade || null,
-            impacto_social: form.impacto_transformacao_social || null,
+            impacto_social: form.impacto_social || null,
             referencias_bibliograficas: form.referencias_bibliograficas || null,
+        };
+
+        //json plano_trabalho pronto para enviar para o backend
+        const plano_trabalho = {
+            "ano": new Date().getFullYear(),
+            "resultados_esperados": form.resultados_esperados,
+            "cronograma_atividades": form.cronograma_atividades
         };
 
         setEnviando(true);
         setErroEnvio(null);
         try {
-            let id = projetoId;
-            if (!id) {
-                id = await criarProjeto(projeto);
-                setProjetoId(id);
+            let projeto_id = projetoId;
+            if (!projeto_id) {
+                projeto_id = await criarProjeto(projeto);
+                setProjetoId(projeto_id);
             }
 
-            // Endereco e Caracterizacao foram criados vazio pelo backend
-            await atualizarEndereco(id, endereco);
-            await atualizarCaracterizacao(id, caracterizacao);
-            await atualizarDescricao(id, descricao);
+            // Endereco, Caracterizacao e Descrição foram criados vazio pelo backend
+            await atualizarEndereco(projeto_id, endereco);
+            await atualizarCaracterizacao(projeto_id, caracterizacao);
+            await atualizarDescricao(projeto_id, descricao);
+
+            // Plano de trabalho não
+            await criarPlanoDeTrabalho(projeto_id, plano_trabalho);
             
             
             navigate("/Projetos/SeusProjetos");

@@ -6,16 +6,19 @@ export async function criarProjeto(dados) {
     return resposta.data.id;
 }
 
-export async function atualizarEndereco(id, dados) {
-    await api.patch(`/projetos/${id}/endereco/`, dados);
+export async function atualizarEndereco(projeto_id, dados) {
+    await api.patch(`/projetos/${projeto_id}/endereco/`, dados);
 }
 
-export async function atualizarCaracterizacao(id, dados) {
-    await api.patch(`/projetos/${id}/caracterizacao/`, dados);
+export async function atualizarCaracterizacao(projeto_id, dados) {
+    await api.patch(`/projetos/${projeto_id}/caracterizacao/`, dados);
 }
 
-export async function atualizarDescricao(id, dados) {
-    await api.patch(`/projetos/${id}/descricao/`, dados);
+export async function atualizarDescricao(projeto_id, dados) {
+    await api.patch(`/projetos/${projeto_id}/descricao/`, dados);
 }
 
-
+export async function criarPlanoDeTrabalho(projeto_id, dados) {
+    const resposta = await api.post(`/api/v1/projetos/{projeto_id}/planos-trabalho/`, dados);
+    return resposta.data.id;
+}

@@ -6,7 +6,17 @@ function PlanoTrabalho({ form, atualizarCampo }) {
             <legend>Plano de Trabalho</legend>
 
             <div className="mb-3">
-                <label className="form-label">Resultados esperados para the biênio (no máximo 1000 caracteres)</label>
+                <label className="form-label">Ano</label>
+                <input
+                    type="text"
+                    className="form-control"
+                    value={new Date().getFullYear()}
+                    readOnly
+                />
+            </div>
+            
+            <div className="mb-3">
+                <label className="form-label">Resultados esperados para o biênio (no máximo 1000 caracteres)</label>
                 <textarea
                     className="form-control"
                     maxLength="1000"
