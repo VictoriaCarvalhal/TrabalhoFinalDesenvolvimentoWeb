@@ -29,8 +29,8 @@ function Inicial() {
                 password: data.senha,
             });
 
-            login(resposta.data.access);
-            localStorage.setItem('refresh', resposta.data.refresh);
+            //Tanto o access token quanto o refresh token são passados para a função login() atualizada do authStore.
+            login(resposta.data.access, resposta.data.refresh);
 
             const perfil = await api.get('/auth/me/');
             setNomeUsuario(perfil.data.nome_completo);
