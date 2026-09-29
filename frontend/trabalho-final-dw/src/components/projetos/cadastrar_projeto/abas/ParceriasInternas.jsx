@@ -70,7 +70,7 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos }) {
             </div>
             <div className="mb-3">
                 <label className="form-label">Participação (no máximo 500 caracteres)</label><br/>
-                <textarea maxlength="500" cols="35"/>
+                <textarea maxLength="500" cols="35"/>
             </div>
 
 

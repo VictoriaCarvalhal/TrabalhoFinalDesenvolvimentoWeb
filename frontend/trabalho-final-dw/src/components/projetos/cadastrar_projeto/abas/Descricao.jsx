@@ -8,7 +8,7 @@ function Descricao({ form, atualizarCampo }) {
                 <label className="form-label">Resumo (no máximo 
                     2000 caracteres)
                 </label>
-                    <textarea class="form-control" maxlength="2000"
+                    <textarea className="form-control" maxLength="2000"
                     value={form.resumo}
                     onChange={(e) => atualizarCampo("resumo", e.target.value)}>
                     </textarea>    
@@ -39,7 +39,7 @@ function Descricao({ form, atualizarCampo }) {
                     <label className="form-label">Introdução (no máximo
                         3000 caracteres)
                     </label>
-                        <textarea class="form-control" maxlength="3000"
+                        <textarea className="form-control" maxLength="3000"
                         value={form.introducao}
                         onChange={(e) => atualizarCampo("introducao", e.target.value)}>
                         </textarea>    
@@ -49,7 +49,7 @@ function Descricao({ form, atualizarCampo }) {
                         <label className="form-label">Justificativa (no máximo 
                             2000 caracteres)
                         </label>
-                                <textarea class="form-control" maxlength="2000"
+                                <textarea className="form-control" maxLength="2000"
                                 value={form.justificativa}
                                 onChange={(e) => atualizarCampo("justificativa", e.target.value)}>
                                 </textarea>    
@@ -59,7 +59,7 @@ function Descricao({ form, atualizarCampo }) {
                                 <label className="form-label">Objetivo Geral (no máximo 
                                     500 caracteres)
                                 </label>
-                                        <textarea class="form-control" maxlength="500"
+                                        <textarea className="form-control" maxLength="500"
                                         value={form.objetivo_geral}
                                         onChange={(e) => atualizarCampo("objetivo_geral", e.target.value)}>
                                         </textarea>    

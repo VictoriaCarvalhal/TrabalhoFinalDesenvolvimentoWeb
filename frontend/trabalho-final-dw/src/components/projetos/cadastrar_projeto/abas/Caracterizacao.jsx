@@ -13,7 +13,7 @@ function Caracterizacao({ form, atualizarCampo, naturezas, carregandoNaturezas, 
             type="text"
             className="form-control"
             value="Novo"
-            readonly
+            readOnly
             />
         </div>
 
