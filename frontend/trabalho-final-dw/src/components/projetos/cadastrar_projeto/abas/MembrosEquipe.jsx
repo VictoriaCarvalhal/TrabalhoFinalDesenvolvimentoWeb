@@ -153,11 +153,10 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
         <fieldset>
             <legend>Membros da Equipe</legend>
 
-            <p className="small">
-                Para <strong>inserir</strong> um membro de equipe, clique no botão 'Novo'. Na nova linha,
-                selecione primeiro o tipo de vínculo, digite a matrícula e clique em 'Pesquisar'.
-                Para <strong>alterar</strong> o tipo de vínculo, exclua o membro e insira novamente.
-                Para <strong>excluir</strong>, clique na lixeira da linha.
+            <p className="small text-body-secondary">
+                Use o botão abaixo para acrescentar um membro. Escolha o tipo de vínculo,
+                busque a pessoa pela matrícula e indique o cargo dela no projeto. Para trocar
+                o vínculo de alguém, remova a linha e inclua de novo.
             </p>
 
             <button type="button" className="btn btn-sm btn-primary mb-3" onClick={novaLinha}>
@@ -208,9 +207,6 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
                                     </button>
                                 </td>
                                 <td>
-                                    {!linha.tipo_vinculo && (
-                                        <div className="small text-danger fw-bold">SELECIONE O VÍNCULO</div>
-                                    )}
                                     <select
                                         className="form-select form-select-sm"
                                         value={linha.tipo_vinculo}
@@ -225,9 +221,6 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
                                     </select>
                                 </td>
                                 <td>
-                                    {linha.tipo_vinculo && !linha.vinculo && (
-                                        <div className="small text-danger fw-bold">SELECIONE A MATRÍCULA</div>
-                                    )}
                                     <div className="input-group input-group-sm">
                                         <input
                                             type="text"
@@ -249,6 +242,9 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
                                             </button>
                                         )}
                                     </div>
+                                    {linha.tipo_vinculo && !linha.vinculo && (
+                                        <div className="form-text">Busque a pessoa para preencher a linha.</div>
+                                    )}
                                 </td>
                                 <td>{linha.cpf || <span className="text-muted">-</span>}</td>
                                 <td>{linha.nome || <span className="text-muted">-</span>}</td>
