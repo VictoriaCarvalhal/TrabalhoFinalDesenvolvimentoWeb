@@ -53,9 +53,20 @@ function Projetos() {
 
     return (
         <div className="container mt-4">
-            <h1>Seus Projetos</h1>
-            {/*Botão p cadastrar um novo projeto, que redireciona para a aba de 'Cadastrar Projetos'*/}
-            <button onClick={redirecionaProCadastro}>Novo Projeto</button>
+            {/* O botão fica na mesma linha do título, alinhado à direita, que é
+                onde se espera a ação principal de uma listagem. */}
+            <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <h1 className="mb-0">Seus Projetos</h1>
+                <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={redirecionaProCadastro}
+                >
+                    <i className="bi bi-plus-lg me-2" aria-hidden="true"></i>
+                    Novo projeto
+                </button>
+            </div>
+
             {!isAutenticado && (
                 <div className="alert alert-warning mt-3">
                     Você precisa estar logado para ver seus projetos.
