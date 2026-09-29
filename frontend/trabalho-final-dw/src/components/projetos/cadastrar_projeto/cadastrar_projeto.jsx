@@ -20,7 +20,7 @@ import { useAreasCNPQ } from '../../../hooks/useAreasCNPQ';
 import { useAreasTematicas } from '../../../hooks/useAreasTematicas';
 import { useLinhasExtensao } from '../../../hooks/useLinhasExtensao';
 
-import { criarProjeto, atualizarEndereco } from '../../../services/projetoService';
+import { criarProjeto, atualizarEndereco, atualizarCaracterizacao } from '../../../services/projetoService';
 
 const ABAS = [
     {id: "identificacao", label: "Identificação"},
@@ -169,13 +169,20 @@ function CadastrarProjeto() {
             municipio: form.municipio ? Number(form.municipio) : null, // codigo_ibge (inteiro), vem do dropdown que pode ou não ser movimentado pela requisição ao viaCEP
         };
 
-        //console.group('Aba Identificação - dados a enviar para o servidor');
-        //console.log('POST /api/v1/projetos/', projeto);
-        //console.log('PATCH /api/v1/projetos/{id}/endereco/', endereco);
-        //console.log('corpo do POST (JSON):', JSON.stringify(projeto));
-        //console.log('corpo do PATCH endereco (JSON):', JSON.stringify(endereco));
-        //console.groupEnd();
-        
+        //json caracterizacao pronto para enviar para o backend
+        const caracterizacao = {
+            situacao_academica: "NOVO", //no backend bem que podia ser NOVO por default
+            vinculado_programa_extensao: form.vinculado_extensao === "sim",
+            curricularizado: form.curricular === "sim",
+            natureza: form.natureza || null,
+            abrangencia: form.abrangencia || null,
+            publico_alvo: form.publico_alvo,
+            grande_area_cnpq: form.area_conhecimento_cnpq || null,
+            area_tematica_principal: form.area_tematica_principal || null,
+            area_tematica_secundaria: form.area_tematica_secundaria || null,
+            linha_extensao: form.linha_extensao || null,
+        };
+
         setEnviando(true);
         setErroEnvio(null);
         try {
@@ -185,8 +192,10 @@ function CadastrarProjeto() {
                 setProjetoId(id);
             }
 
-            // Endereco foi criado vazio pelo backend
+            // Endereco e Caracterizacao foram criados vazio pelo backend
             await atualizarEndereco(id, endereco);
+            await atualizarCaracterizacao(id, caracterizacao);
+            
             navigate("/Projetos/SeusProjetos");
         } catch (erro) {
             const detalhe = erro.response?.data;

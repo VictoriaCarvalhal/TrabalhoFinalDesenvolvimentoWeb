@@ -10,4 +10,8 @@ export async function atualizarEndereco(id, dados) {
     await api.patch(`/projetos/${id}/endereco/`, dados);
 }
 
+export async function atualizarCaracterizacao(id, dados) {
+    await api.patch(`/projetos/${id}/caracterizacao/`, dados);
+}
+
 
