@@ -26,7 +26,17 @@ function Navbar() {
         <nav className="navbar navbar-expand-lg navbar-dark" id="navbar" aria-label="Menu principal">
             <div className="container-fluid">
 
-                
+                <button
+                    className="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Abrir o menu"
+                >
+                    <span className="navbar-toggler-icon"></span>
+                </button>
 
                 <div className="collapse navbar-collapse" id="navbarNav">
                     <ul className="navbar-nav">
