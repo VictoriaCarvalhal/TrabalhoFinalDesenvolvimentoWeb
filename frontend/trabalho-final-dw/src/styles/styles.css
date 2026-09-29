@@ -56,6 +56,16 @@ body {
 }
 
 /* Header */
+/* Risco que separa as duas logos, no lugar da divisoria que vinha desenhada
+   na imagem antiga. */
+.header-separador {
+    display: inline-block;
+    width: 1px;
+    height: 34px;
+    background-color: #e0503a;
+    flex: 0 0 auto;
+}
+
 .header-col-side {
     flex: 1;
 }
@@ -65,7 +75,7 @@ body {
 }
 
 .header-logo {
-    max-width: 150px;
+    max-width: 120px;
 }
 
 .header-titulo {
