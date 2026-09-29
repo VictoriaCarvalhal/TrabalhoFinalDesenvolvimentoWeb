@@ -53,10 +53,12 @@ function Projetos() {
 
     return (
         <div className="container mt-4">
-            {/* O botão fica na mesma linha do título, alinhado à direita, que é
-                onde se espera a ação principal de uma listagem. */}
-            <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                <h1 className="mb-0">Seus Projetos</h1>
+            {/* O menu ja diz em que tela a pessoa esta, entao o titulo nao
+                aparece de novo aqui. Ele continua no html, escondido, porque a
+                pagina precisa de um h1 para quem usa leitor de tela. */}
+            <h1 className="visually-hidden">Seus projetos</h1>
+
+            <div className="d-flex flex-wrap align-items-center justify-content-end gap-2">
                 <button
                     type="button"
                     className="btn btn-primary"
