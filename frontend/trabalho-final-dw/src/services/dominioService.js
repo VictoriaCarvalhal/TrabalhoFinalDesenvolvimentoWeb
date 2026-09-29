@@ -23,3 +23,7 @@ export async function buscarNaturezas() {
 export async function buscarAreasCNPQ() {
     return await api.get(`/dominios/areas-cnpq/`);
 }
+
+export async function buscarAreasTematicas() {
+    return await api.get(`/dominios/areas-tematicas/`);
+}

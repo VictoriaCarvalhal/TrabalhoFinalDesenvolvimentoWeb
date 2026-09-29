@@ -4,7 +4,8 @@ function Caracterizacao({
         form, 
         atualizarCampo, 
         naturezas, carregandoNaturezas, erroNaturezas, 
-        areasCNPQ, carregandoAreasCNPQ, erroAreasCNPQ }) {
+        areasCNPQ, carregandoAreasCNPQ, erroAreasCNPQ, 
+        areasTematicas, carregandoAreasTematicas, erroAreasTematicas }) {
     return (
         <fieldset>
         <legend>
@@ -149,12 +150,19 @@ function Caracterizacao({
 
         <div className="mb-3">
             <label className="form-label">Área Temática Principal</label>
-            <select
+            <select 
                 className="form-select"
                 value={form.area_tematica_principal}
                 onChange={(e) => atualizarCampo("area_tematica_principal", e.target.value)}
             >
                 <option value="">Selecione</option>
+                {carregandoAreasTematicas && <option disabled>Carregando...</option>}
+                {erroAreasTematicas && <option disabled>Erro ao carregar Áreas Tematicas</option>}
+                {areasTematicas.map((areaTematica) => (
+                    <option key={areaTematica.codigo} value={areaTematica.codigo}>
+                        {areaTematica.descricao}
+                    </option>
+                ))}
             </select>
         </div>
 
@@ -166,6 +174,13 @@ function Caracterizacao({
                 onChange={(e) => atualizarCampo("area_tematica_secundaria", e.target.value)}
             >
                 <option value="">Selecione</option>
+                {carregandoAreasTematicas && <option disabled>Carregando...</option>}
+                {erroAreasTematicas && <option disabled>Erro ao carregar Áreas Tematicas</option>}
+                {areasTematicas.map((areaTematica) => (
+                    <option key={areaTematica.codigo} value={areaTematica.codigo}>
+                        {areaTematica.descricao}
+                    </option>
+                ))}
             </select>
         </div>
 
