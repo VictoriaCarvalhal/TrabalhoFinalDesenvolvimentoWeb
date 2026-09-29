@@ -25,7 +25,7 @@ function Navbar() {
                 <button
                     className="navbar-toggler"
                     type="button"
-                    data-bs-toggle="collapse"
+                    data-bs-toggle="offcanvas"
                     data-bs-target="#navbarNav"
                     aria-controls="navbarNav"
                     aria-expanded="false"
@@ -65,6 +65,15 @@ function Navbar() {
                                 <span className="navbar-usuario d-none d-lg-inline">{nomeUsuario}</span>
                             )}
 
+                            <button
+                                type="button"
+                                className="btn btn-sm navbar-acao"
+                                onClick={alternarTema}
+                                aria-label={tema === 'light' ? 'Ativar o modo escuro' : 'Ativar o modo claro'}
+                                title={tema === 'light' ? 'Modo escuro' : 'Modo claro'}
+                            >
+                                <i className={`bi ${tema === 'light' ? 'bi-moon-fill' : 'bi-sun-fill'}`} aria-hidden="true"></i>
+                            </button>
                             <button
                                 type="button"
                                 className="btn btn-sm navbar-acao"
