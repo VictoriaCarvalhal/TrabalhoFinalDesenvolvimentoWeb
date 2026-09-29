@@ -53,9 +53,22 @@ function Projetos() {
 
     return (
         <div className="container mt-4">
-            <h1>Seus Projetos</h1>
-            {/*Botão p cadastrar um novo projeto, que redireciona para a aba de 'Cadastrar Projetos'*/}
-            <button onClick={redirecionaProCadastro}>Novo Projeto</button>
+            {/* O menu ja diz em que tela a pessoa esta, entao o titulo nao
+                aparece de novo aqui. Ele continua no html, escondido, porque a
+                pagina precisa de um h1 para quem usa leitor de tela. */}
+            <h1 className="visually-hidden">Seus projetos</h1>
+
+            <div className="d-flex flex-wrap align-items-center justify-content-end gap-2">
+                <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={redirecionaProCadastro}
+                >
+                    <i className="bi bi-plus-lg me-2" aria-hidden="true"></i>
+                    Novo projeto
+                </button>
+            </div>
+
             {!isAutenticado && (
                 <div className="alert alert-warning mt-3">
                     Você precisa estar logado para ver seus projetos.

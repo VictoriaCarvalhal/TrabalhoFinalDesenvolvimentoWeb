@@ -11,6 +11,8 @@ export const useAuthStore = create((set) => ({
     },
     logout: () => {
         localStorage.removeItem('nomeUsuario');
+        // o refresh e guardado no login, entao sai junto
+        localStorage.removeItem('refresh');
         set({ isAutenticado: false, token: null, nomeUsuario: null });
     },
 }))
