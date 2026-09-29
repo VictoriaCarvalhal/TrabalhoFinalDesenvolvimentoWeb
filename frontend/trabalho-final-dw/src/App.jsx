@@ -4,6 +4,12 @@ import Inicial from './components/Inicial/inicial';
 import Bemvindo from './components/Bemvindo'; // Ajuste o caminho conforme onde estiver seu componente Bemvindo
 import ProtectedRoute from './components/ProtectedRoute'; // O componente do Passo 1
 
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Inicial from './components/Inicial/inicial';
+import Bemvindo from './components/Bemvindo'; // Ajuste o caminho conforme onde estiver seu componente Bemvindo
+import ProtectedRoute from './components/ProtectedRoute'; // O componente do Passo 1
+
 function App() {
   return (
     <BrowserRouter>

@@ -151,3 +151,22 @@ SPECTACULAR_SETTINGS = {
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# --- BYPASS TEMPORÁRIO DE AUTENTICAÇÃO (APENAS DEV) ---
+# if DEBUG:
+#     from rest_framework import authentication
+#     from django.contrib.auth import get_user_model
+#     class DevForceAuth(authentication.BaseAuthentication):
+#         def authenticate(self, request):
+#             User = get_user_model()
+#             # Pega o primeiro superusuário ou o primeiro usuário do banco
+#             user = User.objects.filter(is_superuser=True).first() or User.objects.first()
+#             return (user, None)
+#     REST_FRAMEWORK = globals().get('REST_FRAMEWORK', {})
+#     REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = [
+#         # Foi alterado de 'seu_projeto.settings...' para 'config.settings...'
+#         'config.settings.DevForceAuth', 
+#     ]
+#     REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] = [
+#         'rest_framework.permissions.AllowAny',
+#     ]
