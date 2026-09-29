@@ -2,10 +2,14 @@
  * Cobre o caminho window.print(); o caminho print-js recebe as mesmas
  * regras via opção `style` em ImprimirProjeto.jsx (manter sincronizado). */
 
-/* Timbre repetido: invisível na tela, fixo no papel
+/* Timbre e rodapé repetidos: invisíveis na tela, fixos no papel
  * (o Chrome repete elementos fixed em todas as páginas impressas).
- * A numeração sai na caixa de margem @bottom-right do @page. */
+ * A numeração "Página X de Y" sai na caixa de margem @bottom-right do @page. */
 .print-cabecalho {
+    display: none;
+}
+
+.print-rodape {
     display: none;
 }
 
@@ -26,14 +30,43 @@
     font-weight: bold;
     margin: 0;
 }
+#area-impressao {
+    background: #fff;
+    color: #212529;
+}
+
+#area-impressao h1,
+#area-impressao h2,
+#area-impressao h3,
+#area-impressao p,
+#area-impressao li,
+#area-impressao strong {
+    color: #212529;
+}
+
+#area-impressao .text-muted {
+    color: #6c757d !important;
+}
+
+#area-impressao .table {
+    --bs-table-color: #212529;
+    --bs-table-bg: #fff;
+    --bs-table-border-color: #dee2e6;
+    color: #212529;
+}
+
+#area-impressao .table th,
+#area-impressao .table td {
+    border-color: #dee2e6;
+}
 
 @media print {
     @page {
         size: A4;
-        margin: 16mm 12mm 20mm 12mm;
+        margin: 16mm 12mm 25mm 12mm;
 
         @bottom-right {
-            content: 'Página ' counter(page);
+            content: 'Página ' counter(page) ' de ' counter(pages);
             font-size: 10px;
         }
     }
@@ -129,6 +162,20 @@
         background: #fff !important;
         color: #000 !important;
     }
+    #area-impressao table,
+    #area-impressao thead,
+    #area-impressao tbody,
+    #area-impressao tr,
+    #area-impressao th,
+    #area-impressao td {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    #area-impressao .text-muted,
+    #area-impressao a {
+        color: #000 !important;
+    }
 
     #area-impressao img {
         max-height: 70px;
@@ -144,6 +191,21 @@
         color: #000;
         border-bottom: 1px solid #000;
         padding-bottom: 4px;
+        background: #fff;
+    }
+
+    .print-rodape {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        font-size: 10px;
+        color: #000;
+        border-top: 1px solid #000;
+        padding-top: 4px;
         background: #fff;
     }
 }

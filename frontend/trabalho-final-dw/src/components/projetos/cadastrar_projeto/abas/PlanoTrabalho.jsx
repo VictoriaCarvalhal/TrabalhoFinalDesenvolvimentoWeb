@@ -1,4 +1,5 @@
 import React from 'react';
+import CampoTextoLongo from '../CampoTextoLongo';
 
 function PlanoTrabalho({ form, atualizarCampo }) {
     return (
@@ -14,26 +15,24 @@ function PlanoTrabalho({ form, atualizarCampo }) {
                     readOnly
                 />
             </div>
-            
-            <div className="mb-3">
-                <label className="form-label">Resultados esperados para o biênio (no máximo 1000 caracteres)</label>
-                <textarea
-                    className="form-control"
-                    maxLength="1000"
-                    value={form.resultados_esperados}
-                    onChange={(e) => atualizarCampo("resultados_esperados", e.target.value)}
-                />
-            </div>
 
-            <div className="mb-3">
-                <label className="form-label">Cronograma de atividades do biênio (no máximo 1000 caracteres)</label>
-                <textarea
-                    className="form-control"
-                    maxLength="1000"
-                    value={form.cronograma_atividades}
-                    onChange={(e) => atualizarCampo("cronograma_atividades", e.target.value)}
-                />
-            </div>
+            <CampoTextoLongo
+                rotulo="Resultados esperados para o biênio"
+                campo="resultados_esperados"
+                limite={1000}
+                linhas={5}
+                valor={form.resultados_esperados}
+                aoMudar={atualizarCampo}
+            />
+
+            <CampoTextoLongo
+                rotulo="Cronograma de atividades do biênio"
+                campo="cronograma_atividades"
+                limite={1000}
+                linhas={5}
+                valor={form.cronograma_atividades}
+                aoMudar={atualizarCampo}
+            />
 
         </fieldset>
     );

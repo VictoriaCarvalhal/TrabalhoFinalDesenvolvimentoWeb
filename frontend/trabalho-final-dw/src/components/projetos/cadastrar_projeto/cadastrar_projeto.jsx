@@ -111,6 +111,8 @@ function CadastrarProjeto() {
         //plano de trabalho
         resultados_esperados: "",
         cronograma_atividades: "",
+        //parcerias internas
+        participacao_interna: "",
         //unidade envolvidas
         unidade: "",
         departamento: "",
@@ -256,9 +258,10 @@ function CadastrarProjeto() {
     
     return (
         <div className="container mt-4">
-            <h1>Cadastro de Projeto</h1>
-            {/* Codigo para testar a autenticacao mockada. Use isso para já programar a logica de mostrar os projetos de um especifico usuario.
-             Dessa forma quando o codigo do backend estiver pronto só precisamos adaptar e não criar do zero*/}
+            {/* Mesma ideia da lista: o titulo fica so para leitor de tela,
+                porque as abas logo abaixo ja dizem onde a pessoa esta. */}
+            <h1 className="visually-hidden">Cadastro de projeto</h1>
+
              <ul className="nav nav-tabs">
                 {ABAS.map((aba) => (
                     <li className="nav-item" key={aba.id}>
