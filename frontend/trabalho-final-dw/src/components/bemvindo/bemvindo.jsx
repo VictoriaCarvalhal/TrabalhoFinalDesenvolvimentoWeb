@@ -5,7 +5,7 @@ function Bemvindo() {
 
     return (
         <div>
-            <h1>Bem Vindo {nomeUsuario ? `${nomeUsuario}` : ''}</h1>
+            <h1>Bem Vindo, {nomeUsuario ? `${nomeUsuario}` : ''}</h1>
         </div>
     );
 }
