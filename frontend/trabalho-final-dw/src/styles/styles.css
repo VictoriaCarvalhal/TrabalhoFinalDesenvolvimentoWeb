@@ -89,15 +89,6 @@ body {
     width: 100%;
 }
 
-/* No desktop, o offcanvas-body precisa ser flex pra empurrar as ações
-   (admin, tema, sair) pra direita com ms-lg-auto */
-@media (min-width: 992px) {
-    #navbar .offcanvas-body {
-        display: flex;
-        align-items: center;
-    }
-}
-
 #navbar .navbar-nav {
     display: flex;
     padding: 0;

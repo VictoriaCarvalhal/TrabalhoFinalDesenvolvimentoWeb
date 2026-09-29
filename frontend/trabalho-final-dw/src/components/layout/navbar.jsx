@@ -62,7 +62,7 @@ function Navbar() {
                         <h5 className="offcanvas-title" style={{ color: '#45718C' }}>Menu</h5>
                         <button type="button" className="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#navbarNav" aria-label="Fechar"></button>
                     </div>
-                    <div className="offcanvas-body">
+                    <div className="offcanvas-body d-lg-flex flex-grow-1 align-items-center">
                         <ul className="navbar-nav">
                             <li className="nav-item">
                                 <NavLink className="nav-link" to="/Bemvindo" onClick={fecharDropdown}>
