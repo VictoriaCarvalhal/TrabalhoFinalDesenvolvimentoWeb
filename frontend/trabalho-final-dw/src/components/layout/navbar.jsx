@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuthStore } from '../../stores/authStore';
 import { useThemeStore } from '../../stores/themeStore';
 
 // A navegação toda fica numa lista só, à esquerda. O botão de tema não entra
@@ -8,8 +9,18 @@ import { useThemeStore } from '../../stores/themeStore';
 function Navbar() {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const { tema, alternarTema } = useThemeStore();
+    const navigate = useNavigate();
+    const isAutenticado = useAuthStore((state) => state.isAutenticado);
+    const nomeUsuario = useAuthStore((state) => state.nomeUsuario);
+    const logout = useAuthStore((state) => state.logout);
 
     const fecharDropdown = () => setDropdownOpen(false);
+
+    // Sair limpa o token e devolve para a tela de login.
+    const sair = () => {
+        logout();
+        navigate('/');
+    };
 
     return (
         <nav className="navbar navbar-expand-lg navbar-dark" id="navbar" aria-label="Menu principal">
@@ -53,7 +64,11 @@ function Navbar() {
                         </li>
                     </ul>
 
-                    <div className="navbar-acoes ms-lg-auto">
+                    <div className="navbar-acoes ms-lg-auto d-flex align-items-center gap-2">
+                        {isAutenticado && nomeUsuario && (
+                            <span className="navbar-usuario d-none d-lg-inline">{nomeUsuario}</span>
+                        )}
+
                         <button
                             type="button"
                             className="btn btn-sm navbar-acao"
@@ -63,6 +78,13 @@ function Navbar() {
                         >
                             <i className={`bi ${tema === 'light' ? 'bi-moon-fill' : 'bi-sun-fill'}`} aria-hidden="true"></i>
                         </button>
+
+                        {isAutenticado && (
+                            <button type="button" className="btn btn-sm navbar-acao" onClick={sair}>
+                                <i className="bi bi-box-arrow-right me-1" aria-hidden="true"></i>
+                                Sair
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

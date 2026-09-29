@@ -152,6 +152,12 @@ body {
     border-color: #45718C;
 }
 
+.navbar-usuario {
+    color: #45718C;
+    font-weight: 700;
+    font-size: 14px;
+}
+
 /* Estilos específicos para o Dropdown Menu */
 #navbar .dropdown-menu {
     background-color: var(--cor-fundo);
