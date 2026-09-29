@@ -105,11 +105,15 @@ function Caracterizacao({ form, atualizarCampo, naturezas, carregandoNaturezas, 
             <label className="form-label">Abrangência</label>
                         
             <select 
-            className="form-select"
-            value={form.abrangencia}
-            onChange={(e) => atualizarCampo("abrangencia", e.target.value)}
+                className="form-select"
+                value={form.abrangencia}
+                onChange={(e) => atualizarCampo("abrangencia", e.target.value)}
             >
-
+                <option value="">Selecione</option>
+                <option value="LOCAL">Local</option>
+                <option value="REGIONAL">Regional</option>
+                <option value="NACIONAL">Nacional</option>
+                <option value="INTERNACIONAL">Internacional</option>
             </select>
         </div>
 
