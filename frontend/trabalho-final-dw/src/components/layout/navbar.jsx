@@ -56,13 +56,14 @@ function Navbar() {
                     )}
                 </div>
 
-                {/* offcanvas-lg: no celular abre pelo lado, no desktop fica normal */}
-                <div className="offcanvas-lg offcanvas-start" tabIndex="-1" id="navbarNav" style={{ backgroundColor: '#1E2D40' }}>
+                {/* No celular abre pelo lado, no desktop o navbar-expand-lg
+                    transforma em layout inline automaticamente */}
+                <div className="offcanvas offcanvas-start" tabIndex="-1" id="navbarNav" style={{ backgroundColor: '#1E2D40' }}>
                     <div className="offcanvas-header">
                         <h5 className="offcanvas-title" style={{ color: '#45718C' }}>Menu</h5>
                         <button type="button" className="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#navbarNav" aria-label="Fechar"></button>
                     </div>
-                    <div className="offcanvas-body d-lg-flex flex-grow-1 align-items-center">
+                    <div className="offcanvas-body">
                         <ul className="navbar-nav">
                             <li className="nav-item">
                                 <NavLink className="nav-link" to="/Bemvindo" onClick={fecharDropdown}>
