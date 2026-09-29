@@ -1,11 +1,34 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../../stores/authStore';
-import CampoTextoLongo from './CampoTextoLongo';
+
 import LocaisRealizacao from './abas/LocaisRealizacao';
 import MembrosEquipe from './abas/MembrosEquipe';
 import UnidadesEnvolvidas from './abas/UnidadesEnvolvidas';
-import api from '../../../services/api';//
+import Identificacao from './abas/Identificacao';
+import Caracterizacao from './abas/Caracterizacao';
+import Descricao from './abas/Descricao';
+import PlanoTrabalho from './abas/PlanoTrabalho';
+import ParceriasInternas from './abas/ParceriasInternas';
+
 import { MUNICIPIOS_RJ } from '../../../dados/municipiosRJ';
+import { useUnidades } from '../../../hooks/useUnidades';
+import { useDepartamentos } from '../../../hooks/useDepartamentos';
+import { useVinculosCoordenador } from '../../../hooks/useVinculosCoordenador';
+import { useNaturezas } from '../../../hooks/useNaturezas';
+import { useAreasCNPQ } from '../../../hooks/useAreasCNPQ';
+import { useAreasTematicas } from '../../../hooks/useAreasTematicas';
+import { useLinhasExtensao } from '../../../hooks/useLinhasExtensao';
+
+
+import { 
+    criarProjeto,
+    atualizarEndereco,
+    criarContato,
+    atualizarCaracterizacao,
+    atualizarDescricao,
+    criarPlanoDeTrabalho
+} from '../../../services/projetoService';
 
 const ABAS = [
     {id: "identificacao", label: "Identificação"},
@@ -19,23 +42,28 @@ const ABAS = [
 ];
 
 function CadastrarProjeto() {
+    const navigate = useNavigate();
+
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
     const token = useAuthStore((state) => state.token);
     
     const [abaAtiva, setAbaAtiva] = useState("identificacao");
 
     const [buscandoCep, setBuscandoCep] = useState(false);
-    const [avisoCep, setAvisoCep] = useState(null);//recado do ViaCEP quando o CEP não serve
+    const [avisoCep, setAvisoCep] = useState(null);
 
-    const [unidades, setUnidades] = useState([]); //Aqui serão armazenadas as unidades que serão obtidas da API para o dropdown
-    const [departamentos, setDepartamentos] = useState([]); //Aqui serão armazenados os departamentos que serão obtidas da API para o dropdown
+    // Hooks para carregar dados dos dominios e vinculos do coordenador
+    const { dados: unidades, loading: carregandoUnidades, erro: erroUnidades } = useUnidades();
+    const { dados: departamentos, loading: carregandoDepartamentos, erro: erroDepartamentos } = useDepartamentos();
+    const { dados: vinculosCoordenador, loading: carregandoVinculos, erro: erroVinculos } = useVinculosCoordenador();
+    const { dados: naturezas, loading: carregandoNaturezas, erro: erroNaturezas } = useNaturezas();
+    const { dados: areasCNPQ, loading: carregandoAreasCNPQ, erro: erroAreasCNPQ } = useAreasCNPQ();
+    const { dados: areasTematicas, loading: carregandoAreasTematicas, erro: erroAreasTematicas } = useAreasTematicas();
+    const { dados: linhasExtensao, loading: carregandoLinhasExtensao, erro: erroLinhasExtensao } = useLinhasExtensao();
     
-    const [vinculosCoordenador, setVinculosCoordenador] = useState([]);//
-    const [carregandoVinculos, setCarregandoVinculos] = useState(true);//
-    const [erroVinculos, setErroVinculos] = useState(null);//
 
-
-    const [projetoId, setProjetoId] = useState(null);//UUID vindo do POST; as abas tambem usam
+    //projetoId é UUID vindo do POST; as abas tambem usam
+    const [projetoId, setProjetoId] = useState(null);
     const [enviando, setEnviando] = useState(false);
     const [erroEnvio, setErroEnvio] = useState(null);
     
@@ -45,6 +73,9 @@ function CadastrarProjeto() {
         coordenador: "",
         matricula_coordenador: "",
         coordenador_vinculo: "",
+        //contato: sempre começa com um campo de cada, o botão + acrescenta mais
+        telefones: [""],
+        emails: [""],
         //endereço
         cep: "",
         logradouro: "",
@@ -70,16 +101,16 @@ function CadastrarProjeto() {
         palavra_chave_3: "",
         introducao: "",
         justificativa: "",
-        ojetivo_geral: "",
-        objetivo_especifico: "",
+        objetivo_geral: "",
+        objetivos_especificos: "",
         metodologia_avaliacao: "",
         relacao_ensino: "",
         relacao_pesquisa: "",
         interacao_dialogica: "",
-        interdisciplinaridade_interprofissionalidade: "",
+        interdisciplinaridade: "",
         impacto_formacao: "",
         indissociabilidade: "",
-        impacto_transformacao_social: "",
+        impacto_social: "",
         referencias_bibliograficas: "",
         //plano de trabalho
         resultados_esperados: "",
@@ -130,17 +161,16 @@ function CadastrarProjeto() {
         setForm((prev) => ({ ...prev, [campo]: valor }));
     }
 
-    // Mais tarde essa função vai ser responsável por persistir os dados
+    // Essa função é responsável por persistir os dados
     async function salvarDadosIdentificacao() {
-        //json projeto pronto para enviar para o backend
+        //json projeto pronto com os dados mínimos de um projeto para enviar ao backend
         const projeto = {
-            ano: new Date().getFullYear(),//pega o ano atual
-            titulo: form.titulo,//pega o título do formulário
+            ano: new Date().getFullYear(),
+            titulo: form.titulo,
             coordenador: form.coordenador_vinculo, //pega o UUID do vínculo, não a matricula do coordenador e nem o UUID do coordenador. Um bom tempo foi gasto pra perceber isso
-            unidade_proponente: form.unidade ? Number(form.unidade) : null,//pega o id da unidade
-            departamento_proponente: form.departamento ? Number(form.departamento) : null,//pega o id do departamento
+            unidade_proponente: form.unidade ? Number(form.unidade) : null,
+            departamento_proponente: form.departamento ? Number(form.departamento) : null,
         };
-
 
         //json endereço pronto para enviar para o backend
         const endereco = {
@@ -152,25 +182,72 @@ function CadastrarProjeto() {
             municipio: form.municipio ? Number(form.municipio) : null, // codigo_ibge (inteiro), vem do dropdown que pode ou não ser movimentado pela requisição ao viaCEP
         };
 
-        //console.group('Aba Identificação — dados a enviar para o servidor');
-        //console.log('POST /api/v1/projetos/', projeto);
-        //console.log('PATCH /api/v1/projetos/{id}/endereco/', endereco);
-        //console.log('corpo do POST (JSON):', JSON.stringify(projeto));
-        //console.log('corpo do PATCH endereco (JSON):', JSON.stringify(endereco));
-        //console.groupEnd();
-        
+        //json caracterizacao pronto para enviar para o backend
+        const caracterizacao = {
+            situacao_academica: "NOVO", //no backend bem que podia ser NOVO por default
+            vinculado_programa_extensao: form.vinculado_extensao === "sim",
+            curricularizado: form.curricular === "sim",
+            natureza: form.natureza || null,
+            abrangencia: form.abrangencia || null,
+            publico_alvo: form.publico_alvo,
+            grande_area_cnpq: form.area_conhecimento_cnpq || null,
+            area_tematica_principal: form.area_tematica_principal || null,
+            area_tematica_secundaria: form.area_tematica_secundaria || null,
+            linha_extensao: form.linha_extensao || null,
+        };
+
+        //json descricao pronto para enviar para o backend
+        const descricao = {
+            resumo: form.resumo || null,
+            palavras_chave: [form.palavra_chave_1, form.palavra_chave_2, form.palavra_chave_3].filter(Boolean),
+            introducao: form.introducao || null,
+            justificativa: form.justificativa || null,
+            objetivo_geral: form.objetivo_geral || null,
+            objetivos_especificos: form.objetivos_especificos || null,
+            metodologia_avaliacao: form.metodologia_avaliacao || null,
+            relacao_ensino: form.relacao_ensino === "sim",
+            relacao_pesquisa: form.relacao_pesquisa === "sim",
+            interacao_dialogica: form.interacao_dialogica || null,
+            interdisciplinaridade: form.interdisciplinaridade || null,
+            impacto_formacao: form.impacto_formacao || null,
+            indissociabilidade: form.indissociabilidade || null,
+            impacto_social: form.impacto_social || null,
+            referencias_bibliograficas: form.referencias_bibliograficas || null,
+        };
+
+        //json plano_trabalho pronto para enviar para o backend
+        const plano_trabalho = {
+            "ano": new Date().getFullYear(),
+            "resultados_esperados": form.resultados_esperados,
+            "cronograma_atividades": form.cronograma_atividades
+        };
+
         setEnviando(true);
         setErroEnvio(null);
         try {
-            let id = projetoId; //O id virá no corpo da resposta.
-            if (!id) {
-                const resposta = await api.post('/projetos/', projeto);
-                id = resposta.data.id;
-                setProjetoId(id);//guarda: as abas e o proximo salvar dependem dele
+            let projeto_id = projetoId;
+            if (!projeto_id) {
+                projeto_id = await criarProjeto(projeto);
+                setProjetoId(projeto_id);
             }
 
-            // Endereco foi criado vazio pelo backend
-            await api.patch(`/projetos/${id}/endereco/`, endereco);
+            // Endereco, Caracterizacao e Descrição foram criados vazio pelo backend
+            await atualizarEndereco(projeto_id, endereco);
+            await atualizarCaracterizacao(projeto_id, caracterizacao);
+            await atualizarDescricao(projeto_id, descricao);
+
+            // Plano de trabalho e contatos não
+            await criarPlanoDeTrabalho(projeto_id, plano_trabalho);
+            const contatos = [
+                ...form.telefones.map((valor) => ({ tipo_contato: 'TELEFONE', valor: valor.trim() })),
+                ...form.emails.map((valor) => ({ tipo_contato: 'EMAIL', valor: valor.trim() })),
+            ].filter((c) => c.valor);
+
+            for (const contato of contatos) {
+                await criarContato(projeto_id, contato);
+            }
+            
+            navigate("/Projetos/SeusProjetos");
         } catch (erro) {
             const detalhe = erro.response?.data;
             setErroEnvio(detalhe
@@ -180,63 +257,15 @@ function CadastrarProjeto() {
             setEnviando(false);
         }
     }
+
+    // Se houver apenas um vínculo ativo, preenche automaticamente o coordenador
     useEffect(() => {
-        async function carregarUnidades() {
-            try {
-                const resposta = await fetch("/api/v1/dominios/unidades/");
-
-                if (!resposta.ok) {
-                    throw new Error(`HTTP ${resposta.status}`);
-                }
-
-                const dados = await resposta.json();
-
-                setUnidades(dados);
-            } catch (erro) {
-                console.error("Erro ao carregar unidades:", erro);
-            }
+        if (vinculosCoordenador.length === 1) {
+            atualizarCampo('coordenador_vinculo', vinculosCoordenador[0].id);
+            atualizarCampo('matricula_coordenador', vinculosCoordenador[0].matricula ?? '');
+            atualizarCampo('coordenador', vinculosCoordenador[0].nome_completo);
         }
-
-        async function carregarDepartamentos() {
-            try {
-                const resposta = await fetch("/api/v1/dominios/departamentos/");
-
-                if (!resposta.ok) {
-                    throw new Error(`HTTP ${resposta.status}`);
-                }
-
-                const dados = await resposta.json();
-
-                setDepartamentos(dados);
-            } catch (erro) {
-                console.error("Erro ao carregar departamentos:", erro);
-            }
-        }
-        async function carregarVinculos() {
-                 try {
-                     const perfil = await api.get('/auth/me/');//consulta dados do usuário logado
-                     const resposta = await api.get('/dominios/vinculos/');//consulta todos os vinculos
-                     const meus = resposta.data.filter(
-                         (v) => v.pessoa === perfil.data.id && v.status === 'ATIVO'//filtra os vinculos que são apenas do usuário logado
-                     );
-                     setVinculosCoordenador(meus);
-
-                     if (meus.length === 1) {//se o usuário só tem uma matricula, então já preenche 
-                         atualizarCampo('coordenador_vinculo', meus[0].id);
-                         atualizarCampo('matricula_coordenador', meus[0].matricula ?? '');
-                         atualizarCampo('coordenador', meus[0].nome_completo);
-                     }
-                 } catch (erro) {
-                     console.error('Erro ao carregar vínculos:', erro);
-                     setErroVinculos('Não foi possível carregar as matrículas');
-                 } finally {
-                     setCarregandoVinculos(false);
-                 }
-             }
-        carregarVinculos();
-        carregarUnidades();
-        carregarDepartamentos();
-    }, []);
+    }, [vinculosCoordenador]);
     
     return (
         <div className="container mt-4">
@@ -266,563 +295,51 @@ function CadastrarProjeto() {
             <div className="p-3 border rounded bg-body-tertiary">
                 
                 {abaAtiva === "identificacao" && (
-                    
-                    <fieldset>
-                        <legend>Identificação</legend>
-                        <fieldset className="border rounded p-3 m-2">
-                            <legend>Projeto</legend>
-                            <div className="mb-3">
-                                <label className="form-label">Título do projeto</label>
-                                <input
-                                type="text"
-                                className="form-control"
-                                value={form.titulo}
-                                onChange={(e) => atualizarCampo("titulo", e.target.value)}
-                                />
-                            </div>
-                        </fieldset>
-                        <fieldset className="border rounded p-3 m-2">
-                            <legend>Coordenador</legend>
-                            <div className="mb-3">
-                                <label className="form-label">Matrícula</label>
-                                {/*<input
-                                    type="number"
-                                    className="form-control"
-                                    value={form.matricula_coordenador}
-                                    onChange={(e) => atualizarCampo("matricula_coordenador", e.target.value)}
-                                />*/}
-                                <select
-                                    className="form-select"
-                                    value={form.coordenador_vinculo}
-                                    onChange={(e) => {
-                                        const v = vinculosCoordenador.find((x) => x.id === e.target.value);
-                                        atualizarCampo('coordenador_vinculo', e.target.value);
-                                        atualizarCampo('matricula_coordenador', v?.matricula ?? '');
-                                        atualizarCampo('coordenador', v?.nome_completo ?? '');
-                                    }}
-                                >
-                                    <option value="">Selecione a matrícula</option>
-                                    {vinculosCoordenador.map((v) => (
-                                        <option key={v.id} value={v.id}>
-                                            {v.matricula || 'sem matrícula'} — {v.tipo_vinculo_display}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="mb-3">
-                                <label className="form-label">Nome</label>
-                                <input
-                                type="text"
-                                className="form-control"
-                                value={form.coordenador}
-                                //onChange={(e) => atualizarCampo("coordenador", e.target.value)}
-                                readOnly
-                                />
-                            </div>
-                        </fieldset>
-                        <fieldset className="border rounded p-3 m-2">
-                            <legend>Unidade</legend>
-                            <div className="mb-3">
-                                <label className="form-label">Unidade</label>
-                                <select
-                                    className="form-select"
-                                    value={form.unidade}
-                                    onChange={(e) => {
-                                        atualizarCampo("unidade", e.target.value);
-                                        atualizarCampo("departamento", "");//acontece em função da unidade
-                                    }}
-                                >
-                                    <option value="">Selecione uma unidade</option>
-                                    {unidades.map((unidade) => (
-                                        <option key={unidade.id} value={unidade.id}>
-                                            {unidade.sigla} — {unidade.nome}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="mb-3">
-                                <label className="form-label">Departamento</label>
-                                
-                                <select
-                                    className="form-select"
-                                    value={form.departamento}
-                                    disabled={!form.unidade}
-                                    onChange={(e) => atualizarCampo("departamento", e.target.value)}
-                                >
-                                    <option value="">
-                                        {form.unidade ? "Selecione um departamento" : "Escolha uma unidade primeiro"}
-                                    </option>
-                                    {departamentos
-                                        .filter((d) => String(d.unidade) === String(form.unidade))  // <- o String() do item 2
-                                        .map((d) => (
-                                            <option key={d.id} value={d.id}>
-                                                {d.nome}
-                                            </option>
-                                        ))}
-                                </select>
-                        
-                            </div>
-
-                        </fieldset>
-                        <fieldset className="border rounded p-3 m-2">
-                            <legend>Endereço</legend>
-                                <div className="mb-3">
-                                    <label className="form-label">CEP</label>
-                                    <input
-                                        className="form-control"
-                                        id="cep"
-                                        placeholder= "00000-000"
-                                        maxLength={9}
-                                        value={form.cep}
-                                            onChange={(e) => {
-                                            const v = e.target.value.replace(/\D/g, '').slice(0, 8);
-                                            const fmt = v.length > 5 ? `${v.slice(0,5)}-${v.slice(5)}` : v;
-                                            atualizarCampo('cep', fmt);
-                                            }}
-                                            onBlur={() => buscarCep(form.cep)}
-                                        />
-                                </div>
-                                <div className="mb-3">
-                                    <label className="form-label">Logradouro</label>
-                                      <input
-                                            className="form-control"
-                                            id="logradouro"
-                                            value={form.logradouro}
-                                            onChange={(e) => atualizarCampo('logradouro', e.target.value)}
-                                        />
-                                </div>
-                                <div className="mb-3">
-                                    <label className="form-label">Bairro</label>
-                                    <input
-                                            className="form-control"
-                                            id="logradouro"
-                                            value={form.bairro}
-                                            onChange={(e) => atualizarCampo('bairro', e.target.value)}
-                                        />
-                                </div>
-                                <div className="mb-3">
-                                    <label className="form-label" htmlFor="municipio">Município</label>
-                                    <select
-                                        className="form-select"
-                                        id="municipio"
-                                        value={form.municipio}
-                                        onChange={(e) => atualizarCampo("municipio", e.target.value)}
-                                    >
-                                        <option value="">Selecione um município</option>
-                                        {MUNICIPIOS_RJ.map((m) => (
-                                            <option key={m.codigo} value={m.codigo}>
-                                                {m.nome}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="mb-3">
-                                    <label className="form-label">Numero</label>
-                                    <input
-                                            className="form-control"
-                                            id="numero"
-                                            value={form.numero}
-                                            onChange={(e) => atualizarCampo('numero', e.target.value)}
-                                        />
-                                </div>
-                                <div className="mb-3">
-                                    <label className="form-label">Complemento</label>
-                                            <input
-                                            className="form-control"
-                                            id="complemento"
-                                            value={form.complemento}
-                                            onChange={(e) => atualizarCampo('complemento', e.target.value)}
-                                        />
-                                </div>
-                        </fieldset>
-                    </fieldset>
-
+                    <Identificacao
+                        form={form}
+                        atualizarCampo={atualizarCampo}
+                        vinculosCoordenador={vinculosCoordenador}
+                        unidades={unidades}
+                        departamentos={departamentos}
+                        buscarCep={buscarCep}
+                        buscandoCep={buscandoCep}
+                        avisoCep={avisoCep}
+                    />
                 )}
 
                 {abaAtiva === "caracterizacao" && (
-                    <fieldset>
-                    <legend>
-                        Caracterização
-                    </legend>
-                    
-                    <div className="mb-3">
-                        <label className="form-label">Situação do Projeto</label>
-                        <input
-                        type="text"
-                        className="form-control"
-                        value="Novo"
-                        readonly
-                        />
-                    </div>
-
-                    <div className="mb-3">
-                        <label className="form-label">É vinculado a Programa de Extensão?</label>
-                        <div className="form-check">
-                            <input
-                                className="form-check-input"
-                                type="radio"
-                                name="vinculado_extensao"
-                                id="vinculado_extensao_sim"
-                                value="sim"
-                                checked={form.vinculado_extensao === "sim"}
-                                onChange={(e) => atualizarCampo("vinculado_extensao", e.target.value)}
-                            />
-                            <label className="form-check-label" htmlFor="vinculado_extensao_sim">
-                                Sim
-                            </label>
-                        </div>
-                        <div className="form-check">
-                            <input
-                                className="form-check-input"
-                                type="radio"
-                                name="vinculado_extensao"
-                                id="vinculado_extensao_nao"
-                                value="nao"
-                                checked={form.vinculado_extensao === "nao"}
-                                onChange={(e) => atualizarCampo("vinculado_extensao", e.target.value)}
-                            />
-                            <label className="form-check-label" htmlFor="vinculado_extensao_nao">
-                                Não
-                            </label>
-                        </div>
-                    </div>
-
-                    <div className="mb-3">
-                        <label className="form-label">É curricular?</label>
-                        <div className="form-check">
-                            <input
-                                className="form-check-input"
-                                type="radio"
-                                name="curricular"
-                                id="curricular_sim"
-                                value="sim"
-                                checked={form.curricular === "sim"}
-                                onChange={(e) => atualizarCampo("curricular", e.target.value)}
-                            />
-                            <label className="form-check-label" htmlFor="curricular_sim">
-                                Sim
-                            </label>
-                        </div>
-                        <div className="form-check">
-                            <input
-                                className="form-check-input"
-                                type="radio"
-                                name="curricular"
-                                id="curricular_nao"
-                                value="nao"
-                                checked={form.curricular === "nao"}
-                                onChange={(e) => atualizarCampo("curricular", e.target.value)}
-                            />
-                            <label className="form-check-label" htmlFor="curricular_nao">
-                                Não
-                            </label>
-                        </div>
-                    </div>
-
-                    <div className="mb-3">
-                        <label className="form-label">Natureza</label>
-                                    
-                        <select 
-                        className="form-select"
-                        value={form.natureza}
-                        onChange={(e) => atualizarCampo("natureza", e.target.value)}
-                        >
-
-                        </select>
-                    </div>
-
-                    <div className="mb-3">
-                        <label className="form-label">Abrangência</label>
-                                    
-                        <select 
-                        className="form-select"
-                        value={form.abrangencia}
-                        onChange={(e) => atualizarCampo("abrangencia", e.target.value)}
-                        >
-
-                        </select>
-                    </div>
-
-                    <div className="mb-3">
-                        <label className="form-label">Público Alvo</label>
-                        <textarea
-                            className="form-control"
-                            value={form.publico_alvo}
-                            onChange={(e) => atualizarCampo("publico_alvo", e.target.value)}
-                        />
-                    </div>
-
-                    <div className="mb-3">
-                        <label className="form-label">Grande Área de Conhecimento do CNPq</label>
-                        <select
-                            className="form-select"
-                            value={form.area_conhecimento_cnpq}
-                            onChange={(e) => atualizarCampo("area_conhecimento_cnpq", e.target.value)}
-                        >
-                            <option value="">Selecione</option>
-                        </select>
-                    </div>
-
-                    <div className="mb-3">
-                        <label className="form-label">Área Temática Principal</label>
-                        <select
-                            className="form-select"
-                            value={form.area_tematica_principal}
-                            onChange={(e) => atualizarCampo("area_tematica_principal", e.target.value)}
-                        >
-                            <option value="">Selecione</option>
-                        </select>
-                    </div>
-
-                    <div className="mb-3">
-                        <label className="form-label">Área Temática Secundária</label>
-                        <select
-                            className="form-select"
-                            value={form.area_tematica_secundaria}
-                            onChange={(e) => atualizarCampo("area_tematica_secundaria", e.target.value)}
-                        >
-                            <option value="">Selecione</option>
-                        </select>
-                    </div>
-
-                    <div className="mb-3">
-                        <label className="form-label">Linha de Extensão</label>
-                        <select
-                            className="form-select"
-                            value={form.linha_extensao}
-                            onChange={(e) => atualizarCampo("linha_extensao", e.target.value)}
-                        >
-                            <option value="">Selecione</option>
-                        </select>
-                    </div>
-
-                    </fieldset>
+                    <Caracterizacao
+                        form={form}
+                        atualizarCampo={atualizarCampo}
+                        naturezas={naturezas}
+                        carregandoNaturezas={carregandoNaturezas}
+                        erroNaturezas={erroNaturezas}
+                        areasCNPQ={areasCNPQ}
+                        carregandoAreasCNPQ={carregandoAreasCNPQ}
+                        erroAreasCNPQ={erroAreasCNPQ}
+                        areasTematicas={areasTematicas}
+                        carregandoAreasTematicas={carregandoAreasTematicas}
+                        erroAreasTematicas={erroAreasTematicas}
+                        linhasExtensao={linhasExtensao}
+                        carregandoLinhasExtensao={carregandoLinhasExtensao}
+                        erroLinhasExtensao={erroLinhasExtensao}
+                        
+                    />
                 )}
 
 
                 {abaAtiva === "descricao" && (
-                    <fieldset>
-                        <legend>Descrição</legend>
-                                                <CampoTextoLongo
-                            rotulo="Resumo"
-                            campo="resumo"
-                            limite={2000}
-                            linhas={6}
-                            valor={form.resumo}
-                            aoMudar={atualizarCampo}
-                        />
-                        
-                        <div className="mb-3">
-                            <label className="form-label">Palavra Chave 1</label>
-                            <input type="text" className="form-control"
-                            value={form.palavra_chave_1}
-                            onChange={(e) => atualizarCampo("palavra_chave_1", e.target.value)}/>
-                        </div>
-
-                        <div className="mb-3">
-                            <label className="form-label">Palavra Chave 2</label>
-                            <input type="text" className="form-control"
-                            value={form.palavra_chave_2}
-                            onChange={(e) => atualizarCampo("palavra_chave_2", e.target.value)}/>
-                        </div>
-
-                        <div className="mb-3">
-                            <label className="form-label">Palavra Chave 3</label>
-                            <input type="text" className="form-control"
-                            value={form.palavra_chave_3}
-                            onChange={(e) => atualizarCampo("palavra_chave_3", e.target.value)}/>
-                        </div>
-
-                                                <CampoTextoLongo
-                            rotulo="Introdução"
-                            campo="introducao"
-                            limite={3000}
-                            linhas={6}
-                            valor={form.introducao}
-                            aoMudar={atualizarCampo}
-                        />
-
-                                                <CampoTextoLongo
-                            rotulo="Justificativa"
-                            campo="justificativa"
-                            limite={2000}
-                            linhas={6}
-                            valor={form.justificativa}
-                            aoMudar={atualizarCampo}
-                        />
-
-                                                <CampoTextoLongo
-                            rotulo="Objetivo geral"
-                            campo="objetivo_geral"
-                            limite={500}
-                            linhas={3}
-                            valor={form.objetivo_geral}
-                            aoMudar={atualizarCampo}
-                        />
-
-                                                <CampoTextoLongo
-                            rotulo="Objetivos específicos"
-                            campo="objetivo_especifico"
-                            limite={1000}
-                            linhas={4}
-                            valor={form.objetivo_especifico}
-                            aoMudar={atualizarCampo}
-                        />
-
-                                                <CampoTextoLongo
-                            rotulo="Metodologia e avaliação"
-                            campo="metodologia_avaliacao"
-                            limite={2000}
-                            linhas={5}
-                            valor={form.metodologia_avaliacao}
-                            aoMudar={atualizarCampo}
-                        />
-
-                    <div className="mb-3">
-                        <label className="form-label">Tem relação com ensino?</label>
-                        <div className="form-check">
-                            <input
-                                className="form-check-input"
-                                type="radio"
-                                name="relacao_ensino"
-                                id="relacao_ensino_sim"
-                                value="sim"
-                                checked={form.relacao_ensino === "sim"}
-                                onChange={(e) => atualizarCampo("relacao_ensino", e.target.value)}
-                            />
-                            <label className="form-check-label" htmlFor="relacao_ensino_sim">
-                                Sim
-                            </label>
-                        </div>
-                        <div className="form-check">
-                            <input
-                                className="form-check-input"
-                                type="radio"
-                                name="relacao_ensino"
-                                id="relacao_ensino_nao"
-                                value="nao"
-                                checked={form.relacao_ensino === "nao"}
-                                onChange={(e) => atualizarCampo("relacao_ensino", e.target.value)}
-                            />
-                            <label className="form-check-label" htmlFor="relacao_ensino_nao">
-                                Não
-                            </label>
-                        </div>
-                    </div>
-
-                    <div className="mb-3">
-                        <label className="form-label">Tem relação com Pesquisa?</label>
-                        <div className="form-check">
-                            <input
-                                className="form-check-input"
-                                type="radio"
-                                name="relacao_pesquisa"
-                                id="relacao_pesquisa_sim"
-                                value="sim"
-                                checked={form.relacao_pesquisa === "sim"}
-                                onChange={(e) => atualizarCampo("relacao_pesquisa", e.target.value)}
-                            />
-                            <label className="form-check-label" htmlFor="relacao_pesquisa_sim">
-                                Sim
-                            </label>
-                        </div>
-                        <div className="form-check">
-                            <input
-                                className="form-check-input"
-                                type="radio"
-                                name="relacao_pesquisa"
-                                id="relacao_pesquisa_nao"
-                                value="nao"
-                                checked={form.relacao_pesquisa === "nao"}
-                                onChange={(e) => atualizarCampo("relacao_pesquisa", e.target.value)}
-                            />
-                            <label className="form-check-label" htmlFor="relacao_pesquisa_nao">
-                                Não
-                            </label>
-                        </div>
-                    </div>
-
-                                        <CampoTextoLongo
-                        rotulo="Interação dialógica"
-                        campo="interacao_dialogica"
-                        limite={1000}
-                        linhas={4}
-                        valor={form.interacao_dialogica}
-                        aoMudar={atualizarCampo}
+                    <Descricao
+                        form={form}
+                        atualizarCampo={atualizarCampo}
                     />
-
-                                        <CampoTextoLongo
-                        rotulo="Interdisciplinaridade e interprofissionalidade"
-                        campo="interdisciplinaridade_interprofissionalidade"
-                        limite={1000}
-                        linhas={4}
-                        valor={form.interdisciplinaridade_interprofissionalidade}
-                        aoMudar={atualizarCampo}
-                    />
-
-                                        <CampoTextoLongo
-                        rotulo="Impacto na formação do estudante"
-                        campo="impacto_formacao"
-                        limite={1000}
-                        linhas={4}
-                        valor={form.impacto_formacao}
-                        aoMudar={atualizarCampo}
-                    />
-
-                                        <CampoTextoLongo
-                        rotulo="Indissociabilidade entre ensino, pesquisa e extensão"
-                        campo="indissociabilidade"
-                        limite={1000}
-                        linhas={4}
-                        valor={form.indissociabilidade}
-                        aoMudar={atualizarCampo}
-                    />
-
-                                        <CampoTextoLongo
-                        rotulo="Impacto e transformação social"
-                        campo="impacto_transformacao_social"
-                        limite={1000}
-                        linhas={4}
-                        valor={form.impacto_transformacao_social}
-                        aoMudar={atualizarCampo}
-                    />
-
-                                        <CampoTextoLongo
-                        rotulo="Referências bibliográficas"
-                        campo="referencias_bibliograficas"
-                        limite={1000}
-                        linhas={4}
-                        valor={form.referencias_bibliograficas}
-                        aoMudar={atualizarCampo}
-                    />
-
-                    </fieldset>
                 )}
 
                 {abaAtiva === "plano-de-trabalho" && (
-
-                    <fieldset>
-                        <legend>Plano de Trabalho</legend>
-
-                                                <CampoTextoLongo
-                            rotulo="Resultados esperados para o biênio"
-                            campo="resultados_esperados"
-                            limite={1000}
-                            linhas={5}
-                            valor={form.resultados_esperados}
-                            aoMudar={atualizarCampo}
-                        />
-
-                                                <CampoTextoLongo
-                            rotulo="Cronograma de atividades do biênio"
-                            campo="cronograma_atividades"
-                            limite={1000}
-                            linhas={5}
-                            valor={form.cronograma_atividades}
-                            aoMudar={atualizarCampo}
-                        />
-
-                    </fieldset>
+                    <PlanoTrabalho
+                        form={form}
+                        atualizarCampo={atualizarCampo}
+                    />
                 )}
 
                 {abaAtiva === "unidades-envolvidas" && (
@@ -835,85 +352,12 @@ function CadastrarProjeto() {
                 )}
 
                 {abaAtiva==="parcerias-internas" && (
-                    <fieldset>
-                        <legend>
-                            Parcerias Internas
-                        </legend>
-
-                        <div className="mb-3">
-                            <label className="form-label">Nome da Instituição</label>
-                            <input
-                            type="text"
-                            className="form-control"
-                            value={form.area}
-                            onChange={(e) => atualizarCampo("area", e.target.value)}
-                            />
-                        </div>
-
-                        <div className="mb-3">
-                            <label className="form-label">Sigla da Intituição</label>
-                            <input
-                            type="text"
-                            className="form-control"
-                            value={form.sigla}
-                            onChange={(e) => atualizarCampo("sigla", e.target.value)}
-                            />
-                        </div>
-
-                        <div className="mb-3">
-                            <label className="form-label">Unidade</label><br/>
-                            <select
-                                className="form-select"
-                                value={form.unidade}
-                                onChange={(e) => atualizarCampo("unidade", e.target.value)}
-                            >
-                                <option value="">Selecione uma unidade</option>
-
-                                {unidades.map((unidade) => (
-                                    <option key={unidade.id} value={unidade.id}>
-                                        {unidade.sigla} — {unidade.nome}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="mb-3">
-                            <label className="form-label">Departamento</label>
-
-                            <select
-                                className="form-select"
-                                value={form.departamento}
-                                onChange={(e) =>
-                                    atualizarCampo("departamento", e.target.value)
-                                }
-                            >
-                                <option value="">
-                                    Selecione um departamento
-                                </option>
-
-                                {departamentos.map((departamento) => (
-                                    <option
-                                        key={departamento.id}
-                                        value={departamento.id}
-                                    >
-                                        {departamento.unidade_sigla} — {departamento.nome}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <CampoTextoLongo
-                            rotulo="Participação da unidade no projeto"
-                            ajuda="Descreva de que forma essa unidade colabora: o que ela oferece ao projeto (pessoas, espaço, equipamento, dados) e em quais atividades participa."
-                            campo="participacao_interna"
-                            limite={500}
-                            linhas={4}
-                            valor={form.participacao_interna}
-                            aoMudar={atualizarCampo}
-                        />
-
-
-                    </fieldset>
-
+                    <ParceriasInternas
+                        form={form}
+                        atualizarCampo={atualizarCampo}
+                        unidades={unidades}
+                        departamentos={departamentos}
+                    />
                 )}
 
                 {/* As abas ficam escondidas, não desmontadas, pra não perder as
@@ -935,10 +379,11 @@ function CadastrarProjeto() {
                 <button
                     type="button"
                     className="btn btn-primary"
-                    onClick={salvarDadosIdentificacao} //só pra testra
+                    onClick={salvarDadosIdentificacao}
+                    disabled={enviando}
                 >
-                    Enviar formulário 
-                </button> 
+                    Enviar Formulário
+                </button>
             </div>
 
         </div>
