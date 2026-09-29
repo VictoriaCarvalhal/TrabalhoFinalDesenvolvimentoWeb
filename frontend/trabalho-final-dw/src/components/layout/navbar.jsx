@@ -26,16 +26,20 @@ function Navbar() {
                     className="navbar-toggler"
                     type="button"
                     data-bs-toggle="offcanvas"
-                    data-bs-target="#navbarNav"
-                    aria-controls="navbarNav"
-                    aria-expanded="false"
+                    data-bs-target="#offcanvasNavbar"
+                    aria-controls="offcanvasNavbar"
                     aria-label="Toggle navigation"
                 >
                     <span className="navbar-toggler-icon"></span>
                 </button>
 
-                <div className="collapse navbar-collapse" id="navbarNav">
-                    <div className="d-none d-lg-flex w-100">
+                <div className="offcanvas offcanvas-start" data-bs-theme="dark" style={{ backgroundColor: '#1E2D40' }} tabIndex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+                    <div className="offcanvas-header d-lg-none border-bottom border-secondary mb-2">
+                        <h5 className="offcanvas-title" id="offcanvasNavbarLabel">Menu</h5>
+                        <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                    </div>
+                    <div className="offcanvas-body">
+                        <div className="d-none d-lg-flex w-100">
                         <ul className="navbar-nav w-100">
                             <li className="nav-item">
                                 <NavLink className="nav-link" to="/Bemvindo" onClick={fecharDropdown}>
@@ -65,15 +69,6 @@ function Navbar() {
                                 <span className="navbar-usuario d-none d-lg-inline">{nomeUsuario}</span>
                             )}
 
-                            <button
-                                type="button"
-                                className="btn btn-sm navbar-acao"
-                                onClick={alternarTema}
-                                aria-label={tema === 'light' ? 'Ativar o modo escuro' : 'Ativar o modo claro'}
-                                title={tema === 'light' ? 'Modo escuro' : 'Modo claro'}
-                            >
-                                <i className={`bi ${tema === 'light' ? 'bi-moon-fill' : 'bi-sun-fill'}`} aria-hidden="true"></i>
-                            </button>
                             <button
                                 type="button"
                                 className="btn btn-sm navbar-acao"
@@ -140,10 +135,11 @@ function Navbar() {
                         ) : (
                             <>
                                 <button
-                                    className="nav-link text-start w-100 border-0 bg-transparent mb-3 fw-bold text-primary"
+                                    className="nav-link text-start w-100 border-0 bg-transparent mb-3 d-flex align-items-center"
                                     onClick={() => setMenuMobileAtivo('principal')}
                                 >
-                                    <i className="bi bi-arrow-left me-3"></i> 
+                                    <i className="bi bi-chevron-left me-3"></i> 
+                                    Voltar
                                 </button>
 
                                 <ul className="navbar-nav ms-3"> 
@@ -159,6 +155,7 @@ function Navbar() {
                                 </ul>
                             </>
                         )}
+                    </div>
                     </div>
                 </div>
             </div>
