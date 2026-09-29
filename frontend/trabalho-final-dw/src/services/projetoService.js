@@ -14,4 +14,8 @@ export async function atualizarCaracterizacao(id, dados) {
     await api.patch(`/projetos/${id}/caracterizacao/`, dados);
 }
 
+export async function atualizarDescricao(id, dados) {
+    await api.patch(`/projetos/${id}/descricao/`, dados);
+}
+
 

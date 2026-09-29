@@ -20,7 +20,13 @@ import { useAreasCNPQ } from '../../../hooks/useAreasCNPQ';
 import { useAreasTematicas } from '../../../hooks/useAreasTematicas';
 import { useLinhasExtensao } from '../../../hooks/useLinhasExtensao';
 
-import { criarProjeto, atualizarEndereco, atualizarCaracterizacao } from '../../../services/projetoService';
+
+import { 
+    criarProjeto, 
+    atualizarEndereco, 
+    atualizarCaracterizacao,
+    atualizarDescricao
+} from '../../../services/projetoService';
 
 const ABAS = [
     {id: "identificacao", label: "Identificação"},
@@ -90,7 +96,7 @@ function CadastrarProjeto() {
         palavra_chave_3: "",
         introducao: "",
         justificativa: "",
-        ojetivo_geral: "",
+        objetivo_geral: "",
         objetivo_especifico: "",
         metodologia_avaliacao: "",
         relacao_ensino: "",
@@ -183,6 +189,25 @@ function CadastrarProjeto() {
             linha_extensao: form.linha_extensao || null,
         };
 
+        //json descricao pronto para enviar para o backend
+        const descricao = {
+            resumo: form.resumo || null,
+            palavras_chave: [form.palavra_chave_1, form.palavra_chave_2, form.palavra_chave_3].filter(Boolean),
+            introducao: form.introducao || null,
+            justificativa: form.justificativa || null,
+            objetivo_geral: form.objetivo_geral || null,
+            objetivos_especificos: form.objetivo_especifico || null,
+            metodologia_avaliacao: form.metodologia_avaliacao || null,
+            relacao_ensino: form.relacao_ensino === "sim",
+            relacao_pesquisa: form.relacao_pesquisa === "sim",
+            interacao_dialogica: form.interacao_dialogica || null,
+            interdisciplinaridade: form.interdisciplinaridade_interprofissionalidade || null,
+            impacto_formacao: form.impacto_formacao || null,
+            indissociabilidade: form.indissociabilidade || null,
+            impacto_social: form.impacto_transformacao_social || null,
+            referencias_bibliograficas: form.referencias_bibliograficas || null,
+        };
+
         setEnviando(true);
         setErroEnvio(null);
         try {
@@ -195,6 +220,8 @@ function CadastrarProjeto() {
             // Endereco e Caracterizacao foram criados vazio pelo backend
             await atualizarEndereco(id, endereco);
             await atualizarCaracterizacao(id, caracterizacao);
+            await atualizarDescricao(id, descricao);
+            
             
             navigate("/Projetos/SeusProjetos");
         } catch (erro) {
