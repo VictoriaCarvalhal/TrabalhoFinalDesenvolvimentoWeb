@@ -5,7 +5,8 @@ function Caracterizacao({
         atualizarCampo, 
         naturezas, carregandoNaturezas, erroNaturezas, 
         areasCNPQ, carregandoAreasCNPQ, erroAreasCNPQ, 
-        areasTematicas, carregandoAreasTematicas, erroAreasTematicas }) {
+        areasTematicas, carregandoAreasTematicas, erroAreasTematicas, 
+        linhasExtensao, carregandoLinhasExtensao, erroLinhasExtensao }) {
     return (
         <fieldset>
         <legend>
@@ -159,7 +160,7 @@ function Caracterizacao({
                 {carregandoAreasTematicas && <option disabled>Carregando...</option>}
                 {erroAreasTematicas && <option disabled>Erro ao carregar Áreas Tematicas</option>}
                 {areasTematicas.map((areaTematica) => (
-                    <option key={areaTematica.codigo} value={areaTematica.codigo}>
+                    <option key={areaTematica.id} value={areaTematica.id}>
                         {areaTematica.descricao}
                     </option>
                 ))}
@@ -177,7 +178,7 @@ function Caracterizacao({
                 {carregandoAreasTematicas && <option disabled>Carregando...</option>}
                 {erroAreasTematicas && <option disabled>Erro ao carregar Áreas Tematicas</option>}
                 {areasTematicas.map((areaTematica) => (
-                    <option key={areaTematica.codigo} value={areaTematica.codigo}>
+                    <option key={areaTematica.id} value={areaTematica.id}>
                         {areaTematica.descricao}
                     </option>
                 ))}
@@ -192,6 +193,13 @@ function Caracterizacao({
                 onChange={(e) => atualizarCampo("linha_extensao", e.target.value)}
             >
                 <option value="">Selecione</option>
+                {carregandoLinhasExtensao && <option disabled>Carregando...</option>}
+                {erroLinhasExtensao && <option disabled>Erro ao carregar Áreas Tematicas</option>}
+                {linhasExtensao.map((linha) => (
+                    <option key={linha.id} value={linha.id}>
+                        {linha.descricao}
+                    </option>
+                ))}
             </select>
         </div>
 

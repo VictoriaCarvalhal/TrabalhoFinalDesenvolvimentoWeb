@@ -18,7 +18,7 @@ import { useVinculosCoordenador } from '../../../hooks/useVinculosCoordenador';
 import { useNaturezas } from '../../../hooks/useNaturezas';
 import { useAreasCNPQ } from '../../../hooks/useAreasCNPQ';
 import { useAreasTematicas } from '../../../hooks/useAreasTematicas';
-
+import { useLinhasExtensao } from '../../../hooks/useLinhasExtensao';
 
 import { criarProjeto, atualizarEndereco } from '../../../services/projetoService';
 
@@ -51,6 +51,7 @@ function CadastrarProjeto() {
     const { dados: naturezas, loading: carregandoNaturezas, erro: erroNaturezas } = useNaturezas();
     const { dados: areasCNPQ, loading: carregandoAreasCNPQ, erro: erroAreasCNPQ } = useAreasCNPQ();
     const { dados: areasTematicas, loading: carregandoAreasTematicas, erro: erroAreasTematicas } = useAreasTematicas();
+    const { dados: linhasExtensao, loading: carregandoLinhasExtensao, erro: erroLinhasExtensao } = useLinhasExtensao();
     
 
     //projetoId é UUID vindo do POST; as abas tambem usam
@@ -258,6 +259,9 @@ function CadastrarProjeto() {
                         areasTematicas={areasTematicas}
                         carregandoAreasTematicas={carregandoAreasTematicas}
                         erroAreasTematicas={erroAreasTematicas}
+                        linhasExtensao={linhasExtensao}
+                        carregandoLinhasExtensao={carregandoLinhasExtensao}
+                        erroLinhasExtensao={erroLinhasExtensao}
                         
                     />
                 )}

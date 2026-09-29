@@ -27,3 +27,7 @@ export async function buscarAreasCNPQ() {
 export async function buscarAreasTematicas() {
     return await api.get(`/dominios/areas-tematicas/`);
 }
+
+export async function buscarLinhasExtensao() {
+    return await api.get(`/dominios/linhas-extensao/`);
+}
