@@ -1,7 +1,28 @@
 import React from 'react';
 import CampoTextoLongo from '../CampoTextoLongo';
+import CampoContato from '../CampoContato';
 
 function Descricao({ form, atualizarCampo }) {
+    function adicionarPalavraChave() {
+        if (form.palavras_chave.length < 3) {
+            atualizarCampo("palavras_chave", [...form.palavras_chave, ""]);
+        }
+    }
+
+    function editarPalavraChave(indice, valor) {
+        atualizarCampo(
+            "palavras_chave",
+            form.palavras_chave.map((p, i) => (i === indice ? valor : p))
+        );
+    }
+
+    function removerPalavraChave(indice) {
+        atualizarCampo(
+            "palavras_chave",
+            form.palavras_chave.filter((_, i) => i !== indice)
+        );
+    }
+
     return (
         <fieldset>
             <legend>Descrição</legend>
@@ -16,24 +37,25 @@ function Descricao({ form, atualizarCampo }) {
             />
 
             <div className="mb-3">
-                <label className="form-label">Palavra Chave 1</label>
-                <input type="text" className="form-control"
-                value={form.palavra_chave_1}
-                onChange={(e) => atualizarCampo("palavra_chave_1", e.target.value)}/>
-            </div>
+                <label className="form-label">Palavras Chave</label>
+                <small className="d-block text-muted mb-2">
+                    Adicione até 3 palavras-chave que descrevam o projeto.
+                </small>
+                {form.palavras_chave.map((palavra, i) => (
+                    <CampoContato
+                        key={`palavra-chave-${i}`}
+                        rotulo="Palavra-Chave"
+                        tipoEntrada="text"
+                        placeholder="Ex: Sustentabilidade"
+                        valor={palavra}
+                        indice={i}
+                        total={form.palavras_chave.length}
+                        aoMudar={(indice, valor) => editarPalavraChave(indice, valor)}
+                        aoAdicionar={adicionarPalavraChave}
+                        aoRemover={(indice) => removerPalavraChave(indice)}
+                    />
 
-            <div className="mb-3">
-                <label className="form-label">Palavra Chave 2</label>
-                <input type="text" className="form-control"
-                value={form.palavra_chave_2}
-                onChange={(e) => atualizarCampo("palavra_chave_2", e.target.value)}/>
-            </div>
-
-            <div className="mb-3">
-                <label className="form-label">Palavra Chave 3</label>
-                <input type="text" className="form-control"
-                value={form.palavra_chave_3}
-                onChange={(e) => atualizarCampo("palavra_chave_3", e.target.value)}/>
+                ))}
             </div>
 
             <CampoTextoLongo

@@ -167,6 +167,15 @@ class ProjetoContato(AuditModel):
     def __str__(self):
         return f'{self.get_tipo_contato_display()}: {self.valor}'
 
+class ProjetoPalavraChave(AuditModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    projeto = models.ForeignKey(Projeto, related_name='palavras_chave', on_delete=models.CASCADE)
+    palavra = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name = 'Palavra-Chave do Projeto'
+        verbose_name_plural = 'Palavras-Chave do Projeto'
+        ordering = ['palavra']
 
 class ProjetoCaracterizacao(AuditModel):
     """Classificações e metadados do projeto (1:1)."""
@@ -196,7 +205,6 @@ class ProjetoDescricao(AuditModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     projeto = models.OneToOneField(Projeto, related_name='descricao', on_delete=models.CASCADE)
     resumo = models.TextField(blank=True)
-    palavras_chave = ArrayField(models.CharField(max_length=150), size=5, blank=True, default=list)
     introducao = models.TextField(blank=True)
     justificativa = models.TextField(blank=True)
     objetivo_geral = models.TextField(blank=True)

@@ -54,8 +54,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -125,7 +125,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1440), #Deixo aqui meu honesto pedido de desculpas para o pessoal do backend, att, Aprigio
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15), #Deixo aqui meu honesto pedido de desculpas para o pessoal do backend, att, Aprigio
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),                                            #Garanto que depois eu volto aqui, desfaço e arrumo uma solução no front, isso é só pra testar as requisições do frontend
     # --- ALTERADO: Ativa a renovação/rotação do Refresh Token a cada chamada ---
     'ROTATE_REFRESH_TOKENS': True,
@@ -154,19 +154,19 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # --- BYPASS TEMPORÁRIO DE AUTENTICAÇÃO (APENAS DEV) ---
 # if DEBUG:
-#     from rest_framework import authentication
-#     from django.contrib.auth import get_user_model
-#     class DevForceAuth(authentication.BaseAuthentication):
-#         def authenticate(self, request):
-#             User = get_user_model()
-#             # Pega o primeiro superusuário ou o primeiro usuário do banco
-#             user = User.objects.filter(is_superuser=True).first() or User.objects.first()
-#             return (user, None)
-#     REST_FRAMEWORK = globals().get('REST_FRAMEWORK', {})
-#     REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = [
-#         # Foi alterado de 'seu_projeto.settings...' para 'config.settings...'
-#         'config.settings.DevForceAuth', 
-#     ]
-#     REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] = [
-#         'rest_framework.permissions.AllowAny',
-#     ]
+#    from rest_framework import authentication
+#    from django.contrib.auth import get_user_model
+#    class DevForceAuth(authentication.BaseAuthentication):
+#        def authenticate(self, request):
+#            User = get_user_model()
+#            # Pega o primeiro superusuário ou o primeiro usuário do banco
+#            user = User.objects.filter(is_superuser=True).first() or User.objects.first()
+#            return (user, None)
+#    REST_FRAMEWORK = globals().get('REST_FRAMEWORK', {})
+#    REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = [
+#        # Foi alterado de 'seu_projeto.settings...' para 'config.settings...'
+#        'config.settings.DevForceAuth', 
+#    ]
+#    REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] = [
+#        'rest_framework.permissions.AllowAny',
+#    ]
