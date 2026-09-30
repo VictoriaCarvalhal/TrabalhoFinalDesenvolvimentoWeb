@@ -51,7 +51,7 @@ function Navbar() {
 
                     <div className="offcanvas-body">
                         
-                        <div className="d-none d-lg-flex w-100">
+                        <div className="d-none d-lg-flex w-100 align-items-center">
                             <ul className="navbar-nav w-100">
                                 <li className="nav-item">
                                     <NavLink className="nav-link" to="/Bemvindo" onClick={fecharDropdown}>
