@@ -94,11 +94,11 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
         setSugestoes((a) => { const novo = { ...a }; delete novo[indice]; return novo; });
     }
 
-    // Busca pelo tipo de vínculo e/ou texto digitado (matrícula, CPF ou nome).
-    async function buscarPessoa(indice) {
+    // Busca pelo tipo de vínculo e/ou texto digitado (matrícula ou CPF).
+    async function buscarPessoa(indice, novoFiltro = null) {
         const linha = linhas[indice];
         const termo = (linha.busca || '').trim();
-        const filtroTipo = linha.filtroTipo || '';
+        const filtroTipo = novoFiltro !== null ? novoFiltro : (linha.filtroTipo || '');
 
         // Precisa ter pelo menos um filtro
         if (!termo && !filtroTipo) return;
@@ -119,17 +119,13 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
                 // Se não digitou nada no campo texto, aceita todos do tipo
                 if (!termo) return true;
 
-                // Matrícula: compara como texto (pode ter letras tipo SIAPE456)
                 const matriculaOk = v.matricula
                     && v.matricula.toLowerCase().includes(termoLower);
                 // CPF: compara só os dígitos
                 const cpfOk = termoDigitos.length >= 3
                     && v.cpf
                     && v.cpf.replace(/\D/g, '').includes(termoDigitos);
-                // Nome: busca parcial
-                const nomeOk = v.nome_completo
-                    && v.nome_completo.toLowerCase().includes(termoLower);
-                return matriculaOk || cpfOk || nomeOk;
+                return matriculaOk || cpfOk;
             });
 
             if (encontrados.length === 0) {
@@ -226,28 +222,32 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
                         <>
                             <div className="row g-2 align-items-end">
                                 <div className="col-sm-4">
+                                    <label className="form-label">Matrícula ou CPF</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        placeholder="Ex: 202520402012"
+                                        value={linha.busca || ''}
+                                        onChange={(e) => editar(i, { busca: e.target.value })}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); buscarPessoa(i); } }}
+                                    />
+                                </div>
+                                <div className="col-sm-4">
                                     <label className="form-label">Tipo de Vínculo</label>
                                     <select
                                         className="form-select"
                                         value={linha.filtroTipo || ''}
-                                        onChange={(e) => editar(i, { filtroTipo: e.target.value })}
+                                        onChange={(e) => {
+                                            const novoValor = e.target.value;
+                                            editar(i, { filtroTipo: novoValor });
+                                            buscarPessoa(i, novoValor);
+                                        }}
                                     >
                                         <option value="">[Todos]</option>
                                         {TIPOS_VINCULO.map((t) => (
                                             <option key={t.valor} value={t.valor}>{t.rotulo}</option>
                                         ))}
                                     </select>
-                                </div>
-                                <div className="col-sm-4">
-                                    <label className="form-label">Matrícula, CPF ou Nome</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        placeholder="Ex: SIAPE456, João..."
-                                        value={linha.busca || ''}
-                                        onChange={(e) => editar(i, { busca: e.target.value })}
-                                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); buscarPessoa(i); } }}
-                                    />
                                 </div>
                                 <div className="col-sm-2">
                                     <button
