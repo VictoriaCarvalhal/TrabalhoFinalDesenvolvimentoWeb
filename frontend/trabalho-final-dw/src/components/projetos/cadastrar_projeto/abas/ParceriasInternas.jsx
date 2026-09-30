@@ -33,7 +33,10 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos }) {
                 <select
                     className="form-select"
                     value={form.unidade}
-                    onChange={(e) => atualizarCampo("unidade", e.target.value)}
+                    onChange={(e) => {
+                        atualizarCampo("unidade", e.target.value);
+                        atualizarCampo("departamento", "");
+                    }}
                 >
                     <option value="">Selecione uma unidade</option>
 
@@ -51,22 +54,25 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos }) {
                 <select
                     className="form-select"
                     value={form.departamento}
+                    disabled={!form.unidade}
                     onChange={(e) =>
                         atualizarCampo("departamento", e.target.value)
                     }
                 >
                     <option value="">
-                        Selecione um departamento
+                        {form.unidade ? "Selecione um departamento" : "Escolha uma unidade primeiro"}
                     </option>
 
-                    {departamentos.map((departamento) => (
-                        <option
-                            key={departamento.id}
-                            value={departamento.id}
-                        >
-                            {departamento.unidade_sigla} — {departamento.nome}
-                        </option>
-                    ))}
+                    {departamentos
+                        .filter((d) => String(d.unidade) === String(form.unidade))
+                        .map((departamento) => (
+                            <option
+                                key={departamento.id}
+                                value={departamento.id}
+                            >
+                                {departamento.nome}
+                            </option>
+                        ))}
                 </select>
             </div>
             <CampoTextoLongo

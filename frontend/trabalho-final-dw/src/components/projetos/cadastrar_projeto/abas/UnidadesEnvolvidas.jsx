@@ -109,7 +109,12 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
                                         value={linha.unidade}
                                         required
                                         aria-label={`Unidade envolvida ${i + 1}`}
-                                        onChange={(e) => editar(i, 'unidade', e.target.value)}
+                                        onChange={(e) => {
+                                            const novaUnidade = e.target.value;
+                                            setLinhas((atuais) =>
+                                                atuais.map((l, idx) => (idx === i ? { ...l, unidade: novaUnidade, departamento: '' } : l))
+                                            );
+                                        }}
                                         onBlur={() => gravar(i)}
                                     >
                                         <option value="">[Selecione]</option>
@@ -124,17 +129,22 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
                                     <select
                                         className="form-select"
                                         value={linha.departamento}
+                                        disabled={!linha.unidade}
                                         required
                                         aria-label={`Departamento da unidade ${i + 1}`}
                                         onChange={(e) => editar(i, 'departamento', e.target.value)}
                                         onBlur={() => gravar(i)}
                                     >
-                                        <option value="">[Selecione]</option>
-                                        {departamentos.map((departamento) => (
-                                            <option key={departamento.id} value={departamento.id}>
-                                                {departamento.unidade_sigla} — {departamento.nome}
-                                            </option>
-                                        ))}
+                                        <option value="">
+                                            {linha.unidade ? "[Selecione]" : "Escolha uma unidade primeiro"}
+                                        </option>
+                                        {departamentos
+                                            .filter((d) => String(d.unidade) === String(linha.unidade))
+                                            .map((departamento) => (
+                                                <option key={departamento.id} value={departamento.id}>
+                                                    {departamento.nome}
+                                                </option>
+                                            ))}
                                     </select>
                                 </td>
                             </tr>

@@ -31,7 +31,7 @@ from projetos.serializers import (
     DemandaBolsaSerializer, LocalRealizacaoSerializer, MembroEquipeSerializer,
     ParceriaExternaSerializer, ParceriaInternaSerializer,
     PlanoTrabalhoSerializer, UnidadeEnvolvidaSerializer,
-    ProjetoResumoSerializer, ProjetoDetalheSimplesSerializer,
+    ProjetoResumoSerializer, ProjetoDetalheSimplesSerializer, ProjetoCreateSerializer,
     ProjetoEnderecoSerializer, ProjetoContatoSerializer,
     ProjetoCaracterizacaoSerializer, ProjetoDescricaoSerializer
 )
@@ -166,14 +166,12 @@ class ProjetoViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'list':
             return ProjetoResumoSerializer
+        if self.action == 'create':
+            return ProjetoCreateSerializer
         return ProjetoDetalheSimplesSerializer
 
     def perform_create(self, serializer):
-        projeto = serializer.save()
-
-        ProjetoEndereco.objects.get_or_create(projeto=projeto)
-        ProjetoCaracterizacao.objects.get_or_create(projeto=projeto)
-        ProjetoDescricao.objects.get_or_create(projeto=projeto)
+        serializer.save()
 
     # --- endpoint para cada "Salvar" de aba simples ---
 

@@ -7,8 +7,7 @@ da requisicao: ele e o da URL e a view injeta no save(). As chaves
 estrangeiras vao com o nome por extenso ao lado do id, para o front nao
 precisar cruzar tabela nenhuma.
 """
-import re
-
+from django.db import transaction
 from rest_framework import serializers
 
 from projetos.models import (
@@ -252,6 +251,43 @@ class ProjetoResumoSerializer(serializers.ModelSerializer):
             'id', 'ano', 'numero', 'titulo', 'situacao', 'situacao_display',
             'unidade_sigla', 'coordenador_nome', 'created_at', 'updated_at'
         ]
+
+
+class ProjetoCreateSerializer(serializers.ModelSerializer):
+    endereco = ProjetoEnderecoSerializer(required=False)
+    contatos = ProjetoContatoSerializer(many=True, required=False)
+
+    class Meta:
+        model = Projeto
+        fields = [
+            'id', 'ano', 'numero', 'titulo', 'situacao',
+            'coordenador', 'unidade_proponente', 'departamento_proponente',
+            'endereco', 'contatos'
+        ]
+
+    @transaction.atomic
+    def create(self, validated_data):
+        endereco_data = validated_data.pop('endereco', None)
+        contatos_data = validated_data.pop('contatos', [])
+
+        # 1. Cria o projeto base
+        projeto = Projeto.objects.create(**validated_data)
+
+        # 2. Garante a criação dos registros 1:1 auxiliares
+        ProjetoCaracterizacao.objects.get_or_create(projeto=projeto)
+        ProjetoDescricao.objects.get_or_create(projeto=projeto)
+
+        # 3. Cria/atualiza o endereço se enviado
+        if endereco_data:
+            ProjetoEndereco.objects.create(projeto=projeto, **endereco_data)
+        else:
+            ProjetoEndereco.objects.create(projeto=projeto)
+
+        # 4. Cria os contatos se enviados
+        for contato_data in contatos_data:
+            ProjetoContato.objects.create(projeto=projeto, **contato_data)
+
+        return projeto
 
 
 class ProjetoDetalheSimplesSerializer(serializers.ModelSerializer):
