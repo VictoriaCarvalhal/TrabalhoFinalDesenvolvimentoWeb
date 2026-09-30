@@ -225,3 +225,13 @@ class ProjetoViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(projeto=projeto)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    @action(detail=True, methods=['get', 'post'])
+    def palavras_chave(self, request, pk=None):
+        projeto = self.get_object()
+        if request.method == 'GET':
+            return Response(ProjetoPalavraChaveSerializer(projeto.palavras_chave.all(), many=True).data)
+
+        serializer = ProjetoPalavraChaveSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(projeto=projeto)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

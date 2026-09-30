@@ -25,6 +25,7 @@ import {
     criarProjeto,
     atualizarEndereco,
     criarContato,
+    criarPalavraChave,
     atualizarCaracterizacao,
     atualizarDescricao,
     criarPlanoDeTrabalho
@@ -96,6 +97,7 @@ function CadastrarProjeto() {
         linha_extensao: "",
         //descrição
         resumo: "",
+        palavras_chave: [""],
         palavra_chave_1: "",
         palavra_chave_2: "",
         palavra_chave_3: "",
@@ -199,7 +201,6 @@ function CadastrarProjeto() {
         //json descricao pronto para enviar para o backend
         const descricao = {
             resumo: form.resumo || null,
-            palavras_chave: [form.palavra_chave_1, form.palavra_chave_2, form.palavra_chave_3].filter(Boolean),
             introducao: form.introducao || null,
             justificativa: form.justificativa || null,
             objetivo_geral: form.objetivo_geral || null,
@@ -247,6 +248,11 @@ function CadastrarProjeto() {
                 await criarContato(projeto_id, contato);
             }
             
+            const palavras = form.palavras_chave.map((p) => p.trim()).filter((p) => p);
+            for (const palavra of palavras) {
+                await criarPalavraChave(projeto_id, { palavra });
+            }
+
             navigate("/Projetos/SeusProjetos");
         } catch (erro) {
             const detalhe = erro.response?.data;
