@@ -54,8 +54,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -125,7 +125,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15), #Deixo aqui meu honesto pedido de desculpas para o pessoal do backend, att, Aprigio
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1440), #Deixo aqui meu honesto pedido de desculpas para o pessoal do backend, att, Aprigio
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),                                            #Garanto que depois eu volto aqui, desfaço e arrumo uma solução no front, isso é só pra testar as requisições do frontend
     # --- ALTERADO: Ativa a renovação/rotação do Refresh Token a cada chamada ---
     'ROTATE_REFRESH_TOKENS': True,
