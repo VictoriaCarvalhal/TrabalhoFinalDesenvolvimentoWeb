@@ -14,7 +14,7 @@ from rest_framework import serializers
 from projetos.models import (
     DemandaBolsa, LocalRealizacao, MembroEquipe, ParceriaExterna,
     ParceriaInterna, PlanoTrabalho, ProjetoUnidade,
-    Projeto, ProjetoEndereco, ProjetoContato, ProjetoCaracterizacao, ProjetoDescricao
+    Projeto, ProjetoEndereco, ProjetoContato, ProjetoPalavraChave, ProjetoCaracterizacao, ProjetoDescricao
 )
 
 
@@ -204,6 +204,10 @@ class ProjetoContatoSerializer(serializers.ModelSerializer):
             'valor', 'ddd', 'ramal', 'tipo_telefone', 'tipo_telefone_display'
         ]
 
+class ProjetoPalavraChaveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjetoPalavraChave
+        fields = ['id', 'palavra']
 
 class ProjetoCaracterizacaoSerializer(serializers.ModelSerializer):
     natureza_display = serializers.CharField(source='natureza.descricao', read_only=True)
@@ -229,7 +233,7 @@ class ProjetoDescricaoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjetoDescricao
         fields = [
-            'id', 'resumo', 'palavras_chave', 'introducao', 'justificativa',
+            'id', 'resumo', 'introducao', 'justificativa',
             'objetivo_geral', 'objetivos_especificos', 'metodologia_avaliacao',
             'relacao_ensino', 'relacao_pesquisa', 'interacao_dialogica',
             'interdisciplinaridade', 'impacto_formacao', 'indissociabilidade',
