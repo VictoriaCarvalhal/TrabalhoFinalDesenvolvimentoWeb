@@ -173,6 +173,10 @@ class ProjetoViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save()
 
+    def perform_destroy(self, instance):
+        instance.excluido = True
+        instance.save(update_fields=['excluido', 'updated_at'])
+
     # --- endpoint para cada "Salvar" de aba simples ---
 
     @action(detail=True, methods=['get', 'put', 'patch'])

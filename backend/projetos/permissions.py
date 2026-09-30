@@ -14,7 +14,7 @@ def projetos_visiveis_para(user):
     ligacao e pelo e-mail institucional. Staff e superusuario enxergam tudo,
     para dar para testar pelo admin.
     """
-    qs = Projeto.objects.all()
+    qs = Projeto.objects.filter(excluido=False)
     if getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False):
         return qs
 

@@ -249,8 +249,9 @@ class ProjetoResumoSerializer(serializers.ModelSerializer):
         model = Projeto
         fields = [
             'id', 'ano', 'numero', 'titulo', 'situacao', 'situacao_display',
-            'unidade_sigla', 'coordenador_nome', 'created_at', 'updated_at'
+            'unidade_sigla', 'coordenador_nome', 'excluido', 'created_at', 'updated_at'
         ]
+        read_only_fields = ['excluido']
 
 
 class ProjetoCreateSerializer(serializers.ModelSerializer):
@@ -299,10 +300,11 @@ class ProjetoDetalheSimplesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Projeto
         fields = [
-            'id', 'ano', 'numero', 'titulo', 'situacao',
+            'id', 'ano', 'numero', 'titulo', 'situacao', 'excluido',
             'coordenador', 'unidade_proponente', 'departamento_proponente',
             'endereco', 'contatos', 'caracterizacao', 'descricao'
         ]
+        read_only_fields = ['excluido']
 
 
 class ProjetoImpressaoSerializer(serializers.ModelSerializer):
