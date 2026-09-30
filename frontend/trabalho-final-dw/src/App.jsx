@@ -14,8 +14,6 @@ function App() {
       <Route element={<LayoutNotAutenticated />}>
         <Route path="/" element={<Inicial />} />
       </Route>
-      
-      {/* Rota de Proteção (Segurança) envolvendo o Layout Autenticado (Visual) */}
       <Route element={<ProtectedRoute />}>
         <Route element={<LayoutAutenticated />}>
           <Route path="/Bemvindo" element={<Bemvindo />} />
