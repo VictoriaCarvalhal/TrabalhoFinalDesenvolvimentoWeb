@@ -3,13 +3,14 @@ import { useAuthStore } from '../../../stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
 
-function Projetos() {
+function Projetos({isPrevia = false, limite = 5}) {
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
 
     const [projetos, setProjetos] = useState([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState(null);
     const navigate = useNavigate();
+    const controlFade = isPrevia && projetos.length > limite;
 
     function redirecionaProCadastro(){
         navigate('/Projetos/CadastrarProjeto');
@@ -52,85 +53,104 @@ function Projetos() {
     }, [isAutenticado]);
 
     return (
-        <div className="container mt-4">
-            {/* O menu ja diz em que tela a pessoa esta, entao o titulo nao
+        <div>
+            <div className="container mt-4">
+                {/* O menu ja diz em que tela a pessoa esta, entao o titulo nao
                 aparece de novo aqui. Ele continua no html, escondido, porque a
                 pagina precisa de um h1 para quem usa leitor de tela. */}
-            <h1 className="visually-hidden">Seus projetos</h1>
+                <h1 className="visually-hidden">Seus projetos</h1>
 
-            <div className="d-flex flex-wrap align-items-center justify-content-end gap-2">
-                <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={redirecionaProCadastro}
-                >
-                    <i className="bi bi-plus-lg me-2" aria-hidden="true"></i>
-                    Novo projeto
-                </button>
+                {!isPrevia && (
+                    <div className="d-flex flex-wrap align-items-center justify-content-end gap-2">
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={redirecionaProCadastro}
+                        >
+                            <i className="bi bi-plus-lg me-2" aria-hidden="true"></i>
+                            Novo projeto
+                        </button>
+                    </div>
+                )}
+
+                {!isAutenticado && (
+                    <div className="alert alert-warning mt-3">
+                        Você precisa estar logado para ver seus projetos.
+                    </div>
+                )}
+
+                {isAutenticado && carregando && (
+                    <p className="mt-3">Carregando projetos...</p>
+                )}
+
+                {isAutenticado && !carregando && erro && (
+                    <div className="alert alert-danger mt-3">{erro}</div>
+                )}
+
+                {isAutenticado && !carregando && !erro && projetos.length === 0 && (
+                    <p className="mt-3">Você ainda não tem projetos cadastrados.</p>
+                )}
+
+                {isAutenticado && !carregando && !erro && projetos.length > 0 && (
+                    <>
+                        <div className={controlFade? "table-fade" : ""}>
+                            <table className="table table-striped table-hover mt-3">
+                                <thead>
+                                    <tr>
+                                        <th>Ano</th>
+                                        <th>Número</th>
+                                        <th>Título</th>
+                                        <th>Situação</th>
+                                        <th>Unidade</th>
+                                        <th>Coordenador(a)</th>
+                                        <th>Atualizado em</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {projetos.slice(0, isPrevia ? limite : projetos.length).map((projeto) => (
+                                        <tr key={projeto.id}>
+                                            <td>{projeto.ano}</td>
+                                            <td>{projeto.numero ?? 'S/N'}</td>
+                                            <td>{projeto.titulo}</td>
+                                            <td>{projeto.situacao_display}</td>
+                                            <td>{projeto.unidade_sigla}</td>
+                                            <td>{projeto.coordenador_nome}</td>
+                                            <td>
+                                                {projeto.updated_at
+                                                    ? new Date(projeto.updated_at).toLocaleDateString('pt-BR')
+                                                    : '-'}
+                                            </td>
+                                            <td>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-outline-secondary"
+                                                    title="Imprimir projeto"
+                                                    aria-label={`Imprimir projeto ${projeto.titulo}`}
+                                                    onClick={() => redirecionaParaImpressao(projeto.id)}
+                                                >
+                                                    <i className="bi bi-printer"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {isPrevia && (projetos.length > 0) && (
+                            <div className="mt-4 text-center">
+                                <button
+                                    className="btn btn-outline-primary"
+                                    onClick={() => navigate('/Projetos/SeusProjetos')}
+                                >
+                                    Ver todos projetos
+                                </button>
+                            </div>
+                        )}
+                    </>
+                )}
+
             </div>
-
-            {!isAutenticado && (
-                <div className="alert alert-warning mt-3">
-                    Você precisa estar logado para ver seus projetos.
-                </div>
-            )}
-
-            {isAutenticado && carregando && (
-                <p className="mt-3">Carregando projetos...</p>
-            )}
-
-            {isAutenticado && !carregando && erro && (
-                <div className="alert alert-danger mt-3">{erro}</div>
-            )}
-
-            {isAutenticado && !carregando && !erro && projetos.length === 0 && (
-                <p className="mt-3">Você ainda não tem projetos cadastrados.</p>
-            )}
-
-            {isAutenticado && !carregando && !erro && projetos.length > 0 && (
-                <table className="table table-striped table-hover mt-3">
-                    <thead>
-                        <tr>
-                            <th>Ano</th>
-                            <th>Número</th>
-                            <th>Título</th>
-                            <th>Situação</th>
-                            <th>Unidade</th>
-                            <th>Coordenador(a)</th>
-                            <th>Atualizado em</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {projetos.map((projeto) => (
-                            <tr key={projeto.id}>
-                                <td>{projeto.ano}</td>
-                                <td>{projeto.numero ?? 'S/N'}</td>
-                                <td>{projeto.titulo}</td>
-                                <td>{projeto.situacao_display}</td>
-                                <td>{projeto.unidade_sigla}</td>
-                                <td>{projeto.coordenador_nome}</td>
-                                <td>
-                                    {projeto.updated_at
-                                        ? new Date(projeto.updated_at).toLocaleDateString('pt-BR')
-                                        : '-'}
-                                </td>
-                                <td>
-                                    <button
-                                        type="button"
-                                        className="btn btn-sm btn-outline-secondary"
-                                        title="Imprimir projeto"
-                                        aria-label={`Imprimir projeto ${projeto.titulo}`}
-                                        onClick={() => redirecionaParaImpressao(projeto.id)}
-                                    >
-                                        <i className="bi bi-printer"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
         </div>
     );
 }
