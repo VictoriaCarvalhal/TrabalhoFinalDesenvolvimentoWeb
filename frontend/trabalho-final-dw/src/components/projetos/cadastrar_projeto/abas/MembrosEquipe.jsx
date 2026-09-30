@@ -27,21 +27,23 @@ const LINHA_VAZIA = {
     id: null, vinculo: null, tipo_vinculo: '', matricula: '', cpf: '', nome: '', funcao: '',
 };
 
-// Aba "Membros da Equipe" do cadastro de projeto. Como no sistema original:
-// "Novo" abre uma linha, escolhe-se o tipo de vínculo, digita-se a matrícula
-// e o "Pesquisar" abre a janela "Seleção", que lista as pessoas cadastradas.
-// Clicar numa pessoa preenche a linha. Depois é só escolher o cargo/perfil.
-//
-// Sem projetoId as linhas ficam na memória e sobem pelo onChange; com
-// projetoId cada linha vai pra /projetos/<id>/membros-equipe/ na hora.
+function mascaraCpf(valor) {
+    const nums = valor.replace(/\D/g, '').slice(0, 11);
+    if (nums.length <= 3) return nums;
+    if (nums.length <= 6) return nums.slice(0, 3) + '.' + nums.slice(3);
+    if (nums.length <= 9) return nums.slice(0, 3) + '.' + nums.slice(3, 6) + '.' + nums.slice(6);
+    return nums.slice(0, 3) + '.' + nums.slice(3, 6) + '.' + nums.slice(6, 9) + '-' + nums.slice(9);
+}
+
+function pareceCpf(texto) {
+    const limpo = texto.replace(/\D/g, '');
+    return limpo.length >= 3 && !/[a-zA-Z]/.test(texto);
+}
+
 function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
-
-    // Estado da janela de seleção: qual linha está pesquisando e o resultado.
-    const [pesquisa, setPesquisa] = useState(null);
-    const [resultado, setResultado] = useState([]);
-    const [pesquisando, setPesquisando] = useState(false);
+    const [buscando, setBuscando] = useState({}); // { indice: true } enquanto busca
 
     useEffect(() => {
         if (!projetoId) return;
@@ -62,11 +64,6 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
         setLinhas((atuais) => atuais.map((l, i) => (i === indice ? { ...l, ...mudancas } : l)));
     }
 
-    // Trocar o tipo de vínculo limpa a pessoa, porque a pesquisa é por tipo.
-    function trocarTipo(indice, tipo) {
-        editar(indice, { tipo_vinculo: tipo, vinculo: null, matricula: '', cpf: '', nome: '' });
-    }
-
     async function gravar(indice, linha) {
         if (!projetoId || !linha.vinculo || !linha.funcao) return;
         try {
@@ -75,7 +72,6 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
             const resposta = linha.id
                 ? await api.patch(`/projetos/${projetoId}/membros-equipe/${linha.id}/`, corpo)
                 : await api.post(`/projetos/${projetoId}/membros-equipe/`, corpo);
-            // A API devolve a linha completa, com CPF e nome vindos do cadastro.
             editar(indice, resposta.data);
         } catch (err) {
             const detalhe = err.response?.data;
@@ -96,52 +92,68 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
         setLinhas((atuais) => atuais.filter((_, i) => i !== indice));
     }
 
-    // Abre a janela "Seleção" pra linha e já pesquisa com o que foi digitado.
-    async function abrirPesquisa(indice) {
-        const linha = linhas[indice];
-        setPesquisa({ indice, matricula: linha.matricula, tipo_vinculo: linha.tipo_vinculo });
-        await pesquisar(linha.matricula, linha.tipo_vinculo);
-    }
 
-    // A lista de vínculos é pequena, então o filtro é feito aqui no front:
-    // por tipo de vínculo e por começo da matrícula ou pedaço do nome.
-    async function pesquisar(matricula, tipo) {
-        setPesquisando(true);
+    async function buscarPessoa(indice) {
+        const linha = linhas[indice];
+        const termo = (linha.busca || '').replace(/\D/g, '').trim();
+        if (!termo) return;
+
+        setBuscando((a) => ({ ...a, [indice]: true }));
+        setErro(null);
+
         try {
             const resposta = await api.get('/dominios/vinculos/');
-            const termo = (matricula ?? '').trim().toLowerCase();
-            setResultado(resposta.data.filter((v) => {
-                const tipoOk = !tipo || v.tipo_vinculo === tipo;
-                const termoOk = !termo
-                    || (v.matricula ?? '').toLowerCase().startsWith(termo)
-                    || (v.nome_completo ?? '').toLowerCase().includes(termo);
-                return tipoOk && termoOk;
-            }));
+            const encontrado = resposta.data.find((v) => {
+                const matriculaOk = v.matricula && v.matricula === termo;
+                const cpfOk = v.cpf && v.cpf.replace(/\D/g, '') === termo;
+                return matriculaOk || cpfOk;
+            });
+
+            if (!encontrado) {
+                setErro('Nenhuma pessoa encontrada com essa matrícula ou CPF.');
+                return;
+            }
+
+            const jaEsta = linhas.some((l, i) => i !== indice && l.vinculo === encontrado.id);
+            if (jaEsta) {
+                setErro('Esta pessoa já está na equipe.');
+                return;
+            }
+
+            const dadosPreenchidos = {
+                vinculo: encontrado.id,
+                tipo_vinculo: encontrado.tipo_vinculo,
+                matricula: encontrado.matricula || '',
+                cpf: encontrado.cpf || '',
+                nome: encontrado.nome_completo,
+            };
+            editar(indice, dadosPreenchidos);
+
+            // Se já tem função selecionada, grava direto
+            if (linha.funcao) {
+                gravar(indice, { ...linha, ...dadosPreenchidos });
+            }
         } catch {
-            setErro('Não foi possível pesquisar as pessoas cadastradas.');
-            setResultado([]);
+            setErro('Erro ao buscar pessoa. Tente novamente.');
         } finally {
-            setPesquisando(false);
+            setBuscando((a) => ({ ...a, [indice]: false }));
         }
     }
 
-    function selecionar(vinculo) {
-        const indice = pesquisa.indice;
-        const jaEsta = linhas.some((l, i) => i !== indice && l.vinculo === vinculo.id);
-        if (jaEsta) {
-            setErro('Esta pessoa já está na equipe.');
-            setPesquisa(null);
-            return;
+    // Quando muda o campo de busca, aplica máscara de CPF se necessário
+    function aoDigitarBusca(indice, valor) {
+        if (pareceCpf(valor) && valor.length > 3) {
+            editar(indice, { busca: mascaraCpf(valor) });
+        } else {
+            editar(indice, { busca: valor });
         }
-        const mudancas = {
-            vinculo: vinculo.id,
-            tipo_vinculo: vinculo.tipo_vinculo,
-            matricula: vinculo.matricula ?? '',
-            nome: vinculo.nome_completo,
-        };
-        editar(indice, mudancas);
-        setPesquisa(null);
-        gravar(indice, { ...linhas[indice], ...mudancas });
+    }
+
+    // Limpa a pessoa selecionada pra buscar outra
+    function limparPessoa(indice) {
+        editar(indice, {
+            vinculo: null, tipo_vinculo: '', matricula: '', cpf: '', nome: '', busca: '',
+        });
     }
 
     function trocarFuncao(indice, funcao) {
@@ -149,14 +161,20 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
         gravar(indice, { ...linhas[indice], funcao });
     }
 
+    // Acha o rótulo legível do tipo de vínculo
+    function rotuloVinculo(valor) {
+        const tipo = TIPOS_VINCULO.find((t) => t.valor === valor);
+        return tipo ? tipo.rotulo : valor;
+    }
+
     return (
         <fieldset>
             <legend>Membros da Equipe</legend>
 
             <p className="small text-body-secondary">
-                Use o botão abaixo para acrescentar um membro. Escolha o tipo de vínculo,
-                busque a pessoa pela matrícula e indique o cargo dela no projeto. Para trocar
-                o vínculo de alguém, remova a linha e inclua de novo.
+                Clique em "Novo" para adicionar um membro. Digite a matrícula ou o CPF
+                da pessoa e clique em "Buscar". O sistema preenche o nome e o vínculo
+                automaticamente.
             </p>
 
             <button type="button" className="btn btn-sm btn-primary mb-3" onClick={novaLinha}>
@@ -169,91 +187,76 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
 
             {erro && <div className="alert alert-danger py-2">{erro}</div>}
 
-            <div className="table-responsive">
-                <table className="table table-bordered align-middle">
-                    <thead className="table-light">
-                        <tr>
-                            <th scope="col" style={{ width: '4rem' }}>Nº</th>
-                            <th scope="col" style={{ width: '4rem' }}>
-                                <i className="bi bi-trash" aria-hidden="true"></i>
-                                <span className="visually-hidden">Excluir</span>
-                            </th>
-                            <th scope="col">Tipo de Vínculo</th>
-                            <th scope="col">Número da Matrícula</th>
-                            <th scope="col">CPF</th>
-                            <th scope="col">Nome</th>
-                            <th scope="col">Cargo/Perfil</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {linhas.length === 0 && (
-                            <tr>
-                                <td colSpan={7} className="text-muted text-center">
-                                    Nenhum membro cadastrado.
-                                </td>
-                            </tr>
-                        )}
-                        {linhas.map((linha, i) => (
-                            <tr key={linha.id ?? `nova-${i}`}>
-                                <td>{i + 1}.</td>
-                                <td>
-                                    <button
-                                        type="button"
-                                        className="btn btn-sm btn-outline-danger"
-                                        onClick={() => excluir(i)}
-                                        aria-label={`Excluir membro ${i + 1}`}
-                                    >
-                                        <i className="bi bi-trash" aria-hidden="true"></i>
-                                    </button>
-                                </td>
-                                <td>
-                                    <select
-                                        className="form-select form-select-sm"
-                                        value={linha.tipo_vinculo}
-                                        disabled={Boolean(linha.vinculo)}
-                                        aria-label={`Tipo de vínculo do membro ${i + 1}`}
-                                        onChange={(e) => trocarTipo(i, e.target.value)}
-                                    >
-                                        <option value="">[Selecione]</option>
-                                        {TIPOS_VINCULO.map((t) => (
-                                            <option key={t.valor} value={t.valor}>{t.rotulo}</option>
-                                        ))}
-                                    </select>
-                                </td>
-                                <td>
-                                    <div className="input-group input-group-sm">
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            value={linha.matricula}
-                                            readOnly={Boolean(linha.vinculo)}
-                                            disabled={!linha.tipo_vinculo}
-                                            aria-label={`Matrícula do membro ${i + 1}`}
-                                            onChange={(e) => editar(i, { matricula: e.target.value })}
-                                        />
-                                        {!linha.vinculo && (
-                                            <button
-                                                type="button"
-                                                className="btn btn-outline-secondary"
-                                                disabled={!linha.tipo_vinculo}
-                                                onClick={() => abrirPesquisa(i)}
-                                            >
-                                                Pesquisar
-                                            </button>
-                                        )}
+            {linhas.length === 0 && (
+                <p className="text-muted">Nenhum membro cadastrado.</p>
+            )}
+
+            {linhas.map((linha, i) => (
+                <div key={linha.id ?? `nova-${i}`} className="border rounded p-3 mb-3">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                        <strong>Membro {i + 1}</strong>
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => excluir(i)}
+                        >
+                            <i className="bi bi-trash me-1" aria-hidden="true"></i>Remover
+                        </button>
+                    </div>
+
+                    {/* Se ainda não encontrou a pessoa, mostra o campo de busca */}
+                    {!linha.vinculo ? (
+                        <div className="row g-2 align-items-end">
+                            <div className="col-sm-6">
+                                <label className="form-label">Matrícula ou CPF</label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Digite a matrícula ou CPF"
+                                    value={linha.busca || ''}
+                                    onChange={(e) => aoDigitarBusca(i, e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); buscarPessoa(i); } }}
+                                />
+                            </div>
+                            <div className="col-sm-3">
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-primary w-100"
+                                    disabled={!linha.busca || buscando[i]}
+                                    onClick={() => buscarPessoa(i)}
+                                >
+                                    {buscando[i] ? 'Buscando...' : 'Buscar'}
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        /* Pessoa encontrada: mostra os dados preenchidos */
+                        <>
+                            <div className="row g-2 mb-2">
+                                <div className="col-sm-4">
+                                    <label className="form-label">Nome</label>
+                                    <input type="text" className="form-control" value={linha.nome} readOnly />
+                                </div>
+                                <div className="col-sm-3">
+                                    <label className="form-label">Tipo de Vínculo</label>
+                                    <input type="text" className="form-control" value={rotuloVinculo(linha.tipo_vinculo)} readOnly />
+                                </div>
+                                {linha.matricula ? (
+                                    <div className="col-sm-2">
+                                        <label className="form-label">Matrícula</label>
+                                        <input type="text" className="form-control" value={linha.matricula} readOnly />
                                     </div>
-                                    {linha.tipo_vinculo && !linha.vinculo && (
-                                        <div className="form-text">Busque a pessoa para preencher a linha.</div>
-                                    )}
-                                </td>
-                                <td>{linha.cpf || <span className="text-muted">-</span>}</td>
-                                <td>{linha.nome || <span className="text-muted">-</span>}</td>
-                                <td>
+                                ) : (
+                                    <div className="col-sm-2">
+                                        <label className="form-label">CPF</label>
+                                        <input type="text" className="form-control" value={mascaraCpf(linha.cpf || '')} readOnly />
+                                    </div>
+                                )}
+                                <div className="col-sm-3">
+                                    <label className="form-label">Cargo/Perfil</label>
                                     <select
-                                        className="form-select form-select-sm"
+                                        className="form-select"
                                         value={linha.funcao}
-                                        disabled={!linha.vinculo}
-                                        aria-label={`Cargo ou perfil do membro ${i + 1}`}
                                         onChange={(e) => trocarFuncao(i, e.target.value)}
                                     >
                                         <option value="">[Selecione]</option>
@@ -261,112 +264,19 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
                                             <option key={f.valor} value={f.valor}>{f.rotulo}</option>
                                         ))}
                                     </select>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Janela "Seleção", igual à do sistema original. */}
-            {pesquisa && (
-                <div
-                    className="modal d-block"
-                    tabIndex={-1}
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="titulo-selecao"
-                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-                >
-                    <div className="modal-dialog modal-lg">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h5 className="modal-title" id="titulo-selecao">Seleção</h5>
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    aria-label="Fechar"
-                                    onClick={() => setPesquisa(null)}
-                                ></button>
+                                </div>
                             </div>
-                            <div className="modal-body">
-                                <p className="fw-bold small mb-2">Membro Equipe</p>
-                                <form
-                                    className="row g-2 align-items-end mb-3"
-                                    onSubmit={(e) => {
-                                        e.preventDefault();
-                                        pesquisar(pesquisa.matricula, pesquisa.tipo_vinculo);
-                                    }}
-                                >
-                                    <div className="col-sm-5">
-                                        <label htmlFor="selecao-matricula" className="form-label">Matrícula ou nome</label>
-                                        <input
-                                            id="selecao-matricula"
-                                            type="text"
-                                            className="form-control form-control-sm"
-                                            value={pesquisa.matricula}
-                                            onChange={(e) => setPesquisa({ ...pesquisa, matricula: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="col-sm-5">
-                                        <label htmlFor="selecao-tipo" className="form-label">Tipo de Vínculo</label>
-                                        <select
-                                            id="selecao-tipo"
-                                            className="form-select form-select-sm"
-                                            value={pesquisa.tipo_vinculo}
-                                            onChange={(e) => setPesquisa({ ...pesquisa, tipo_vinculo: e.target.value })}
-                                        >
-                                            <option value="">[Todos]</option>
-                                            {TIPOS_VINCULO.map((t) => (
-                                                <option key={t.valor} value={t.valor}>{t.rotulo}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="col-sm-2">
-                                        <button type="submit" className="btn btn-sm btn-primary w-100">
-                                            <i className="bi bi-search me-1" aria-hidden="true"></i>Pesquisar
-                                        </button>
-                                    </div>
-                                </form>
-
-                                <p className="fw-bold small mb-2">Seleção Membro Equipe</p>
-                                <table className="table table-sm table-hover">
-                                    <thead className="table-info">
-                                        <tr>
-                                            <th scope="col">Matrícula</th>
-                                            <th scope="col">Nome</th>
-                                            <th scope="col">Tipo de Vínculo</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {pesquisando && (
-                                            <tr><td colSpan={3} className="text-muted">Pesquisando...</td></tr>
-                                        )}
-                                        {!pesquisando && resultado.length === 0 && (
-                                            <tr><td colSpan={3} className="text-muted">Nenhuma pessoa encontrada.</td></tr>
-                                        )}
-                                        {!pesquisando && resultado.map((v) => (
-                                            <tr key={v.id}>
-                                                <td colSpan={3} className="p-0">
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-link text-start w-100 text-decoration-none d-flex"
-                                                        onClick={() => selecionar(v)}
-                                                    >
-                                                        <span className="flex-fill">{v.matricula || '-'}</span>
-                                                        <span className="flex-fill">{v.nome_completo}</span>
-                                                        <span className="flex-fill">{v.tipo_vinculo_display}</span>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => limparPessoa(i)}
+                            >
+                                <i className="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Trocar pessoa
+                            </button>
+                        </>
+                    )}
                 </div>
-            )}
+            ))}
         </fieldset>
     );
 }

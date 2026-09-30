@@ -107,12 +107,13 @@ class AreaConhecimentoCNPqSerializer(serializers.ModelSerializer):
 
 class VinculoInstitucionalSerializer(serializers.ModelSerializer):
     nome_completo = serializers.CharField(source='pessoa.nome_completo', read_only=True)
+    cpf = serializers.CharField(source='pessoa.cpf', read_only=True)
     tipo_vinculo_display = serializers.CharField(source='get_tipo_vinculo_display', read_only=True)
 
     class Meta:
         model = VinculoInstitucional
         fields = [
-            'id', 'pessoa', 'nome_completo',
+            'id', 'pessoa', 'nome_completo', 'cpf',
             'tipo_vinculo', 'tipo_vinculo_display',
             'matricula', 'departamento', 'status',
         ]
