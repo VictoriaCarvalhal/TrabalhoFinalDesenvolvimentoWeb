@@ -24,26 +24,27 @@ const FUNCOES = [
 ];
 
 const LINHA_VAZIA = {
-    id: null, vinculo: null, tipo_vinculo: '', matricula: '', cpf: '', nome: '', funcao: '',
+    id: null, vinculo: null, tipo_vinculo: '', matricula: '', cpf: '',
+    nome: '', funcao: '', busca: '', filtroTipo: '',
 };
 
+// Máscara de CPF pra exibição: 123.456.789-00
 function mascaraCpf(valor) {
-    const nums = valor.replace(/\D/g, '').slice(0, 11);
+    const nums = (valor || '').replace(/\D/g, '').slice(0, 11);
     if (nums.length <= 3) return nums;
     if (nums.length <= 6) return nums.slice(0, 3) + '.' + nums.slice(3);
     if (nums.length <= 9) return nums.slice(0, 3) + '.' + nums.slice(3, 6) + '.' + nums.slice(6);
     return nums.slice(0, 3) + '.' + nums.slice(3, 6) + '.' + nums.slice(6, 9) + '-' + nums.slice(9);
 }
 
-function pareceCpf(texto) {
-    const limpo = texto.replace(/\D/g, '');
-    return limpo.length >= 3 && !/[a-zA-Z]/.test(texto);
-}
-
+// Aba "Membros da Equipe" do cadastro de projeto.
+// O usuário pode filtrar por tipo de vínculo e/ou digitar matrícula/CPF/nome.
+// O sistema mostra as pessoas encontradas pra ele escolher.
 function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
-    const [buscando, setBuscando] = useState({}); // { indice: true } enquanto busca
+    const [buscando, setBuscando] = useState({});
+    const [sugestoes, setSugestoes] = useState({});
 
     useEffect(() => {
         if (!projetoId) return;
@@ -90,48 +91,53 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
             }
         }
         setLinhas((atuais) => atuais.filter((_, i) => i !== indice));
+        setSugestoes((a) => { const novo = { ...a }; delete novo[indice]; return novo; });
     }
 
-
+    // Busca pelo tipo de vínculo e/ou texto digitado (matrícula, CPF ou nome).
     async function buscarPessoa(indice) {
         const linha = linhas[indice];
-        const termo = (linha.busca || '').replace(/\D/g, '').trim();
-        if (!termo) return;
+        const termo = (linha.busca || '').trim();
+        const filtroTipo = linha.filtroTipo || '';
+
+        // Precisa ter pelo menos um filtro
+        if (!termo && !filtroTipo) return;
 
         setBuscando((a) => ({ ...a, [indice]: true }));
         setErro(null);
+        setSugestoes((a) => ({ ...a, [indice]: [] }));
 
         try {
             const resposta = await api.get('/dominios/vinculos/');
-            const encontrado = resposta.data.find((v) => {
-                const matriculaOk = v.matricula && v.matricula === termo;
-                const cpfOk = v.cpf && v.cpf.replace(/\D/g, '') === termo;
-                return matriculaOk || cpfOk;
+            const termoLower = termo.toLowerCase();
+            const termoDigitos = termo.replace(/\D/g, '');
+
+            const encontrados = resposta.data.filter((v) => {
+                // Filtro por tipo de vínculo (se selecionou)
+                if (filtroTipo && v.tipo_vinculo !== filtroTipo) return false;
+
+                // Se não digitou nada no campo texto, aceita todos do tipo
+                if (!termo) return true;
+
+                // Matrícula: compara como texto (pode ter letras tipo SIAPE456)
+                const matriculaOk = v.matricula
+                    && v.matricula.toLowerCase().includes(termoLower);
+                // CPF: compara só os dígitos
+                const cpfOk = termoDigitos.length >= 3
+                    && v.cpf
+                    && v.cpf.replace(/\D/g, '').includes(termoDigitos);
+                // Nome: busca parcial
+                const nomeOk = v.nome_completo
+                    && v.nome_completo.toLowerCase().includes(termoLower);
+                return matriculaOk || cpfOk || nomeOk;
             });
 
-            if (!encontrado) {
-                setErro('Nenhuma pessoa encontrada com essa matrícula ou CPF.');
-                return;
-            }
-
-            const jaEsta = linhas.some((l, i) => i !== indice && l.vinculo === encontrado.id);
-            if (jaEsta) {
-                setErro('Esta pessoa já está na equipe.');
-                return;
-            }
-
-            const dadosPreenchidos = {
-                vinculo: encontrado.id,
-                tipo_vinculo: encontrado.tipo_vinculo,
-                matricula: encontrado.matricula || '',
-                cpf: encontrado.cpf || '',
-                nome: encontrado.nome_completo,
-            };
-            editar(indice, dadosPreenchidos);
-
-            // Se já tem função selecionada, grava direto
-            if (linha.funcao) {
-                gravar(indice, { ...linha, ...dadosPreenchidos });
+            if (encontrados.length === 0) {
+                setErro('Nenhuma pessoa encontrada. Verifique os filtros.');
+            } else if (encontrados.length === 1) {
+                selecionarPessoa(indice, encontrados[0]);
+            } else {
+                setSugestoes((a) => ({ ...a, [indice]: encontrados }));
             }
         } catch {
             setErro('Erro ao buscar pessoa. Tente novamente.');
@@ -140,19 +146,33 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
         }
     }
 
-    // Quando muda o campo de busca, aplica máscara de CPF se necessário
-    function aoDigitarBusca(indice, valor) {
-        if (pareceCpf(valor) && valor.length > 3) {
-            editar(indice, { busca: mascaraCpf(valor) });
-        } else {
-            editar(indice, { busca: valor });
+    function selecionarPessoa(indice, vinculo) {
+        const jaEsta = linhas.some((l, i) => i !== indice && l.vinculo === vinculo.id);
+        if (jaEsta) {
+            setErro('Esta pessoa já está na equipe.');
+            return;
+        }
+
+        const dadosPreenchidos = {
+            vinculo: vinculo.id,
+            tipo_vinculo: vinculo.tipo_vinculo,
+            matricula: vinculo.matricula || '',
+            cpf: vinculo.cpf || '',
+            nome: vinculo.nome_completo,
+        };
+        editar(indice, dadosPreenchidos);
+        setSugestoes((a) => { const novo = { ...a }; delete novo[indice]; return novo; });
+
+        const linha = linhas[indice];
+        if (linha.funcao) {
+            gravar(indice, { ...linha, ...dadosPreenchidos });
         }
     }
 
-    // Limpa a pessoa selecionada pra buscar outra
     function limparPessoa(indice) {
         editar(indice, {
-            vinculo: null, tipo_vinculo: '', matricula: '', cpf: '', nome: '', busca: '',
+            vinculo: null, tipo_vinculo: '', matricula: '', cpf: '',
+            nome: '', busca: '', filtroTipo: '',
         });
     }
 
@@ -161,7 +181,6 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
         gravar(indice, { ...linhas[indice], funcao });
     }
 
-    // Acha o rótulo legível do tipo de vínculo
     function rotuloVinculo(valor) {
         const tipo = TIPOS_VINCULO.find((t) => t.valor === valor);
         return tipo ? tipo.rotulo : valor;
@@ -172,9 +191,8 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
             <legend>Membros da Equipe</legend>
 
             <p className="small text-body-secondary">
-                Clique em "Novo" para adicionar um membro. Digite a matrícula ou o CPF
-                da pessoa e clique em "Buscar". O sistema preenche o nome e o vínculo
-                automaticamente.
+                Clique em "Novo" para adicionar um membro. Filtre por tipo de vínculo
+                e/ou digite a matrícula, CPF ou nome da pessoa.
             </p>
 
             <button type="button" className="btn btn-sm btn-primary mb-3" onClick={novaLinha}>
@@ -204,33 +222,68 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
                         </button>
                     </div>
 
-                    {/* Se ainda não encontrou a pessoa, mostra o campo de busca */}
                     {!linha.vinculo ? (
-                        <div className="row g-2 align-items-end">
-                            <div className="col-sm-6">
-                                <label className="form-label">Matrícula ou CPF</label>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    placeholder="Digite a matrícula ou CPF"
-                                    value={linha.busca || ''}
-                                    onChange={(e) => aoDigitarBusca(i, e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); buscarPessoa(i); } }}
-                                />
+                        <>
+                            <div className="row g-2 align-items-end">
+                                <div className="col-sm-4">
+                                    <label className="form-label">Tipo de Vínculo</label>
+                                    <select
+                                        className="form-select"
+                                        value={linha.filtroTipo || ''}
+                                        onChange={(e) => editar(i, { filtroTipo: e.target.value })}
+                                    >
+                                        <option value="">[Todos]</option>
+                                        {TIPOS_VINCULO.map((t) => (
+                                            <option key={t.valor} value={t.valor}>{t.rotulo}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="col-sm-4">
+                                    <label className="form-label">Matrícula, CPF ou Nome</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        placeholder="Ex: SIAPE456, João..."
+                                        value={linha.busca || ''}
+                                        onChange={(e) => editar(i, { busca: e.target.value })}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); buscarPessoa(i); } }}
+                                    />
+                                </div>
+                                <div className="col-sm-2">
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-primary w-100"
+                                        disabled={(!linha.busca && !linha.filtroTipo) || buscando[i]}
+                                        onClick={() => buscarPessoa(i)}
+                                    >
+                                        {buscando[i] ? 'Buscando...' : 'Buscar'}
+                                    </button>
+                                </div>
                             </div>
-                            <div className="col-sm-3">
-                                <button
-                                    type="button"
-                                    className="btn btn-outline-primary w-100"
-                                    disabled={!linha.busca || buscando[i]}
-                                    onClick={() => buscarPessoa(i)}
-                                >
-                                    {buscando[i] ? 'Buscando...' : 'Buscar'}
-                                </button>
-                            </div>
-                        </div>
+
+                            {/* Sugestões quando acha mais de uma pessoa */}
+                            {sugestoes[i] && sugestoes[i].length > 0 && (
+                                <div className="mt-2">
+                                    <p className="small fw-bold mb-1">Selecione a pessoa:</p>
+                                    <div className="list-group">
+                                        {sugestoes[i].map((v) => (
+                                            <button
+                                                key={v.id}
+                                                type="button"
+                                                className="list-group-item list-group-item-action d-flex justify-content-between"
+                                                onClick={() => selecionarPessoa(i, v)}
+                                            >
+                                                <span>{v.nome_completo}</span>
+                                                <span className="text-muted">
+                                                    {v.matricula || mascaraCpf(v.cpf)} — {v.tipo_vinculo_display}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     ) : (
-                        /* Pessoa encontrada: mostra os dados preenchidos */
                         <>
                             <div className="row g-2 mb-2">
                                 <div className="col-sm-4">
@@ -249,7 +302,7 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
                                 ) : (
                                     <div className="col-sm-2">
                                         <label className="form-label">CPF</label>
-                                        <input type="text" className="form-control" value={mascaraCpf(linha.cpf || '')} readOnly />
+                                        <input type="text" className="form-control" value={mascaraCpf(linha.cpf)} readOnly />
                                     </div>
                                 )}
                                 <div className="col-sm-3">
