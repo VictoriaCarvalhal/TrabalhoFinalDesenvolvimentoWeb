@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../../services/api';
+import CampoTextoLongo from '../CampoTextoLongo';
+import DialogoFormulario from '../DialogoFormulario';
 
 // Lista copiada do backend (projetos.TipoInstituicaoExterna).
 const TIPOS_INSTITUICAO = [
@@ -16,10 +18,13 @@ const LINHA_VAZIA = {
     id: null, nome_instituicao: '', sigla_instituicao: '', tipo_instituicao: '', participacao: '',
 };
 
-function ParceriasExternas({ projetoId, valor = [], onChange }) {
+// Mesma forma das parcerias internas: a aba lista o que já existe e o
+// preenchimento acontece num diálogo.
+function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = false }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
-    
+    const [edicao, setEdicao] = useState(null);
+
     useEffect(() => {
         if (!projetoId) return;
         api.get(`/projetos/${projetoId}/parcerias-externas/`)
@@ -32,33 +37,52 @@ function ParceriasExternas({ projetoId, valor = [], onChange }) {
         onChange?.(linhas);
     }, [linhas]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    function novaLinha() {
-        setLinhas((atuais) => [...atuais, { ...LINHA_VAZIA }]);
-    }
-
-    function editar(indice, mudancas) {
-        setLinhas((atuais) => atuais.map((l, i) => (i === indice ? { ...l, ...mudancas } : l)));
-    }
-
-    // A instituição e o tipo são obrigatórios no modelo
+    // A instituição e o tipo são obrigatórios no modelo.
     function completa(linha) {
         return Boolean(linha.nome_instituicao && linha.tipo_instituicao);
     }
 
-    async function gravar(indice, linha) {
-        if (!projetoId || !completa(linha)) return;
+    function abrirNova() {
+        setEdicao({ indice: null, dados: { ...LINHA_VAZIA } });
+    }
+
+    function abrirEdicao(indice) {
+        setEdicao({ indice, dados: { ...linhas[indice] } });
+    }
+
+    function mudarCampo(mudancas) {
+        setEdicao((atual) => ({ ...atual, dados: { ...atual.dados, ...mudancas } }));
+    }
+
+    async function salvar() {
+        const { indice, dados } = edicao;
+        if (!completa(dados)) return;
+
+        // Sem projeto gravado ainda, a parceria fica na lista e sobe junto no envio.
+        if (!projetoId) {
+            setLinhas((atuais) => (indice === null
+                ? [...atuais, dados]
+                : atuais.map((l, i) => (i === indice ? dados : l))));
+            setEdicao(null);
+            return;
+        }
+
         try {
             setErro(null);
             const corpo = {
-                nome_instituicao: linha.nome_instituicao,
-                sigla_instituicao: linha.sigla_instituicao,
-                tipo_instituicao: linha.tipo_instituicao,
-                participacao: linha.participacao,
+                nome_instituicao: dados.nome_instituicao,
+                sigla_instituicao: dados.sigla_instituicao,
+                tipo_instituicao: dados.tipo_instituicao,
+                participacao: dados.participacao,
             };
-            const resposta = linha.id
-                ? await api.patch(`/projetos/${projetoId}/parcerias-externas/${linha.id}/`, corpo)
+            const resposta = dados.id
+                ? await api.patch(`/projetos/${projetoId}/parcerias-externas/${dados.id}/`, corpo)
                 : await api.post(`/projetos/${projetoId}/parcerias-externas/`, corpo);
-            editar(indice, { id: resposta.data.id });
+            const gravada = { ...dados, id: resposta.data.id };
+            setLinhas((atuais) => (indice === null
+                ? [...atuais, gravada]
+                : atuais.map((l, i) => (i === indice ? gravada : l))));
+            setEdicao(null);
         } catch (err) {
             const detalhe = err.response?.data;
             setErro(detalhe ? Object.values(detalhe).flat().join(' ') : 'Erro ao gravar a parceria externa.');
@@ -78,15 +102,27 @@ function ParceriasExternas({ projetoId, valor = [], onChange }) {
         setLinhas((atuais) => atuais.filter((_, i) => i !== indice));
     }
 
+    // A API devolve o tipo por extenso no GET; uma parceria recém-digitada
+    // só tem o código, então o nome sai da lista local.
+    function nomeTipo(linha) {
+        if (linha.tipo_instituicao_display) return linha.tipo_instituicao_display;
+        const t = TIPOS_INSTITUICAO.find((x) => x.valor === linha.tipo_instituicao);
+        return t ? t.rotulo : '—';
+    }
+
+    const dados = edicao?.dados;
+
     return (
         <fieldset>
-            <legend>Parcerias Externas</legend>
+            <legend className={tituloOculto ? 'visually-hidden' : ''}>Parcerias Externas</legend>
 
-            <p className="small text-body-secondary mb-1">Os campos com * são obrigatórios.</p>
-            <p className="small text-body-secondary">Use o botão abaixo para acrescentar uma parceria.</p>
+            <p className="small text-body-secondary">
+                Instituições de fora da universidade que colaboram com o projeto.
+                Use o botão abaixo para acrescentar uma.
+            </p>
 
-            <button type="button" className="btn btn-sm btn-primary mb-3" onClick={novaLinha}>
-                <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Novo
+            <button type="button" className="btn btn-sm btn-primary mb-3" onClick={abrirNova}>
+                <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova parceria externa
             </button>
 
             {erro && <div className="alert alert-danger py-2">{erro}</div>}
@@ -96,20 +132,15 @@ function ParceriasExternas({ projetoId, valor = [], onChange }) {
                     <thead className="table-light">
                         <tr>
                             <th scope="col" style={{ width: '4rem' }}>Nº</th>
-                            <th scope="col" style={{ width: '4rem' }}>
-                                <i className="bi bi-trash" aria-hidden="true"></i>
-                                <span className="visually-hidden">Excluir</span>
-                            </th>
-                            <th scope="col">* Nome da Instituição</th>
-                            <th scope="col">Sigla da Instituição</th>
-                            <th scope="col">* Tipo de Instituição</th>
-                            <th scope="col">Participação</th>
+                            <th scope="col">Instituição</th>
+                            <th scope="col">Tipo</th>
+                            <th scope="col" style={{ width: '7rem' }}>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {linhas.length === 0 && (
                             <tr>
-                                <td colSpan={6} className="text-muted text-center">
+                                <td colSpan={4} className="text-muted text-center">
                                     Nenhuma parceria externa cadastrada.
                                 </td>
                             </tr>
@@ -118,71 +149,97 @@ function ParceriasExternas({ projetoId, valor = [], onChange }) {
                             <tr key={linha.id ?? `nova-${i}`}>
                                 <td>{i + 1}.</td>
                                 <td>
-                                    <button
-                                        type="button"
-                                        className="btn btn-sm btn-outline-danger"
-                                        onClick={() => excluir(i)}
-                                        aria-label={`Excluir parceria externa ${i + 1}`}
-                                    >
-                                        <i className="bi bi-trash" aria-hidden="true"></i>
-                                    </button>
+                                    {linha.nome_instituicao}
+                                    {linha.sigla_instituicao && ` (${linha.sigla_instituicao})`}
                                 </td>
-                                <td>
-                                    <input
-                                        type="text"
-                                        className="form-control form-control-sm"
-                                        value={linha.nome_instituicao}
-                                        maxLength={255}
-                                        required
-                                        aria-label={`Nome da instituição da parceria externa ${i + 1}`}
-                                        onChange={(e) => editar(i, { nome_instituicao: e.target.value })}
-                                        onBlur={() => gravar(i, linha)}
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        type="text"
-                                        className="form-control form-control-sm"
-                                        value={linha.sigla_instituicao}
-                                        maxLength={50}
-                                        aria-label={`Sigla da instituição da parceria externa ${i + 1}`}
-                                        onChange={(e) => editar(i, { sigla_instituicao: e.target.value })}
-                                        onBlur={() => gravar(i, linha)}
-                                    />
-                                </td>
-                                <td>
-                                    <select
-                                        className="form-select form-select-sm"
-                                        value={linha.tipo_instituicao}
-                                        required
-                                        aria-label={`Tipo da instituição da parceria externa ${i + 1}`}
-                                        onChange={(e) => editar(i, { tipo_instituicao: e.target.value })}
-                                        onBlur={() => gravar(i, linha)}
-                                    >
-                                        <option value="">[Selecione]</option>
-                                        {TIPOS_INSTITUICAO.map((tipo) => (
-                                            <option key={tipo.valor} value={tipo.valor}>
-                                                {tipo.rotulo}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </td>
-                                <td>
-                                    <input
-                                        type="text"
-                                        className="form-control form-control-sm"
-                                        value={linha.participacao}
-                                        maxLength={500}
-                                        aria-label={`Participação da parceria externa ${i + 1}`}
-                                        onChange={(e) => editar(i, { participacao: e.target.value })}
-                                        onBlur={() => gravar(i, linha)}
-                                    />
+                                <td>{nomeTipo(linha)}</td>
+                                <td className="text-nowrap">
+                                    <div className="d-flex gap-2">
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-secondary"
+                                            onClick={() => abrirEdicao(i)}
+                                            aria-label={`Editar a parceria externa ${i + 1}`}
+                                            title="Editar"
+                                        >
+                                            <i className="bi bi-pencil" aria-hidden="true"></i>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-danger"
+                                            onClick={() => excluir(i)}
+                                            aria-label={`Excluir a parceria externa ${i + 1}`}
+                                            title="Excluir"
+                                        >
+                                            <i className="bi bi-trash" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+
+            {edicao && (
+                <DialogoFormulario
+                    titulo={edicao.indice === null ? 'Nova parceria externa' : 'Editar parceria externa'}
+                    aoSalvar={salvar}
+                    aoFechar={() => setEdicao(null)}
+                    salvarDesabilitado={!completa(dados)}
+                >
+                    <div className="mb-3">
+                        <label className="form-label" htmlFor="pe-nome">Nome da instituição *</label>
+                        <input
+                            id="pe-nome"
+                            type="text"
+                            className="form-control"
+                            value={dados.nome_instituicao}
+                            maxLength={255}
+                            required
+                            onChange={(e) => mudarCampo({ nome_instituicao: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label" htmlFor="pe-sigla">Sigla da instituição</label>
+                        <input
+                            id="pe-sigla"
+                            type="text"
+                            className="form-control"
+                            value={dados.sigla_instituicao}
+                            maxLength={50}
+                            onChange={(e) => mudarCampo({ sigla_instituicao: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label" htmlFor="pe-tipo">Tipo de instituição *</label>
+                        <select
+                            id="pe-tipo"
+                            className="form-select"
+                            value={dados.tipo_instituicao}
+                            required
+                            onChange={(e) => mudarCampo({ tipo_instituicao: e.target.value })}
+                        >
+                            <option value="">[Selecione]</option>
+                            {TIPOS_INSTITUICAO.map((tipo) => (
+                                <option key={tipo.valor} value={tipo.valor}>{tipo.rotulo}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <CampoTextoLongo
+                        rotulo="Participação da instituição no projeto"
+                        ajuda="Descreva de que forma essa instituição colabora: o que ela oferece ao projeto (pessoas, espaço, equipamento, recursos) e em quais atividades participa."
+                        campo="participacao"
+                        limite={500}
+                        linhas={4}
+                        valor={dados.participacao ?? ''}
+                        aoMudar={(campo, texto) => mudarCampo({ [campo]: texto })}
+                    />
+                </DialogoFormulario>
+            )}
         </fieldset>
     );
 }
