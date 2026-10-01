@@ -122,7 +122,7 @@ function CadastrarProjeto() {
     // Hooks para carregar dados dos dominios e vinculos do coordenador
     const { dados: unidades, loading: carregandoUnidades, erro: erroUnidades } = useUnidades();
     const { dados: departamentos, loading: carregandoDepartamentos, erro: erroDepartamentos } = useDepartamentos();
-    const { dados: vinculosCoordenador, loading: carregandoVinculos, erro: erroVinculos } = useVinculosCoordenador();
+    const { dados: vinculosCoordenador, loading: carregandoVinculos, erro: erroVinculos, recarregar: recarregarVinculos } = useVinculosCoordenador();
     const { dados: naturezas, loading: carregandoNaturezas, erro: erroNaturezas } = useNaturezas();
     const { dados: areasCNPQ, loading: carregandoAreasCNPQ, erro: erroAreasCNPQ } = useAreasCNPQ();
     const { dados: areasTematicas, loading: carregandoAreasTematicas, erro: erroAreasTematicas } = useAreasTematicas();
@@ -402,6 +402,9 @@ function CadastrarProjeto() {
                         form={form}
                         atualizarCampo={atualizarCampo}
                         vinculosCoordenador={vinculosCoordenador}
+                        carregandoVinculos={carregandoVinculos}
+                        erroVinculos={erroVinculos}
+                        recarregarVinculos={recarregarVinculos}
                         unidades={unidades}
                         departamentos={departamentos}
                         buscarCep={buscarCep}

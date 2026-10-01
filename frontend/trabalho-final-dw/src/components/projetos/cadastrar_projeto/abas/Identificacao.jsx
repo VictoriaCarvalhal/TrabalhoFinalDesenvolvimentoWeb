@@ -1,8 +1,50 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MUNICIPIOS_RJ } from '../../../../dados/municipiosRJ';
+import { criarMeuVinculo } from '../../../../services/dominioService';
 import CampoContato from '../CampoContato';
 
-function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, departamentos, buscarCep, buscandoCep, avisoCep, errosValidacao }) {
+// Mesma lista do backend (core.VinculoInstitucional.TipoVinculo).
+const TIPOS_VINCULO = [
+    { valor: 'PROFESSOR_EFETIVO', rotulo: 'Professor Efetivo' },
+    { valor: 'PROFESSOR_VISITANTE', rotulo: 'Professor Visitante' },
+    { valor: 'PROFESSOR_SUBSTITUTO', rotulo: 'Professor Substituto/Convidado' },
+    { valor: 'TECNICO_ADMINISTRATIVO', rotulo: 'Técnico-Administrativo' },
+    { valor: 'ALUNO_GRADUACAO', rotulo: 'Aluno de Graduação Não Bolsista' },
+    { valor: 'ALUNO_POS_GRADUACAO', rotulo: 'Aluno de Pós-Graduação' },
+    { valor: 'EXTERNO', rotulo: 'Externo' },
+];
+
+function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVinculos, erroVinculos, recarregarVinculos, unidades, departamentos, buscarCep, buscandoCep, avisoCep, errosValidacao }) {
+    // Quem se cadastra no sistema nasce sem vínculo institucional, e sem ele a
+    // lista de matrículas fica vazia e não há como seguir para a próxima etapa.
+    // Nesse caso a aba oferece o cadastro do vínculo aqui mesmo.
+    const [novoVinculo, setNovoVinculo] = useState({ tipo_vinculo: '', matricula: '' });
+    const [salvandoVinculo, setSalvandoVinculo] = useState(false);
+    const [erroNovoVinculo, setErroNovoVinculo] = useState(null);
+    const semVinculo = !carregandoVinculos && !erroVinculos && vinculosCoordenador.length === 0;
+
+    async function cadastrarVinculo(e) {
+        e.preventDefault();
+        setSalvandoVinculo(true);
+        setErroNovoVinculo(null);
+        try {
+            const resposta = await criarMeuVinculo(novoVinculo);
+            await recarregarVinculos?.();
+            // já deixa escolhido o vínculo recém-criado
+            atualizarCampo('coordenador_vinculo', resposta.data.id);
+            atualizarCampo('matricula_coordenador', resposta.data.matricula ?? '');
+            atualizarCampo('coordenador', resposta.data.nome_completo ?? '');
+            setNovoVinculo({ tipo_vinculo: '', matricula: '' });
+        } catch (err) {
+            const detalhe = err.response?.data;
+            setErroNovoVinculo(detalhe
+                ? Object.values(detalhe).flat().join(' ')
+                : 'Não foi possível cadastrar o vínculo.');
+        } finally {
+            setSalvandoVinculo(false);
+        }
+    }
+
     //funções internas, não confundir com as da API
     function adicionarContato(campo) {
         atualizarCampo(campo, [...form[campo], '']);
@@ -54,6 +96,69 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, de
                         ))}
                     </select>
                     {errosValidacao?.coordenador_vinculo && <div className="invalid-feedback">{errosValidacao.coordenador_vinculo}</div>}
+
+                    {carregandoVinculos && (
+                        <div className="form-text">Carregando suas matrículas...</div>
+                    )}
+
+                    {erroVinculos && (
+                        <div className="alert alert-danger py-2 mt-2">
+                            Não foi possível carregar suas matrículas.{' '}
+                            <button type="button" className="btn btn-sm btn-link p-0 align-baseline" onClick={recarregarVinculos}>
+                                Tentar de novo
+                            </button>
+                        </div>
+                    )}
+
+                    {semVinculo && (
+                        <div className="alert alert-warning mt-2">
+                            <p className="mb-2">
+                                Você ainda não tem vínculo cadastrado na universidade, por isso não
+                                há matrícula para escolher. Informe o seu vínculo abaixo para seguir
+                                com o projeto.
+                            </p>
+
+                            {erroNovoVinculo && <div className="alert alert-danger py-2">{erroNovoVinculo}</div>}
+
+                            <div className="row g-2 align-items-end">
+                                <div className="col-sm-5">
+                                    <label className="form-label" htmlFor="novo-vinculo-tipo">Tipo de vínculo</label>
+                                    <select
+                                        id="novo-vinculo-tipo"
+                                        className="form-select"
+                                        value={novoVinculo.tipo_vinculo}
+                                        onChange={(e) => setNovoVinculo((v) => ({ ...v, tipo_vinculo: e.target.value }))}
+                                    >
+                                        <option value="">[Selecione]</option>
+                                        {TIPOS_VINCULO.map((t) => (
+                                            <option key={t.valor} value={t.valor}>{t.rotulo}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="col-sm-4">
+                                    <label className="form-label" htmlFor="novo-vinculo-matricula">Matrícula</label>
+                                    <input
+                                        id="novo-vinculo-matricula"
+                                        type="text"
+                                        className="form-control"
+                                        maxLength={50}
+                                        value={novoVinculo.matricula}
+                                        onChange={(e) => setNovoVinculo((v) => ({ ...v, matricula: e.target.value }))}
+                                    />
+                                </div>
+                                <div className="col-sm-3">
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary w-100"
+                                        disabled={salvandoVinculo || !novoVinculo.tipo_vinculo || !novoVinculo.matricula.trim()}
+                                        onClick={cadastrarVinculo}
+                                    >
+                                        {salvandoVinculo ? 'Salvando...' : 'Cadastrar vínculo'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
                 <div className="mb-3">
                     <label className="form-label">Nome</label>
