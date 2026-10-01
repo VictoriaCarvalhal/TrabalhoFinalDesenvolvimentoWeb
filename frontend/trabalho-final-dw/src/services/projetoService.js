@@ -32,3 +32,7 @@ export async function criarPalavraChave(projeto_id, dados) {
     const resposta = await api.post(`/projetos/${projeto_id}/palavras_chave/`, dados);
     return resposta.data.id;
 }
+
+export async function excluirProjeto(projeto_id) {
+    await api.delete(`/projetos/${projeto_id}/`);
+}

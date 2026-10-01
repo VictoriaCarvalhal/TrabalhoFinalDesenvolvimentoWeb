@@ -57,6 +57,7 @@ class ProjetoAdmin(admin.ModelAdmin):
         'numero',
         'titulo',
         'situacao',
+        'excluido',
         'coordenador',
         'unidade_proponente',
         'created_at',
@@ -65,6 +66,7 @@ class ProjetoAdmin(admin.ModelAdmin):
     list_filter = (
         'ano',
         'situacao',
+        'excluido',
         'unidade_proponente',
     )
 
