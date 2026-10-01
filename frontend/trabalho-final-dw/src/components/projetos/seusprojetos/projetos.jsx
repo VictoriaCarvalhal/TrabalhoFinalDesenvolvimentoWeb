@@ -152,18 +152,16 @@ function Projetos({isPrevia = false, limite = 5}) {
                                                     >
                                                         <i className="bi bi-printer"></i>
                                                     </button>
-                                                    {!isPrevia && (
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-sm btn-outline-danger"
-                                                            title="Excluir projeto"
-                                                            aria-label={`Excluir projeto ${projeto.titulo}`}
-                                                            disabled={excluindoId === projeto.id}
-                                                            onClick={() => handleExcluir(projeto)}
-                                                        >
-                                                            <i className="bi bi-trash"></i>
-                                                        </button>
-                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-danger"
+                                                        title="Excluir projeto"
+                                                        aria-label={`Excluir projeto ${projeto.titulo}`}
+                                                        disabled={excluindoId === projeto.id}
+                                                        onClick={() => handleExcluir(projeto)}
+                                                    >
+                                                        <i className="bi bi-trash"></i>
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
