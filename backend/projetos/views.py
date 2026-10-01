@@ -24,7 +24,8 @@ from rest_framework.views import APIView
 from projetos.models import (
     DemandaBolsa, LocalRealizacao, MembroEquipe, ParceriaExterna,
     ParceriaInterna, PlanoTrabalho, ProjetoUnidade,
-    ProjetoEndereco, ProjetoCaracterizacao, ProjetoDescricao,Projeto
+    ProjetoEndereco, ProjetoCaracterizacao, ProjetoDescricao,
+    ProjetoPalavraChave, Projeto
 )
 from projetos.permissions import projetos_visiveis_para
 from projetos.serializers import (
@@ -33,7 +34,8 @@ from projetos.serializers import (
     PlanoTrabalhoSerializer, UnidadeEnvolvidaSerializer,
     ProjetoResumoSerializer, ProjetoDetalheSimplesSerializer, ProjetoCreateSerializer,
     ProjetoEnderecoSerializer, ProjetoContatoSerializer,
-    ProjetoCaracterizacaoSerializer, ProjetoDescricaoSerializer
+    ProjetoCaracterizacaoSerializer, ProjetoDescricaoSerializer,
+    ProjetoPalavraChaveSerializer
 )
 
 
@@ -115,6 +117,11 @@ class PlanoTrabalhoViewSet(AbaDoProjetoViewSet):
     serializer_class = PlanoTrabalhoSerializer
 
 
+class PalavraChaveViewSet(AbaDoProjetoViewSet):
+    queryset = ProjetoPalavraChave.objects.all()
+    serializer_class = ProjetoPalavraChaveSerializer
+
+
 # Aba -> (viewset, related_name no Projeto). A ordem e a das abas na tela.
 ABAS = [
     ('unidades_envolvidas', UnidadeEnvolvidaViewSet, 'projeto_unidades'),
@@ -124,6 +131,7 @@ ABAS = [
     ('membros_equipe', MembroEquipeViewSet, 'membros'),
     ('demandas_bolsa', DemandaBolsaViewSet, 'demandas_bolsa'),
     ('planos_trabalho', PlanoTrabalhoViewSet, 'planos_trabalho'),
+    ('palavras_chave', PalavraChaveViewSet, 'palavras_chave'),
 ]
 
 

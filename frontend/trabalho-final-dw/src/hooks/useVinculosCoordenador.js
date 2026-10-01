@@ -1,43 +1,33 @@
-import { useEffect, useState } from 'react';
-import { buscarPerfil, buscarVinculos } from '../services/dominioService';
+import { useCallback, useEffect, useState } from 'react';
+import { buscarMeusVinculos } from '../services/dominioService';
 
+// Vinculos ativos da pessoa logada, que são as matrículas que ela pode usar
+// como coordenadora de um projeto. Antes isto buscava os vínculos de todo
+// mundo e filtrava no navegador; agora o backend já devolve só os dela.
 export function useVinculosCoordenador() {
     const [dados, setDados] = useState([]);
     const [loading, setLoading] = useState(true);
     const [erro, setErro] = useState(null);
 
-    useEffect(() => {
-        let cancelado = false;
+    const carregar = useCallback(async () => {
         setLoading(true);
         setErro(null);
-        async function carregarVinculos() {
-            try {
-                const perfil = await buscarPerfil();
-                const resposta = await buscarVinculos();
-                const meus = resposta.data.filter(
-                    (v) =>
-                        v.pessoa === perfil.data.id &&
-                        v.status === 'ATIVO'
-                );
-                if (!cancelado) {
-                    setDados(meus);
-                }
-            } catch (e) {
-                if (!cancelado) {
-                    setErro(e?.response?.status ?? 'rede');
-                }
-            } finally {
-                if (!cancelado) {
-                    setLoading(false);
-                }
-            }
+        try {
+            const resposta = await buscarMeusVinculos();
+            setDados(resposta.data.filter((v) => v.status === 'ATIVO'));
+        } catch (e) {
+            setErro(e?.response?.status ?? 'rede');
+        } finally {
+            setLoading(false);
         }
-        carregarVinculos();
-        return () => {
-            cancelado = true;
-        };
     }, []);
-    return { dados, loading, erro };
+
+    useEffect(() => {
+        carregar();
+    }, [carregar]);
+
+    // recarregar serve para quem acabou de cadastrar um vínculo novo.
+    return { dados, loading, erro, recarregar: carregar };
 }
 
 export default useVinculosCoordenador;

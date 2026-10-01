@@ -2,7 +2,7 @@ import React from 'react';
 import CampoTextoLongo from '../CampoTextoLongo';
 import CampoContato from '../CampoContato';
 
-function Descricao({ form, atualizarCampo }) {
+function Descricao({ form, atualizarCampo, errosValidacao }) {
     function adicionarPalavraChave() {
         if (form.palavras_chave.length < 3) {
             atualizarCampo("palavras_chave", [...form.palavras_chave, ""]);
@@ -34,6 +34,7 @@ function Descricao({ form, atualizarCampo }) {
                 linhas={6}
                 valor={form.resumo}
                 aoMudar={atualizarCampo}
+                errosValidacao={errosValidacao}
             />
 
             <div className="mb-3">
@@ -53,9 +54,13 @@ function Descricao({ form, atualizarCampo }) {
                         aoMudar={(indice, valor) => editarPalavraChave(indice, valor)}
                         aoAdicionar={adicionarPalavraChave}
                         aoRemover={(indice) => removerPalavraChave(indice)}
+                        erro={errosValidacao?.palavras_chave && i === 0 ? errosValidacao.palavras_chave : null}
                     />
 
                 ))}
+                {errosValidacao?.palavras_chave && form.palavras_chave.length <= 1 && (
+                    <div className="invalid-feedback d-block">{errosValidacao.palavras_chave}</div>
+                )}
             </div>
 
             <CampoTextoLongo
@@ -65,6 +70,7 @@ function Descricao({ form, atualizarCampo }) {
                 linhas={6}
                 valor={form.introducao}
                 aoMudar={atualizarCampo}
+                errosValidacao={errosValidacao}
             />
 
             <CampoTextoLongo
@@ -74,6 +80,7 @@ function Descricao({ form, atualizarCampo }) {
                 linhas={6}
                 valor={form.justificativa}
                 aoMudar={atualizarCampo}
+                errosValidacao={errosValidacao}
             />
 
             <CampoTextoLongo
@@ -83,6 +90,7 @@ function Descricao({ form, atualizarCampo }) {
                 linhas={3}
                 valor={form.objetivo_geral}
                 aoMudar={atualizarCampo}
+                errosValidacao={errosValidacao}
             />
 
             <CampoTextoLongo
@@ -92,6 +100,7 @@ function Descricao({ form, atualizarCampo }) {
                 linhas={4}
                 valor={form.objetivos_especificos}
                 aoMudar={atualizarCampo}
+                errosValidacao={errosValidacao}
             />
 
             <CampoTextoLongo
@@ -101,13 +110,14 @@ function Descricao({ form, atualizarCampo }) {
                 linhas={5}
                 valor={form.metodologia_avaliacao}
                 aoMudar={atualizarCampo}
+                errosValidacao={errosValidacao}
             />
 
             <div className="mb-3">
                 <label className="form-label">Tem relação com ensino?</label>
                 <div className="form-check">
                     <input
-                        className="form-check-input"
+                        className={`form-check-input ${errosValidacao?.relacao_ensino ? 'is-invalid' : ''}`}
                         type="radio"
                         name="relacao_ensino"
                         id="relacao_ensino_sim"
@@ -121,7 +131,7 @@ function Descricao({ form, atualizarCampo }) {
                 </div>
                 <div className="form-check">
                     <input
-                        className="form-check-input"
+                        className={`form-check-input ${errosValidacao?.relacao_ensino ? 'is-invalid' : ''}`}
                         type="radio"
                         name="relacao_ensino"
                         id="relacao_ensino_nao"
@@ -133,13 +143,14 @@ function Descricao({ form, atualizarCampo }) {
                         Não
                     </label>
                 </div>
+                {errosValidacao?.relacao_ensino && <div className="invalid-feedback d-block">{errosValidacao.relacao_ensino}</div>}
             </div>
 
             <div className="mb-3">
                 <label className="form-label">Tem relação com Pesquisa?</label>
                 <div className="form-check">
                     <input
-                        className="form-check-input"
+                        className={`form-check-input ${errosValidacao?.relacao_pesquisa ? 'is-invalid' : ''}`}
                         type="radio"
                         name="relacao_pesquisa"
                         id="relacao_pesquisa_sim"
@@ -153,7 +164,7 @@ function Descricao({ form, atualizarCampo }) {
                 </div>
                 <div className="form-check">
                     <input
-                        className="form-check-input"
+                        className={`form-check-input ${errosValidacao?.relacao_pesquisa ? 'is-invalid' : ''}`}
                         type="radio"
                         name="relacao_pesquisa"
                         id="relacao_pesquisa_nao"
@@ -165,6 +176,7 @@ function Descricao({ form, atualizarCampo }) {
                         Não
                     </label>
                 </div>
+                {errosValidacao?.relacao_pesquisa && <div className="invalid-feedback d-block">{errosValidacao.relacao_pesquisa}</div>}
             </div>
 
             <CampoTextoLongo
@@ -174,6 +186,7 @@ function Descricao({ form, atualizarCampo }) {
                 linhas={4}
                 valor={form.interacao_dialogica}
                 aoMudar={atualizarCampo}
+                errosValidacao={errosValidacao}
             />
 
             <CampoTextoLongo
@@ -183,6 +196,7 @@ function Descricao({ form, atualizarCampo }) {
                 linhas={4}
                 valor={form.interdisciplinaridade}
                 aoMudar={atualizarCampo}
+                errosValidacao={errosValidacao}
             />
 
             <CampoTextoLongo
@@ -192,6 +206,7 @@ function Descricao({ form, atualizarCampo }) {
                 linhas={4}
                 valor={form.impacto_formacao}
                 aoMudar={atualizarCampo}
+                errosValidacao={errosValidacao}
             />
 
             <CampoTextoLongo
@@ -201,6 +216,7 @@ function Descricao({ form, atualizarCampo }) {
                 linhas={4}
                 valor={form.indissociabilidade}
                 aoMudar={atualizarCampo}
+                errosValidacao={errosValidacao}
             />
 
             <CampoTextoLongo
@@ -210,6 +226,7 @@ function Descricao({ form, atualizarCampo }) {
                 linhas={4}
                 valor={form.impacto_social}
                 aoMudar={atualizarCampo}
+                errosValidacao={errosValidacao}
             />
 
             <CampoTextoLongo
@@ -219,6 +236,7 @@ function Descricao({ form, atualizarCampo }) {
                 linhas={4}
                 valor={form.referencias_bibliograficas}
                 aoMudar={atualizarCampo}
+                errosValidacao={errosValidacao}
             />
 
         </fieldset>

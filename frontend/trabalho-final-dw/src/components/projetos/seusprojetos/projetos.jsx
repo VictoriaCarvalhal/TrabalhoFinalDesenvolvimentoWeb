@@ -3,6 +3,7 @@ import { useAuthStore } from '../../../stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
 import { excluirProjeto } from '../../../services/projetoService';
+import DialogoDadosProjeto from '../detalhes/DialogoDadosProjeto';
 
 function Projetos() {
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
@@ -11,6 +12,8 @@ function Projetos() {
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState(null);
     const [excluindoId, setExcluindoId] = useState(null);
+    // id do projeto aberto no diálogo de dados; null = diálogo fechado
+    const [vendoId, setVendoId] = useState(null);
     const navigate = useNavigate();
 
     function redirecionaProCadastro() {
@@ -111,72 +114,84 @@ function Projetos() {
 
                 {isAutenticado && !carregando && !erro && (
                     <>
-
-                        <table className="table table-striped table-hover mt-3">
-                            <thead>
-                                <tr>
-                                    <th>Ano</th>
-                                    <th>Número</th>
-                                    <th>Título</th>
-                                    <th>Situação</th>
-                                    <th>Unidade</th>
-                                    <th>Coordenador(a)</th>
-                                    <th>Atualizado em</th>
-                                    <th className="text-nowrap">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {projetos.slice(0,projetos.length).map((projeto) => (
-                                    <tr key={projeto.id}>
-                                        <td>{projeto.ano}</td>
-                                        <td>{projeto.numero ?? 'S/N'}</td>
-                                        <td>{projeto.titulo}</td>
-                                        <td>{projeto.situacao_display}</td>
-                                        <td>{projeto.unidade_sigla}</td>
-                                        <td>{projeto.coordenador_nome}</td>
-                                        <td>
-                                            {projeto.updated_at
-                                                ? new Date(projeto.updated_at).toLocaleDateString('pt-BR')
-                                                : '-'}
-                                        </td>
-                                        <td className="text-nowrap">
-                                            <div className="d-flex gap-2">
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-sm btn-outline-secondary"
-                                                    title="Ver os dados do projeto"
-                                                    aria-label={`Ver os dados do projeto ${projeto.titulo}`}
-                                                    onClick={() => setVendoId(projeto.id)}
-                                                >
-                                                    <i className="bi bi-eye"></i>
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-sm btn-outline-secondary"
-                                                    title="Imprimir projeto"
-                                                    aria-label={`Imprimir projeto ${projeto.titulo}`}
-                                                    onClick={() => redirecionaParaImpressao(projeto.id)}
-                                                >
-                                                    <i className="bi bi-printer"></i>
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-sm btn-outline-danger"
-                                                    title="Excluir projeto"
-                                                    aria-label={`Excluir projeto ${projeto.titulo}`}
-                                                    disabled={excluindoId === projeto.id}
-                                                    onClick={() => handleExcluir(projeto)}
-                                                >
-                                                    <i className="bi bi-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
+                        <div className={controlFade? "table-fade" : ""}>
+                            <table className="table table-striped table-hover mt-3">
+                                <thead>
+                                    <tr>
+                                        <th>Ano</th>
+                                        <th>Número</th>
+                                        <th>Título</th>
+                                        <th>Situação</th>
+                                        <th>Unidade</th>
+                                        <th>Coordenador(a)</th>
+                                        <th>Atualizado em</th>
+                                        <th className="text-nowrap">Ações</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {projetos.slice(0, isPrevia ? limite : projetos.length).map((projeto) => (
+                                        <tr key={projeto.id}>
+                                            <td>{projeto.ano}</td>
+                                            <td>{projeto.numero ?? 'S/N'}</td>
+                                            <td>{projeto.titulo}</td>
+                                            <td>{projeto.situacao_display}</td>
+                                            <td>{projeto.unidade_sigla}</td>
+                                            <td>{projeto.coordenador_nome}</td>
+                                            <td>
+                                                {projeto.updated_at
+                                                    ? new Date(projeto.updated_at).toLocaleDateString('pt-BR')
+                                                    : '-'}
+                                            </td>
+                                            <td className="text-nowrap">
+                                                <div className="d-flex gap-2">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-secondary"
+                                                        title="Ver os dados do projeto"
+                                                        aria-label={`Ver os dados do projeto ${projeto.titulo}`}
+                                                        onClick={() => setVendoId(projeto.id)}
+                                                    >
+                                                        <i className="bi bi-eye"></i>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-secondary"
+                                                        title="Imprimir projeto"
+                                                        aria-label={`Imprimir projeto ${projeto.titulo}`}
+                                                        onClick={() => redirecionaParaImpressao(projeto.id)}
+                                                    >
+                                                        <i className="bi bi-printer"></i>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-danger"
+                                                        title="Excluir projeto"
+                                                        aria-label={`Excluir projeto ${projeto.titulo}`}
+                                                        disabled={excluindoId === projeto.id}
+                                                        onClick={() => handleExcluir(projeto)}
+                                                    >
+                                                        <i className="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                         {vendoId && (
-                            <DialogoDadosProjeto projetoId={vendoId} aoFechar={() => setVendoId(null)} />
+                <DialogoDadosProjeto projetoId={vendoId} aoFechar={() => setVendoId(null)} />
+            )}
+
+            {isPrevia && (projetos.length > 0) && (
+                            <div className="mt-4 text-center">
+                                <button
+                                    className="btn btn-outline-primary"
+                                    onClick={() => navigate('/Projetos/SeusProjetos')}
+                                >
+                                    Ver todos projetos
+                                </button>
+                            </div>
                         )}
 
                     </>
