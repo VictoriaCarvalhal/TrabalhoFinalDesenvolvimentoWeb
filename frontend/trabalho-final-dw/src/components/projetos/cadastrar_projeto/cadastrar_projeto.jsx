@@ -139,6 +139,8 @@ function CadastrarProjeto() {
         }
     }
 
+    const [confirmando, setConfirmando] = useState(false);
+    const [pendencias, setPendencias] = useState([]);
     const [buscandoCep, setBuscandoCep] = useState(false);
     const [avisoCep, setAvisoCep] = useState(null);
 
@@ -330,6 +332,27 @@ function CadastrarProjeto() {
     }
 
     // Essa função é responsável por persistir os dados de todas as abas em 1 única chamada atômica
+    // Antes de enviar, confere as tres etapas que tem campo obrigatorio e
+    // mostra o que falta. So abre a confirmacao se estiver tudo certo.
+    function abrirConfirmacao() {
+        const faltando = [
+            { indice: 0, nome: ABAS[0].label, erros: validarEtapa0(form) },
+            { indice: 1, nome: ABAS[1].label, erros: validarEtapa1(form) },
+            { indice: 2, nome: ABAS[2].label, erros: validarEtapa2(form) },
+        ].filter((etapa) => Object.keys(etapa.erros).length > 0);
+
+        if (faltando.length > 0) {
+            setPendencias(faltando);
+            // leva para a primeira aba com problema e marca os campos dela
+            setEtapaAtual(faltando[0].indice);
+            setErrosValidacao(faltando[0].erros);
+            return;
+        }
+
+        setPendencias([]);
+        setConfirmando(true);
+    }
+
     async function salvarDadosIdentificacao() {
         const payload = {
             //ABA IDENTIFICAÇÃO
@@ -399,6 +422,7 @@ function CadastrarProjeto() {
 
         setEnviando(true);
         setErroEnvio(null);
+        setConfirmando(false);
         try {
             let projeto_id = projetoId;
             if (!projeto_id) {
@@ -556,6 +580,26 @@ function CadastrarProjeto() {
                     />
                 </div>
 
+                {pendencias.length > 0 && (
+                    <div className="alert alert-danger" role="alert">
+                        <p className="mb-1 fw-semibold">Faltam dados para enviar o projeto:</p>
+                        <ul className="mb-0">
+                            {pendencias.map((etapa) => (
+                                <li key={etapa.indice}>
+                                    <button
+                                        type="button"
+                                        className="btn btn-link p-0 align-baseline"
+                                        onClick={() => { setEtapaAtual(etapa.indice); setErrosValidacao(etapa.erros); }}
+                                    >
+                                        {etapa.nome}
+                                    </button>
+                                    : {Object.values(etapa.erros).join('; ')}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
                 <div className="d-flex justify-content-end gap-2">
                     {etapaAtual > 0 && (
                         <button
@@ -567,26 +611,72 @@ function CadastrarProjeto() {
                         </button>
                     )}
 
-                    {etapaAtual < ABAS.length - 1 ? (
+                    {etapaAtual < ABAS.length - 1 && (
                         <button
                             type="button"
-                            className="btn btn-primary"
+                            className="btn btn-secondary"
                             onClick={proximaEtapa}
                         >
                             Avançar
                         </button>
-                    ) : (
-                        <button
-                            type="button"
-                            className="btn btn-primary"
-                            onClick={salvarDadosIdentificacao}
-                            disabled={enviando}
-                        >
-                            Enviar Formulário
-                        </button>
                     )}
+
+                    {/* O envio e um so, e aparece em qualquer aba: quem terminou
+                        de preencher nao precisa andar ate a ultima para enviar. */}
+                    <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={abrirConfirmacao}
+                        disabled={enviando}
+                    >
+                        Enviar projeto
+                    </button>
                 </div>
             </div>
+
+            {confirmando && (
+                <div
+                    className="modal d-block"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="titulo-confirmar-envio"
+                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+                    onClick={() => setConfirmando(false)}
+                >
+                    <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h2 className="modal-title h5" id="titulo-confirmar-envio">Enviar o projeto?</h2>
+                                <button type="button" className="btn-close" aria-label="Fechar" onClick={() => setConfirmando(false)}></button>
+                            </div>
+                            <div className="modal-body">
+                                <p>
+                                    O projeto <strong>{form.titulo}</strong> será enviado para a
+                                    Pró-Reitoria de Extensão e ficará como proposta aguardando
+                                    documentação.
+                                </p>
+                                <p className="mb-0">
+                                    Confira se está tudo preenchido antes de enviar. Depois do envio,
+                                    as mudanças passam pela lista de projetos.
+                                </p>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-outline-secondary" onClick={() => setConfirmando(false)}>
+                                    Revisar antes
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-primary"
+                                    onClick={salvarDadosIdentificacao}
+                                    disabled={enviando}
+                                >
+                                    {enviando ? 'Enviando...' : 'Confirmar envio'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );
