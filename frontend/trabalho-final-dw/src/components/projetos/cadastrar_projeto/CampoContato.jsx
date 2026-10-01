@@ -33,9 +33,7 @@ function CampoContato({ rotulo, tipoEntrada, placeholder, valor, indice, total, 
     } else if (tentouAdicionar) {
         mensagemErro = `Preencha este campo antes de adicionar outro.`;
     }
-
-    // O erro local (formato do valor) tem prioridade porque é mais específico;
-    // se não houver, vale o que a etapa mandou — campo obrigatório em branco.
+    
     if (!mensagemErro) {
         mensagemErro = erro ?? null;
     }
