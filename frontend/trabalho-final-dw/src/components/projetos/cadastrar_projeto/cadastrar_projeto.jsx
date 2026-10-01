@@ -116,6 +116,23 @@ function CadastrarProjeto() {
         setEtapaAtual((prev) => Math.max(prev - 1, 0));
     }
 
+    // Clicar numa aba leva direto para ela. Voltar para uma aba anterior nao
+    // cobra nada, so avancar e que cobra o que falta na aba atual, igual ao
+    // botao Avancar.
+    function irParaEtapa(indice) {
+        if (indice === etapaAtual) return;
+        if (indice < etapaAtual) {
+            setErrosValidacao({});
+            setEtapaAtual(indice);
+            return;
+        }
+        const erros = obterErrosEtapa();
+        setErrosValidacao(erros);
+        if (Object.keys(erros).length === 0) {
+            setEtapaAtual(indice);
+        }
+    }
+
     const [buscandoCep, setBuscandoCep] = useState(false);
     const [avisoCep, setAvisoCep] = useState(null);
 
@@ -395,7 +412,25 @@ function CadastrarProjeto() {
                 porque os botoes de etapa dizem onde a pessoa esta. */}
             <h1 className="visually-hidden">Cadastro de projeto</h1>
 
-            <div className="p-3 border rounded bg-body-tertiary">
+            {/* A tira de abas: mostra todas as partes do formulario e deixa ir
+                direto para uma delas, em vez de so avancar de uma em uma. */}
+            <ul className="nav nav-tabs" role="tablist">
+                {ABAS.map((aba, indice) => (
+                    <li className="nav-item" key={aba.id} role="presentation">
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={indice === etapaAtual}
+                            className={`nav-link ${indice === etapaAtual ? 'active' : ''}`}
+                            onClick={() => irParaEtapa(indice)}
+                        >
+                            {aba.label}
+                        </button>
+                    </li>
+                ))}
+            </ul>
+
+            <div className="p-3 border border-top-0 rounded-bottom bg-body-tertiary">
 
                 {etapaAtual === 0 && (
                     <Identificacao
