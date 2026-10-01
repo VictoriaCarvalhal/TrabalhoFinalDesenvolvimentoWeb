@@ -256,19 +256,21 @@ class ProjetoResumoSerializer(serializers.ModelSerializer):
 class ProjetoCreateSerializer(serializers.ModelSerializer):
     endereco = ProjetoEnderecoSerializer(required=False)
     contatos = ProjetoContatoSerializer(many=True, required=False)
+    caracterizacao = ProjetoCaracterizacaoSerializer(required=False)
 
     class Meta:
         model = Projeto
         fields = [
             'id', 'ano', 'numero', 'titulo', 'situacao',
             'coordenador', 'unidade_proponente', 'departamento_proponente',
-            'endereco', 'contatos'
+            'endereco', 'contatos', 'caracterizacao'
         ]
 
     @transaction.atomic
     def create(self, validated_data):
         endereco_data = validated_data.pop('endereco', None)
         contatos_data = validated_data.pop('contatos', [])
+        caracterizacao_data = validated_data.pop('caracterizacao', {})
 
         # 1. Cria o projeto base
         projeto = Projeto.objects.create(**validated_data)
@@ -286,6 +288,11 @@ class ProjetoCreateSerializer(serializers.ModelSerializer):
         # 4. Cria os contatos se enviados
         for contato_data in contatos_data:
             ProjetoContato.objects.create(projeto=projeto, **contato_data)
+
+        # 5. Cria/atualiza dados de caracterização se enviados
+        if caracterizacao_data:
+            ProjetoCaracterizacao.objects.update_or_create(
+                projeto=projeto, defaults=caracterizacao_data)
 
         return projeto
 
