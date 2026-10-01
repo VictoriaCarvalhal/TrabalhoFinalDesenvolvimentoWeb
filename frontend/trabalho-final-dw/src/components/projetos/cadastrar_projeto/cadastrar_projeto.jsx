@@ -23,9 +23,7 @@ import { useLinhasExtensao } from '../../../hooks/useLinhasExtensao';
 
 import {
     criarProjeto,
-    criarPalavraChave,
-    atualizarDescricao,
-    criarPlanoDeTrabalho
+    criarPalavraChave
 } from '../../../services/projetoService';
 
 const ABAS = [
@@ -185,11 +183,17 @@ function CadastrarProjeto() {
         //plano de trabalho
         resultados_esperados: "",
         cronograma_atividades: "",
-        //parcerias internas
-        participacao_interna: "",
-        //unidade envolvidas
+        //parcerias internas (prefixo próprio: não podem se misturar com a
+        //unidade e o departamento proponentes, que são os da Identificação)
+        parceria_nome_instituicao: "",
+        parceria_sigla_instituicao: "",
+        parceria_unidade: "",
+        parceria_departamento: "",
+        parceria_participacao: "",
+        //unidade proponente, da Identificação
         unidade: "",
         departamento: "",
+        //abas de tabela
         locaisRealizacao: [],
         membrosEquipe: [],
         unidadesEnvolvidas: [],
@@ -231,7 +235,52 @@ function CadastrarProjeto() {
         setForm((prev) => ({ ...prev, [campo]: valor }));
     }
 
-    // Essa função é responsável por persistir os dados da Identificação em 1 única chamada atômica
+    // Monta as linhas das abas de tabela. A tela deixa a linha meio
+    // preenchida à vontade, então só as completas entram no payload.
+    function linhasDeUnidadesEnvolvidas() {
+        return form.unidadesEnvolvidas
+            .filter((linha) => linha.unidade)
+            .map((linha) => ({
+                // O departamento da linha é só para filtrar o dropdown: quem
+                // guarda o vínculo é ProjetoUnidade, que só tem a unidade.
+                unidade: linha.unidade,
+            }));
+    }
+
+    function linhasDeLocaisRealizacao() {
+        return form.locaisRealizacao
+            .filter((linha) => linha.nome_local && linha.municipio)
+            .map((linha) => ({
+                nome_local: linha.nome_local,
+                municipio: linha.municipio,
+            }));
+    }
+
+    function linhasDeMembrosEquipe() {
+        return form.membrosEquipe
+            .filter((linha) => linha.vinculo && linha.funcao)
+            .map((linha) => ({
+                vinculo: linha.vinculo,
+                funcao: linha.funcao,
+            }));
+    }
+
+    // Parcerias Internas é um formulário de uma linha só: vira lista vazia ou
+    // de um item. A API espera lista, igual às outras abas.
+    function linhasDeParceriasInternas() {
+        const nome = form.parceria_nome_instituicao.trim();
+        const sigla = form.parceria_sigla_instituicao.trim();
+        if (!form.parceria_unidade || !nome || !sigla) return [];
+        return [{
+            unidade: form.parceria_unidade,
+            departamento: form.parceria_departamento || null,
+            nome_instituicao: nome,
+            sigla_instituicao: sigla,
+            participacao: form.parceria_participacao,
+        }];
+    }
+
+    // Essa função é responsável por persistir os dados de todas as abas em 1 única chamada atômica
     async function salvarDadosIdentificacao() {
         const payload = {
             //ABA IDENTIFICAÇÃO
@@ -264,32 +313,37 @@ function CadastrarProjeto() {
                 area_tematica_principal: form.area_tematica_principal || null,
                 area_tematica_secundaria: form.area_tematica_secundaria || null,
                 linha_extensao: form.linha_extensao || null,
-            }
-        };
-
-        // O backend cria a Descrição vazia junto com o projeto, mas não aceita
-        // esse conteúdo no POST: por isso vai num PATCH depois.
-        const descricao = {
-            resumo: form.resumo || null,
-            introducao: form.introducao || null,
-            justificativa: form.justificativa || null,
-            objetivo_geral: form.objetivo_geral || null,
-            objetivos_especificos: form.objetivos_especificos || null,
-            metodologia_avaliacao: form.metodologia_avaliacao || null,
-            relacao_ensino: form.relacao_ensino === "sim",
-            relacao_pesquisa: form.relacao_pesquisa === "sim",
-            interacao_dialogica: form.interacao_dialogica || null,
-            interdisciplinaridade: form.interdisciplinaridade || null,
-            impacto_formacao: form.impacto_formacao || null,
-            indissociabilidade: form.indissociabilidade || null,
-            impacto_social: form.impacto_social || null,
-            referencias_bibliograficas: form.referencias_bibliograficas || null,
-        };
-
-        const plano_trabalho = {
-            ano: new Date().getFullYear(),
-            resultados_esperados: form.resultados_esperados,
-            cronograma_atividades: form.cronograma_atividades,
+            },
+            //ABA DESCRIÇÃO
+            // O backend cria a Descrição junto com o projeto, mas o conteúdo
+            // dela só entra por aqui.
+            descricao: {
+                resumo: form.resumo || null,
+                introducao: form.introducao || null,
+                justificativa: form.justificativa || null,
+                objetivo_geral: form.objetivo_geral || null,
+                objetivos_especificos: form.objetivos_especificos || null,
+                metodologia_avaliacao: form.metodologia_avaliacao || null,
+                relacao_ensino: form.relacao_ensino === "sim",
+                relacao_pesquisa: form.relacao_pesquisa === "sim",
+                interacao_dialogica: form.interacao_dialogica || null,
+                interdisciplinaridade: form.interdisciplinaridade || null,
+                impacto_formacao: form.impacto_formacao || null,
+                indissociabilidade: form.indissociabilidade || null,
+                impacto_social: form.impacto_social || null,
+                referencias_bibliograficas: form.referencias_bibliograficas || null,
+            },
+            //ABA PLANO DE TRABALHO
+            planos_trabalho: [{
+                ano: new Date().getFullYear(),
+                resultados_esperados: form.resultados_esperados,
+                cronograma_atividades: form.cronograma_atividades,
+            }],
+            //ABAS DE TABELA
+            unidades_envolvidas: linhasDeUnidadesEnvolvidas(),
+            parcerias_internas: linhasDeParceriasInternas(),
+            locais_realizacao: linhasDeLocaisRealizacao(),
+            membros_equipe: linhasDeMembrosEquipe(),
         };
 
         setEnviando(true);
@@ -301,11 +355,8 @@ function CadastrarProjeto() {
                 setProjetoId(projeto_id);
             }
 
-            // Endereço, contatos e caracterização já vieram no payload do POST.
-            // Descrição, plano de trabalho e palavras-chave têm endpoint próprio.
-            await atualizarDescricao(projeto_id, descricao);
-            await criarPlanoDeTrabalho(projeto_id, plano_trabalho);
-
+            // Todas as abas já foram no payload do POST; só as palavras-chave
+            // continuam tendo endpoint próprio.
             const palavras = form.palavras_chave.map((p) => p.trim()).filter((p) => p);
             for (const palavra of palavras) {
                 await criarPalavraChave(projeto_id, { palavra });
@@ -316,7 +367,7 @@ function CadastrarProjeto() {
             const detalhe = erro.response?.data;
             setErroEnvio(detalhe
                 ? Object.values(detalhe).flat().join(' ')
-                : 'Não foi possível salvar a identificação.');
+                : 'Não foi possível salvar o projeto.');
         } finally {
             setEnviando(false);
         }
