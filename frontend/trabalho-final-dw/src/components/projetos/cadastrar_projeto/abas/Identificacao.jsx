@@ -23,6 +23,10 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
     const [erroNovoVinculo, setErroNovoVinculo] = useState(null);
     const semVinculo = !carregandoVinculos && !erroVinculos && vinculosCoordenador.length === 0;
 
+    const departamentosDaUnidade = departamentos.filter(
+        (d) => String(d.unidade) === String(form.unidade));
+    const semDepartamento = Boolean(form.unidade) && departamentosDaUnidade.length === 0;
+
     async function cadastrarVinculo(e) {
         e.preventDefault();
         setSalvandoVinculo(true);
@@ -196,20 +200,29 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
                     <select
                         className={`form-select ${errosValidacao?.departamento ? 'is-invalid' : ''}`}
                         value={form.departamento}
-                        disabled={!form.unidade}
+                        // Boa parte das unidades nao tem departamento nenhum
+                        // cadastrado, entao ali nao ha o que escolher.
+                        disabled={!form.unidade || semDepartamento}
                         onChange={(e) => atualizarCampo("departamento", e.target.value)}
                     >
                         <option value="">
-                            {form.unidade ? "Selecione um departamento" : "Escolha uma unidade primeiro"}
+                            {!form.unidade
+                                ? "Escolha uma unidade primeiro"
+                                : semDepartamento
+                                    ? "Não se aplica"
+                                    : "Selecione um departamento"}
                         </option>
-                        {departamentos
-                            .filter((d) => String(d.unidade) === String(form.unidade))
-                            .map((d) => (
-                                <option key={d.id} value={d.id}>
-                                    {d.nome}
-                                </option>
-                            ))}
+                        {departamentosDaUnidade.map((d) => (
+                            <option key={d.id} value={d.id}>
+                                {d.nome}
+                            </option>
+                        ))}
                     </select>
+                    {semDepartamento && (
+                        <div className="form-text">
+                            Esta unidade não tem departamentos cadastrados, então o campo não se aplica.
+                        </div>
+                    )}
                     {errosValidacao?.departamento && <div className="invalid-feedback">{errosValidacao.departamento}</div>}
                 </div>
             </fieldset>

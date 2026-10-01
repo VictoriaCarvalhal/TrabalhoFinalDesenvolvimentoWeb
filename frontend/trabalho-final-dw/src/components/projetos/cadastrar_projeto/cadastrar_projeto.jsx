@@ -52,7 +52,11 @@ function CadastrarProjeto() {
            if (!f.titulo.trim()) erros.titulo = "Título é obrigatório";
            if (!f.coordenador_vinculo) erros.coordenador_vinculo = "Selecione uma matrícula";
            if (!f.unidade) erros.unidade = "Selecione uma unidade";
-           if (!f.departamento) erros.departamento = "Selecione um departamento";
+           // Unidade sem departamento cadastrado nao tem o que escolher,
+           // entao o campo fica como "Nao se aplica" e nao e cobrado.
+           const temDepartamento = departamentos.some(
+               (d) => String(d.unidade) === String(f.unidade));
+           if (temDepartamento && !f.departamento) erros.departamento = "Selecione um departamento";
            if (!f.telefones[0]?.trim()) erros.telefones = "Telefone é obrigatório";
            if (!f.emails[0]?.trim()) erros.emails = "E-mail é obrigatório";
            if (!f.cep.trim()) erros.cep = "CEP é obrigatório";
