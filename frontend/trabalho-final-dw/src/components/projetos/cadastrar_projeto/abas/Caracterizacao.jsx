@@ -1,4 +1,5 @@
 import React from 'react';
+import CampoSomenteLeitura from '../CampoSomenteLeitura';
 
 function Caracterizacao({
         form,
@@ -14,15 +15,11 @@ function Caracterizacao({
             Caracterização
         </legend>
 
-        <div className="mb-3">
-            <label className="form-label">Situação do Projeto</label>
-            <input
-            type="text"
-            className="form-control"
-            value="Novo"
-            readOnly
-            />
-        </div>
+        <CampoSomenteLeitura
+            rotulo="Situação do projeto"
+            valor="Novo"
+            ajuda="Todo projeto nasce como novo; a situação muda conforme a análise."
+        />
 
         <div className="mb-3">
             <label className="form-label">É vinculado a Programa de Extensão?</label>

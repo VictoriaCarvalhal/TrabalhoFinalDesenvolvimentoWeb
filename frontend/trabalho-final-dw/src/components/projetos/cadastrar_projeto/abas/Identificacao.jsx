@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MUNICIPIOS_RJ } from '../../../../dados/municipiosRJ';
 import { criarMeuVinculo } from '../../../../services/dominioService';
 import CampoContato from '../CampoContato';
+import CampoSomenteLeitura from '../CampoSomenteLeitura';
 
 // Mesma lista do backend (core.VinculoInstitucional.TipoVinculo).
 const TIPOS_VINCULO = [
@@ -164,15 +165,11 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
                         </div>
                     )}
                 </div>
-                <div className="mb-3">
-                    <label className="form-label">Nome</label>
-                    <input
-                        type="text"
-                        className="form-control"
-                        value={form.coordenador}
-                        readOnly
-                    />
-                </div>
+                <CampoSomenteLeitura
+                    rotulo="Nome"
+                    valor={form.coordenador}
+                    ajuda="Vem do cadastro da matrícula escolhida."
+                />
             </fieldset>
             <fieldset className="border rounded p-3 m-2">
                 <legend>Unidade</legend>
