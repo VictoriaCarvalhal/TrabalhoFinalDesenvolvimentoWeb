@@ -166,6 +166,7 @@ function CadastrarProjeto() {
     // Essa função é responsável por persistir os dados da Identificação em 1 única chamada atômica
     async function salvarDadosIdentificacao() {
         const payload = {
+            //ABA IDENTIFICAÇÃO
             ano: new Date().getFullYear(),
             titulo: form.titulo,
             coordenador: form.coordenador_vinculo,
@@ -182,7 +183,20 @@ function CadastrarProjeto() {
             contatos: [
                 ...form.telefones.map((valor) => ({ tipo_contato: 'TELEFONE', valor: valor.trim() })),
                 ...form.emails.map((valor) => ({ tipo_contato: 'EMAIL', valor: valor.trim() })),
-            ].filter((c) => c.valor)
+            ].filter((c) => c.valor),
+            //ABA CARACTERIZAÇÃO
+            caracterizacao : {
+                situacao_academica: "NOVO", //no backend bem que podia ser NOVO por default
+                vinculado_programa_extensao: form.vinculado_extensao === "sim",
+                curricularizado: form.curricular === "sim",
+                natureza: form.natureza || null,
+                abrangencia: form.abrangencia,
+                publico_alvo: form.publico_alvo,
+                grande_area_cnpq: form.area_conhecimento_cnpq || null,
+                area_tematica_principal: form.area_tematica_principal || null,
+                area_tematica_secundaria: form.area_tematica_secundaria || null,
+                linha_extensao: form.linha_extensao || null,
+            }
         };
 
         setEnviando(true);
