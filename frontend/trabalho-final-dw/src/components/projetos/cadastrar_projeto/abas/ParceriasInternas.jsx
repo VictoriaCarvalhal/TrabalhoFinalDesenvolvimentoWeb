@@ -1,10 +1,26 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import api from '../../../../services/api';
 import CampoTextoLongo from '../CampoTextoLongo';
 
-function ParceriasInternas({ form, atualizarCampo, unidades, departamentos, valor=[]}) {
+function ParceriasInternas({ projetoId, atualizarCampo, unidades, departamentos, valor=[]}) {
 
     const [parceria, setParceria] = useState(valor);
-    const [ativo, setAtivo] = useState({});
+    const [erro, setErro] = useState(null);
+    //const [ativo, setAtivo] = useState({});
+
+    // Com projeto, as linhas gravadas vêm da API.
+    useEffect(() => {
+        if (!projetoId) return;
+        api.get(`/projetos/${projetoId}/parcerias-internas/`)
+            .then((r) => setParceria(r.data))
+            .catch(() => setErro('Não foi possível carregar os locais já cadastrados.'));
+    }, [projetoId]);
+
+    // Toda mudança nas linhas sobe pra página que hospeda a aba.
+        useEffect(() => {
+            onChange?.(parceria);
+        }, [parceria]); // eslint-disable-line react-hooks/exhaustive-deps
+    
 
     function novaParceria(){
         setParceria((atuais) => [...atuais, 
@@ -15,9 +31,18 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos, valo
         setParceria((atuais) => atuais.map((l,i) => (i===indice ? {...l, [campo]: valorCampo } : l)));
     }
     
-    async function excluir(indice){
-        setParceria((atuais) => atuais.filter((_,i) => i !== indice));
-    }
+    async function excluir(indice) {
+            const parcerias = parceria[indice];
+            if (projetoId && parcerias.id) {
+                try {
+                    await api.delete(`/projetos/${projetoId}/parcerias-internas/${parcerias.id}/`);
+                } catch {
+                    setErro('Erro ao excluir o local.');
+                    return;
+                }
+            }
+            setLinhas((atuais) => atuais.filter((_, i) => i !== indice));
+        }
 
 
     return (
@@ -49,7 +74,7 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos, valo
                         <input
                         type="text"
                         className="form-control"
-                        value={form.area}
+                        value={parceria.area}
                         onChange={(e) => editar(i ,"area", e.target.value)}
                         required
                         />
@@ -61,7 +86,7 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos, valo
                         <input
                         type="text"
                         className="form-control"
-                        value={form.sigla}
+                        value={parceria.sigla}
                         onChange={(e) => editar(i,"sigla", e.target.value)}
                         required
                         />
@@ -71,7 +96,7 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos, valo
                         <label className="form-label">Unidade</label><br/>
                         <select
                             className="form-select"
-                            value={form.unidade}
+                            value={parceria.unidade}
                             onChange={(e) => editar(i,"unidade", e.target.value)}
                             required
                         >
@@ -90,7 +115,7 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos, valo
 
                         <select
                             className="form-select"
-                            value={form.departamento}
+                            value={parceria.departamento}
                             onChange={(e) =>
                                 editar(i,"departamento", e.target.value)
                             }
@@ -116,11 +141,11 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos, valo
                         campo="participacao_interna"
                         limite={500}
                         linhas={4}
-                        valor={form.participacao_interna}
+                        valor={parceria.participacao_interna}
                         aoMudar={atualizarCampo}
                         required
                     />
-                    <button type="button" className="btn btn-sm btn-primary mb-3">
+                    <button type="button" className="btn btn-sm btn-primary mb-3" onClick={() => gravar(i)}>
                         <i className="bi bi-floppy me-1" aria-hidden="true"></i>Adicionar Parceria
                     </button>
 
