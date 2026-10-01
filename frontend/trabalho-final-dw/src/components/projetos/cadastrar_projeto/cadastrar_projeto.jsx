@@ -47,60 +47,60 @@ function CadastrarProjeto() {
     const [etapaAtual, setEtapaAtual] = useState(0);
     const [errosValidacao, setErrosValidacao] = useState({});
 
-    function validarEtapa0() {
+    function validarEtapa0(f) {
            const erros = {};
-           if (!form.titulo.trim()) erros.titulo = "Título é obrigatório";
-           if (!form.coordenador_vinculo) erros.coordenador_vinculo = "Selecione uma matrícula";
-           if (!form.unidade) erros.unidade = "Selecione uma unidade";
-           if (!form.departamento) erros.departamento = "Selecione um departamento";
-           if (!form.telefones[0]?.trim()) erros.telefones = "Telefone é obrigatório";
-           if (!form.emails[0]?.trim()) erros.emails = "E-mail é obrigatório";
-           if (!form.cep.trim()) erros.cep = "CEP é obrigatório";
-           if (!form.logradouro.trim()) erros.logradouro = "Logradouro é obrigatório";
-           if (!form.bairro.trim()) erros.bairro = "Bairro é obrigatório";
-           if (!form.municipio) erros.municipio = "Selecione um município";
-           if (!form.numero.trim()) erros.numero = "Número é obrigatório";
+           if (!f.titulo.trim()) erros.titulo = "Título é obrigatório";
+           if (!f.coordenador_vinculo) erros.coordenador_vinculo = "Selecione uma matrícula";
+           if (!f.unidade) erros.unidade = "Selecione uma unidade";
+           if (!f.departamento) erros.departamento = "Selecione um departamento";
+           if (!f.telefones[0]?.trim()) erros.telefones = "Telefone é obrigatório";
+           if (!f.emails[0]?.trim()) erros.emails = "E-mail é obrigatório";
+           if (!f.cep.trim()) erros.cep = "CEP é obrigatório";
+           if (!f.logradouro.trim()) erros.logradouro = "Logradouro é obrigatório";
+           if (!f.bairro.trim()) erros.bairro = "Bairro é obrigatório";
+           if (!f.municipio) erros.municipio = "Selecione um município";
+           if (!f.numero.trim()) erros.numero = "Número é obrigatório";
            return erros;
     }
 
-    function validarEtapa1() {
+    function validarEtapa1(f) {
            const erros = {};
-           if (!form.vinculado_extensao) erros.vinculado_extensao = "Selecione uma opção";
-           if (!form.curricular) erros.curricular = "Selecione uma opção";
-           if (!form.natureza) erros.natureza = "Selecione uma natureza";
-           if (!form.abrangencia) erros.abrangencia = "Selecione uma abrangência";
-           if (!form.publico_alvo.trim()) erros.publico_alvo = "Público alvo é obrigatório";
-           if (!form.area_conhecimento_cnpq) erros.area_conhecimento_cnpq = "Selecione uma área";
-           if (!form.area_tematica_principal) erros.area_tematica_principal = "Selecione uma área temática";
-           if (!form.area_tematica_secundaria) erros.area_tematica_secundaria = "Selecione uma área temática";
-           if (!form.linha_extensao) erros.linha_extensao = "Selecione uma linha de extensão";
+           if (!f.vinculado_extensao) erros.vinculado_extensao = "Selecione uma opção";
+           if (!f.curricular) erros.curricular = "Selecione uma opção";
+           if (!f.natureza) erros.natureza = "Selecione uma natureza";
+           if (!f.abrangencia) erros.abrangencia = "Selecione uma abrangência";
+           if (!f.publico_alvo.trim()) erros.publico_alvo = "Público alvo é obrigatório";
+           if (!f.area_conhecimento_cnpq) erros.area_conhecimento_cnpq = "Selecione uma área";
+           if (!f.area_tematica_principal) erros.area_tematica_principal = "Selecione uma área temática";
+           if (!f.area_tematica_secundaria) erros.area_tematica_secundaria = "Selecione uma área temática";
+           if (!f.linha_extensao) erros.linha_extensao = "Selecione uma linha de extensão";
            return erros;
     }
 
-    function validarEtapa2() {
+    function validarEtapa2(f) {
            const erros = {};
-           if (!form.resumo.trim()) erros.resumo = "Resumo é obrigatório";
-           if (!form.palavras_chave[0]?.trim()) erros.palavras_chave = "Adicione pelo menos 1 palavra-chave";
-           if (!form.introducao.trim()) erros.introducao = "Introdução é obrigatória";
-           if (!form.justificativa.trim()) erros.justificativa = "Justificativa é obrigatória";
-           if (!form.objetivo_geral.trim()) erros.objetivo_geral = "Objetivo geral é obrigatório";
-           if (!form.objetivos_especificos.trim()) erros.objetivos_especificos = "Objetivos específicos são obrigatórios";
-           if (!form.metodologia_avaliacao.trim()) erros.metodologia_avaliacao = "Metodologia é obrigatória";
-           if (!form.relacao_ensino) erros.relacao_ensino = "Selecione uma opção";
-           if (!form.relacao_pesquisa) erros.relacao_pesquisa = "Selecione uma opção";
-           if (!form.interacao_dialogica.trim()) erros.interacao_dialogica = "Interação dialógica é obrigatória";
-           if (!form.interdisciplinaridade.trim()) erros.interdisciplinaridade = "Interdisciplinaridade é obrigatória";
-           if (!form.impacto_formacao.trim()) erros.impacto_formacao = "Impacto na formação é obrigatório";
-           if (!form.indissociabilidade.trim()) erros.indissociabilidade = "Indissociabilidade é obrigatória";
-           if (!form.impacto_social.trim()) erros.impacto_social = "Impacto social é obrigatório";
-           if (!form.referencias_bibliograficas.trim()) erros.referencias_bibliograficas = "Referências são obrigatórias";
+           if (!f.resumo.trim()) erros.resumo = "Resumo é obrigatório";
+           if (!f.palavras_chave[0]?.trim()) erros.palavras_chave = "Adicione pelo menos 1 palavra-chave";
+           if (!f.introducao.trim()) erros.introducao = "Introdução é obrigatória";
+           if (!f.justificativa.trim()) erros.justificativa = "Justificativa é obrigatória";
+           if (!f.objetivo_geral.trim()) erros.objetivo_geral = "Objetivo geral é obrigatório";
+           if (!f.objetivos_especificos.trim()) erros.objetivos_especificos = "Objetivos específicos são obrigatórios";
+           if (!f.metodologia_avaliacao.trim()) erros.metodologia_avaliacao = "Metodologia é obrigatória";
+           if (!f.relacao_ensino) erros.relacao_ensino = "Selecione uma opção";
+           if (!f.relacao_pesquisa) erros.relacao_pesquisa = "Selecione uma opção";
+           if (!f.interacao_dialogica.trim()) erros.interacao_dialogica = "Interação dialógica é obrigatória";
+           if (!f.interdisciplinaridade.trim()) erros.interdisciplinaridade = "Interdisciplinaridade é obrigatória";
+           if (!f.impacto_formacao.trim()) erros.impacto_formacao = "Impacto na formação é obrigatório";
+           if (!f.indissociabilidade.trim()) erros.indissociabilidade = "Indissociabilidade é obrigatória";
+           if (!f.impacto_social.trim()) erros.impacto_social = "Impacto social é obrigatório";
+           if (!f.referencias_bibliograficas.trim()) erros.referencias_bibliograficas = "Referências são obrigatórias";
            return erros;
     }
 
-    function obterErrosEtapa() {
-           if (etapaAtual === 0) return validarEtapa0();
-           if (etapaAtual === 1) return validarEtapa1();
-           if (etapaAtual === 2) return validarEtapa2();
+    function obterErrosEtapa(f = form) {
+           if (etapaAtual === 0) return validarEtapa0(f);
+           if (etapaAtual === 1) return validarEtapa1(f);
+           if (etapaAtual === 2) return validarEtapa2(f);
            return {};
     }
 
@@ -244,7 +244,18 @@ function CadastrarProjeto() {
     };
 
     function atualizarCampo(campo, valor) {
-        setForm((prev) => ({ ...prev, [campo]: valor }));
+        setForm((prev) => {
+            const atualizado = { ...prev, [campo]: valor };
+            // A caixa vermelha some assim que o campo deixa de estar errado,
+            // em vez de so sumir no proximo clique em Avancar.
+            setErrosValidacao((errosAtuais) => {
+                if (!errosAtuais[campo]) return errosAtuais;
+                if (obterErrosEtapa(atualizado)[campo]) return errosAtuais;
+                const { [campo]: _corrigido, ...restantes } = errosAtuais;
+                return restantes;
+            });
+            return atualizado;
+        });
     }
 
     // Monta as linhas das abas de tabela. A tela deixa a linha meio
