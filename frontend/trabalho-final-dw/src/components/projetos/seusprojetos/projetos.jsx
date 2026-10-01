@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
+import { excluirProjeto } from '../../../services/projetoService';
 
 function Projetos({isPrevia = false, limite = 5}) {
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
@@ -9,6 +10,7 @@ function Projetos({isPrevia = false, limite = 5}) {
     const [projetos, setProjetos] = useState([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState(null);
+    const [excluindoId, setExcluindoId] = useState(null);
     const navigate = useNavigate();
     const controlFade = isPrevia && projetos.length > limite;
 
@@ -18,6 +20,22 @@ function Projetos({isPrevia = false, limite = 5}) {
 
     function redirecionaParaImpressao(id){
         navigate(`/Projetos/${id}/imprimir`);
+    }
+
+    async function handleExcluir(projeto) {
+        if (!window.confirm(`Excluir o projeto "${projeto.titulo}"? Ele será ocultado da lista.`)) {
+            return;
+        }
+        setExcluindoId(projeto.id);
+        setErro(null);
+        try {
+            await excluirProjeto(projeto.id);
+            setProjetos((atuais) => atuais.filter((p) => p.id !== projeto.id));
+        } catch (err) {
+            setErro(err.response?.data?.detail ?? 'Erro ao excluir projeto.');
+        } finally {
+            setExcluindoId(null);
+        }
     }
 
     useEffect(() => {
@@ -37,7 +55,9 @@ function Projetos({isPrevia = false, limite = 5}) {
                 const dados = resposta.data;
 
                 // A API pagina a resposta (PAGE_SIZE: 20), então os itens vêm em "results".
-                setProjetos(Array.isArray(dados) ? dados : dados.results ?? []);
+                // Filtro defensivo: o backend já oculta excluido=True, mas garante aqui também.
+                const lista = Array.isArray(dados) ? dados : dados.results ?? [];
+                setProjetos(lista.filter((p) => !p.excluido));
             } catch (err) {
                 if (err.response?.status === 401 || err.response?.status === 403) {
                     setErro('Você precisa estar logado para ver seus projetos.');
@@ -104,7 +124,7 @@ function Projetos({isPrevia = false, limite = 5}) {
                                         <th>Unidade</th>
                                         <th>Coordenador(a)</th>
                                         <th>Atualizado em</th>
-                                        <th>Ações</th>
+                                        <th className="text-nowrap">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -121,16 +141,30 @@ function Projetos({isPrevia = false, limite = 5}) {
                                                     ? new Date(projeto.updated_at).toLocaleDateString('pt-BR')
                                                     : '-'}
                                             </td>
-                                            <td>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-sm btn-outline-secondary"
-                                                    title="Imprimir projeto"
-                                                    aria-label={`Imprimir projeto ${projeto.titulo}`}
-                                                    onClick={() => redirecionaParaImpressao(projeto.id)}
-                                                >
-                                                    <i className="bi bi-printer"></i>
-                                                </button>
+                                            <td className="text-nowrap">
+                                                <div className="d-flex gap-2">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-secondary"
+                                                        title="Imprimir projeto"
+                                                        aria-label={`Imprimir projeto ${projeto.titulo}`}
+                                                        onClick={() => redirecionaParaImpressao(projeto.id)}
+                                                    >
+                                                        <i className="bi bi-printer"></i>
+                                                    </button>
+                                                    {!isPrevia && (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-sm btn-outline-danger"
+                                                            title="Excluir projeto"
+                                                            aria-label={`Excluir projeto ${projeto.titulo}`}
+                                                            disabled={excluindoId === projeto.id}
+                                                            onClick={() => handleExcluir(projeto)}
+                                                        >
+                                                            <i className="bi bi-trash"></i>
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
