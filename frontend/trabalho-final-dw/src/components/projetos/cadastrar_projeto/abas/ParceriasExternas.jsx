@@ -1,18 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../../services/api';
 
+// Lista copiada do backend (projetos.TipoInstituicaoExterna).
+const TIPOS_INSTITUICAO = [
+    { valor: 'GOV_FEDERAL', rotulo: 'Instituição Governamental Federal' },
+    { valor: 'GOV_ESTADUAL', rotulo: 'Instituição Governamental Estadual' },
+    { valor: 'GOV_MUNICIPAL', rotulo: 'Instituição Governamental Municipal' },
+    { valor: 'INICIATIVA_PRIVADA', rotulo: 'Organização da Iniciativa Privada' },
+    { valor: 'MOVIMENTO_SOCIAL', rotulo: 'Movimento Social' },
+    { valor: 'ONG', rotulo: 'Organização Não Governamental' },
+    { valor: 'OUTRO', rotulo: 'Outros' },
+];
+
 const LINHA_VAZIA = {
-    id: null, unidade: '', departamento: '', nome_instituicao: '', sigla_instituicao: '', participacao: '',
+    id: null, nome_instituicao: '', sigla_instituicao: '', tipo_instituicao: '', participacao: '',
 };
 
-
-function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onChange }) {
+function ParceriasExternas({ projetoId, valor = [], onChange }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
     
     useEffect(() => {
         if (!projetoId) return;
-        api.get(`/projetos/${projetoId}/parcerias-internas/`)
+        api.get(`/projetos/${projetoId}/parcerias-externas/`)
             .then((r) => setLinhas(r.data))
             .catch(() => setErro('Não foi possível carregar as parcerias já cadastradas.'));
     }, [projetoId]);
@@ -30,10 +40,9 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
         setLinhas((atuais) => atuais.map((l, i) => (i === indice ? { ...l, ...mudancas } : l)));
     }
 
-    // Dois campos obrigatórios: unidade e os dados da instituição. O
-    // departamento é opcional no modelo, então não entra na checagem.
+    // A instituição e o tipo são obrigatórios no modelo
     function completa(linha) {
-        return Boolean(linha.unidade && linha.nome_instituicao && linha.sigla_instituicao);
+        return Boolean(linha.nome_instituicao && linha.tipo_instituicao);
     }
 
     async function gravar(indice, linha) {
@@ -41,20 +50,18 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
         try {
             setErro(null);
             const corpo = {
-                unidade: linha.unidade,
-                // A API espera null, e não string vazia, quando não há departamento.
-                departamento: linha.departamento || null,
                 nome_instituicao: linha.nome_instituicao,
                 sigla_instituicao: linha.sigla_instituicao,
+                tipo_instituicao: linha.tipo_instituicao,
                 participacao: linha.participacao,
             };
             const resposta = linha.id
-                ? await api.patch(`/projetos/${projetoId}/parcerias-internas/${linha.id}/`, corpo)
-                : await api.post(`/projetos/${projetoId}/parcerias-internas/`, corpo);
+                ? await api.patch(`/projetos/${projetoId}/parcerias-externas/${linha.id}/`, corpo)
+                : await api.post(`/projetos/${projetoId}/parcerias-externas/`, corpo);
             editar(indice, { id: resposta.data.id });
         } catch (err) {
             const detalhe = err.response?.data;
-            setErro(detalhe ? Object.values(detalhe).flat().join(' ') : 'Erro ao gravar a parceria interna.');
+            setErro(detalhe ? Object.values(detalhe).flat().join(' ') : 'Erro ao gravar a parceria externa.');
         }
     }
 
@@ -62,9 +69,9 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
         const linha = linhas[indice];
         if (projetoId && linha.id) {
             try {
-                await api.delete(`/projetos/${projetoId}/parcerias-internas/${linha.id}/`);
+                await api.delete(`/projetos/${projetoId}/parcerias-externas/${linha.id}/`);
             } catch {
-                setErro('Erro ao excluir a parceria interna.');
+                setErro('Erro ao excluir a parceria externa.');
                 return;
             }
         }
@@ -73,7 +80,7 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
 
     return (
         <fieldset>
-            <legend>Parcerias Internas</legend>
+            <legend>Parcerias Externas</legend>
 
             <p className="small text-body-secondary mb-1">Os campos com * são obrigatórios.</p>
             <p className="small text-body-secondary">Use o botão abaixo para acrescentar uma parceria.</p>
@@ -93,18 +100,17 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
                                 <i className="bi bi-trash" aria-hidden="true"></i>
                                 <span className="visually-hidden">Excluir</span>
                             </th>
-                            <th scope="col">* Unidade</th>
-                            <th scope="col">Departamento</th>
                             <th scope="col">* Nome da Instituição</th>
-                            <th scope="col">* Sigla da Instituição</th>
+                            <th scope="col">Sigla da Instituição</th>
+                            <th scope="col">* Tipo de Instituição</th>
                             <th scope="col">Participação</th>
                         </tr>
                     </thead>
                     <tbody>
                         {linhas.length === 0 && (
                             <tr>
-                                <td colSpan={7} className="text-muted text-center">
-                                    Nenhuma parceria interna cadastrada.
+                                <td colSpan={6} className="text-muted text-center">
+                                    Nenhuma parceria externa cadastrada.
                                 </td>
                             </tr>
                         )}
@@ -116,49 +122,10 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
                                         type="button"
                                         className="btn btn-sm btn-outline-danger"
                                         onClick={() => excluir(i)}
-                                        aria-label={`Excluir parceria interna ${i + 1}`}
+                                        aria-label={`Excluir parceria externa ${i + 1}`}
                                     >
                                         <i className="bi bi-trash" aria-hidden="true"></i>
                                     </button>
-                                </td>
-                                <td>
-                                    <select
-                                        className="form-select form-select-sm"
-                                        value={linha.unidade}
-                                        required
-                                        aria-label={`Unidade da parceria interna ${i + 1}`}
-                                        // Trocar a unidade limpa o departamento: o antigo é de outra unidade.
-                                        onChange={(e) => editar(i, { unidade: e.target.value, departamento: '' })}
-                                        onBlur={() => gravar(i, linha)}
-                                    >
-                                        <option value="">[Selecione]</option>
-                                        {unidades.map((unidade) => (
-                                            <option key={unidade.id} value={unidade.id}>
-                                                {unidade.sigla} — {unidade.nome}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </td>
-                                <td>
-                                    <select
-                                        className="form-select form-select-sm"
-                                        value={linha.departamento}
-                                        disabled={!linha.unidade}
-                                        aria-label={`Departamento da parceria interna ${i + 1}`}
-                                        onChange={(e) => editar(i, { departamento: e.target.value })}
-                                        onBlur={() => gravar(i, linha)}
-                                    >
-                                        <option value="">
-                                            {linha.unidade ? '[Selecione]' : 'Escolha uma unidade primeiro'}
-                                        </option>
-                                        {departamentos
-                                            .filter((d) => String(d.unidade) === String(linha.unidade))
-                                            .map((departamento) => (
-                                                <option key={departamento.id} value={departamento.id}>
-                                                    {departamento.nome}
-                                                </option>
-                                            ))}
-                                    </select>
                                 </td>
                                 <td>
                                     <input
@@ -167,7 +134,7 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
                                         value={linha.nome_instituicao}
                                         maxLength={255}
                                         required
-                                        aria-label={`Nome da instituição da parceria interna ${i + 1}`}
+                                        aria-label={`Nome da instituição da parceria externa ${i + 1}`}
                                         onChange={(e) => editar(i, { nome_instituicao: e.target.value })}
                                         onBlur={() => gravar(i, linha)}
                                     />
@@ -178,11 +145,27 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
                                         className="form-control form-control-sm"
                                         value={linha.sigla_instituicao}
                                         maxLength={50}
-                                        required
-                                        aria-label={`Sigla da instituição da parceria interna ${i + 1}`}
+                                        aria-label={`Sigla da instituição da parceria externa ${i + 1}`}
                                         onChange={(e) => editar(i, { sigla_instituicao: e.target.value })}
                                         onBlur={() => gravar(i, linha)}
                                     />
+                                </td>
+                                <td>
+                                    <select
+                                        className="form-select form-select-sm"
+                                        value={linha.tipo_instituicao}
+                                        required
+                                        aria-label={`Tipo da instituição da parceria externa ${i + 1}`}
+                                        onChange={(e) => editar(i, { tipo_instituicao: e.target.value })}
+                                        onBlur={() => gravar(i, linha)}
+                                    >
+                                        <option value="">[Selecione]</option>
+                                        {TIPOS_INSTITUICAO.map((tipo) => (
+                                            <option key={tipo.valor} value={tipo.valor}>
+                                                {tipo.rotulo}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </td>
                                 <td>
                                     <input
@@ -190,7 +173,7 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
                                         className="form-control form-control-sm"
                                         value={linha.participacao}
                                         maxLength={500}
-                                        aria-label={`Participação da parceria interna ${i + 1}`}
+                                        aria-label={`Participação da parceria externa ${i + 1}`}
                                         onChange={(e) => editar(i, { participacao: e.target.value })}
                                         onBlur={() => gravar(i, linha)}
                                     />
@@ -204,4 +187,4 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
     );
 }
 
-export default ParceriasInternas;
+export default ParceriasExternas;

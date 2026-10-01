@@ -10,6 +10,7 @@ import Caracterizacao from './abas/Caracterizacao';
 import Descricao from './abas/Descricao';
 import PlanoTrabalho from './abas/PlanoTrabalho';
 import ParceriasInternas from './abas/ParceriasInternas';
+import ParceriasExternas from './abas/ParceriasExternas';
 
 import { MUNICIPIOS_RJ } from '../../../dados/municipiosRJ';
 import { useUnidades } from '../../../hooks/useUnidades';
@@ -33,6 +34,7 @@ const ABAS = [
     { id: "plano-de-trabalho", label: "Plano de Trabalho" },
     { id: "unidades-envolvidas", label: "Unidades Envolvidas" },
     { id: "parcerias-internas", label: "Parcerias Internas" },
+    { id: "parcerias-externas", label: "Parcerias Externas" },
     { id: "locais-realizacao", label: "Locais de Realização" },
     { id: "membros-equipe", label: "Membros da Equipe" },
 ];
@@ -183,13 +185,6 @@ function CadastrarProjeto() {
         //plano de trabalho
         resultados_esperados: "",
         cronograma_atividades: "",
-        //parcerias internas (prefixo próprio: não podem se misturar com a
-        //unidade e o departamento proponentes, que são os da Identificação)
-        parceria_nome_instituicao: "",
-        parceria_sigla_instituicao: "",
-        parceria_unidade: "",
-        parceria_departamento: "",
-        parceria_participacao: "",
         //unidade proponente, da Identificação
         unidade: "",
         departamento: "",
@@ -197,6 +192,8 @@ function CadastrarProjeto() {
         locaisRealizacao: [],
         membrosEquipe: [],
         unidadesEnvolvidas: [],
+        parceriasInternas: [],
+        parceriasExternas: [],
     });
 
     const buscarCep = async (cep) => {
@@ -265,19 +262,28 @@ function CadastrarProjeto() {
             }));
     }
 
-    // Parcerias Internas é um formulário de uma linha só: vira lista vazia ou
-    // de um item. A API espera lista, igual às outras abas.
+
     function linhasDeParceriasInternas() {
-        const nome = form.parceria_nome_instituicao.trim();
-        const sigla = form.parceria_sigla_instituicao.trim();
-        if (!form.parceria_unidade || !nome || !sigla) return [];
-        return [{
-            unidade: form.parceria_unidade,
-            departamento: form.parceria_departamento || null,
-            nome_instituicao: nome,
-            sigla_instituicao: sigla,
-            participacao: form.parceria_participacao,
-        }];
+        return form.parceriasInternas
+            .filter((linha) => linha.unidade && linha.nome_instituicao && linha.sigla_instituicao)
+            .map((linha) => ({
+                unidade: linha.unidade,
+                departamento: linha.departamento || null,
+                nome_instituicao: linha.nome_instituicao,
+                sigla_instituicao: linha.sigla_instituicao,
+                participacao: linha.participacao,
+            }));
+    }
+
+    function linhasDeParceriasExternas() {
+        return form.parceriasExternas
+            .filter((linha) => linha.nome_instituicao && linha.tipo_instituicao)
+            .map((linha) => ({
+                nome_instituicao: linha.nome_instituicao,
+                sigla_instituicao: linha.sigla_instituicao,
+                tipo_instituicao: linha.tipo_instituicao,
+                participacao: linha.participacao,
+            }));
     }
 
     // Essa função é responsável por persistir os dados de todas as abas em 1 única chamada atômica
@@ -342,6 +348,7 @@ function CadastrarProjeto() {
             //ABAS DE TABELA
             unidades_envolvidas: linhasDeUnidadesEnvolvidas(),
             parcerias_internas: linhasDeParceriasInternas(),
+            parcerias_externas: linhasDeParceriasExternas(),
             locais_realizacao: linhasDeLocaisRealizacao(),
             membros_equipe: linhasDeMembrosEquipe(),
         };
@@ -364,10 +371,11 @@ function CadastrarProjeto() {
 
             navigate("/Projetos/SeusProjetos");
         } catch (erro) {
+            // O corpo do erro do DRF diz o campo e o motivo do erro (futuramente fica mais elegante exibir o erro usando o padrão de outros erros)
             const detalhe = erro.response?.data;
-            setErroEnvio(detalhe
-                ? Object.values(detalhe).flat().join(' ')
-                : 'Não foi possível salvar o projeto.');
+            window.alert(detalhe
+                ? JSON.stringify(detalhe)
+                : 'Não foi possível salvar o projeto. Verifique a conexão e tente de novo.');
         } finally {
             setEnviando(false);
         }
@@ -452,23 +460,30 @@ function CadastrarProjeto() {
 
                 {etapaAtual === 5 && (
                     <ParceriasInternas
-                        form={form}
-                        atualizarCampo={atualizarCampo}
                         unidades={unidades}
                         departamentos={departamentos}
+                        valor={form.parceriasInternas}
+                        onChange={(linhas) => atualizarCampo("parceriasInternas", linhas)}
+                    />
+                )}
+
+                {etapaAtual === 6 && (
+                    <ParceriasExternas
+                        valor={form.parceriasExternas}
+                        onChange={(linhas) => atualizarCampo("parceriasExternas", linhas)}
                     />
                 )}
 
                 {/* As abas ficam escondidas, não desmontadas, pra não perder as
                     linhas nem recarregar o dropdown ao trocar de aba. */}
-                <div hidden={etapaAtual !== 6}>
+                <div hidden={etapaAtual !== 7}>
                     <LocaisRealizacao
                         valor={form.locaisRealizacao}
                         onChange={(linhas) => atualizarCampo("locaisRealizacao", linhas)}
                     />
                 </div>
 
-                <div hidden={etapaAtual !== 7}>
+                <div hidden={etapaAtual !== 8}>
                     <MembrosEquipe
                         coordenador={form.coordenador}
                         valor={form.membrosEquipe}

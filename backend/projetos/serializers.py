@@ -264,6 +264,7 @@ class ProjetoCreateSerializer(serializers.ModelSerializer):
     unidades_envolvidas = UnidadeEnvolvidaSerializer(
         source='projeto_unidades', many=True, required=False)
     parcerias_internas = ParceriaInternaSerializer(many=True, required=False)
+    parcerias_externas = ParceriaExternaSerializer(many=True, required=False)
     locais_realizacao = LocalRealizacaoSerializer(many=True, required=False)
     # A aba e "membros_equipe" na tela e no payload, mas a relacao no Projeto
     # se chama "membros"; o source guarda essa traducao.
@@ -290,8 +291,8 @@ class ProjetoCreateSerializer(serializers.ModelSerializer):
             'id', 'ano', 'numero', 'titulo', 'situacao',
             'coordenador', 'unidade_proponente', 'departamento_proponente',
             'endereco', 'contatos', 'caracterizacao', 'descricao',
-            'unidades_envolvidas', 'parcerias_internas', 'locais_realizacao',
-            'membros_equipe', 'planos_trabalho',
+            'unidades_envolvidas', 'parcerias_internas', 'parcerias_externas',
+            'locais_realizacao', 'membros_equipe', 'planos_trabalho',
         ]
 
     def __init__(self, *args, **kwargs):
@@ -321,6 +322,7 @@ class ProjetoCreateSerializer(serializers.ModelSerializer):
         unidades_data = validated_data.pop('projeto_unidades', [])
         membros_data = validated_data.pop('membros', [])
         parcerias_data = validated_data.pop('parcerias_internas', [])
+        parcerias_externas_data = validated_data.pop('parcerias_externas', [])
         locais_data = validated_data.pop('locais_realizacao', [])
         planos_data = validated_data.pop('planos_trabalho', [])
 
@@ -356,15 +358,19 @@ class ProjetoCreateSerializer(serializers.ModelSerializer):
         for parceria_data in parcerias_data:
             ParceriaInterna.objects.create(projeto=projeto, **parceria_data)
 
-        # 8. Cria os locais de realizacao se enviados
+        # 8. Cria as parcerias externas se enviadas
+        for parceria_externa_data in parcerias_externas_data:
+            ParceriaExterna.objects.create(projeto=projeto, **parceria_externa_data)
+
+        # 9. Cria os locais de realizacao se enviados
         for local_data in locais_data:
             LocalRealizacao.objects.create(projeto=projeto, **local_data)
 
-        # 9. Cria os membros da equipe se enviados
+        # 10. Cria os membros da equipe se enviados
         for membro_data in membros_data:
             MembroEquipe.objects.create(projeto=projeto, **membro_data)
 
-        # 10. Cria os planos de trabalho se enviados
+        # 11. Cria os planos de trabalho se enviados
         for plano_data in planos_data:
             PlanoTrabalho.objects.create(projeto=projeto, **plano_data)
 
