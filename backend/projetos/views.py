@@ -33,7 +33,8 @@ from projetos.serializers import (
     PlanoTrabalhoSerializer, UnidadeEnvolvidaSerializer,
     ProjetoResumoSerializer, ProjetoDetalheSimplesSerializer, ProjetoCreateSerializer,
     ProjetoEnderecoSerializer, ProjetoContatoSerializer,
-    ProjetoCaracterizacaoSerializer, ProjetoDescricaoSerializer
+    ProjetoCaracterizacaoSerializer, ProjetoDescricaoSerializer,
+    ProjetoPalavraChaveSerializer
 )
 
 

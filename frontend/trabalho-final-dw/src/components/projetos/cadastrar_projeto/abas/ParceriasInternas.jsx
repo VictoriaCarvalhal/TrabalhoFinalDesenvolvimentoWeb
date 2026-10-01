@@ -13,8 +13,8 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos }) {
                 <input
                 type="text"
                 className="form-control"
-                value={form.area}
-                onChange={(e) => atualizarCampo("area", e.target.value)}
+                value={form.parceria_nome_instituicao}
+                onChange={(e) => atualizarCampo("parceria_nome_instituicao", e.target.value)}
                 />
             </div>
 
@@ -23,8 +23,8 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos }) {
                 <input
                 type="text"
                 className="form-control"
-                value={form.sigla}
-                onChange={(e) => atualizarCampo("sigla", e.target.value)}
+                value={form.parceria_sigla_instituicao}
+                onChange={(e) => atualizarCampo("parceria_sigla_instituicao", e.target.value)}
                 />
             </div>
 
@@ -32,10 +32,10 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos }) {
                 <label className="form-label">Unidade</label><br/>
                 <select
                     className="form-select"
-                    value={form.unidade}
+                    value={form.parceria_unidade}
                     onChange={(e) => {
-                        atualizarCampo("unidade", e.target.value);
-                        atualizarCampo("departamento", "");
+                        atualizarCampo("parceria_unidade", e.target.value);
+                        atualizarCampo("parceria_departamento", "");
                     }}
                 >
                     <option value="">Selecione uma unidade</option>
@@ -53,18 +53,18 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos }) {
 
                 <select
                     className="form-select"
-                    value={form.departamento}
-                    disabled={!form.unidade}
+                    value={form.parceria_departamento}
+                    disabled={!form.parceria_unidade}
                     onChange={(e) =>
-                        atualizarCampo("departamento", e.target.value)
+                        atualizarCampo("parceria_departamento", e.target.value)
                     }
                 >
                     <option value="">
-                        {form.unidade ? "Selecione um departamento" : "Escolha uma unidade primeiro"}
+                        {form.parceria_unidade ? "Selecione um departamento" : "Escolha uma unidade primeiro"}
                     </option>
 
                     {departamentos
-                        .filter((d) => String(d.unidade) === String(form.unidade))
+                        .filter((d) => String(d.unidade) === String(form.parceria_unidade))
                         .map((departamento) => (
                             <option
                                 key={departamento.id}
@@ -78,10 +78,10 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos }) {
             <CampoTextoLongo
                 rotulo="Participação da unidade no projeto"
                 ajuda="Descreva de que forma essa unidade colabora: o que ela oferece ao projeto (pessoas, espaço, equipamento, dados) e em quais atividades participa."
-                campo="participacao_interna"
+                campo="parceria_participacao"
                 limite={500}
                 linhas={4}
-                valor={form.participacao_interna}
+                valor={form.parceria_participacao}
                 aoMudar={atualizarCampo}
             />
 

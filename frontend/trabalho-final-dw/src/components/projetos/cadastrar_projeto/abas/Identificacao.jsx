@@ -2,7 +2,7 @@ import React from 'react';
 import { MUNICIPIOS_RJ } from '../../../../dados/municipiosRJ';
 import CampoContato from '../CampoContato';
 
-function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, departamentos, buscarCep, buscandoCep, avisoCep }) {
+function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, departamentos, buscarCep, buscandoCep, avisoCep, errosValidacao }) {
     //funções internas, não confundir com as da API
     function adicionarContato(campo) {
         atualizarCampo(campo, [...form[campo], '']);
@@ -15,7 +15,7 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, de
     function removerContato(campo, indice) {
         atualizarCampo(campo, form[campo].filter((_, i) => i !== indice));
     }
-    
+
     return (
         <fieldset>
             <legend>Identificação</legend>
@@ -25,24 +25,19 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, de
                     <label className="form-label">Título do projeto</label>
                     <input
                     type="text"
-                    className="form-control"
+                    className={`form-control ${errosValidacao?.titulo ? 'is-invalid' : ''}`}
                     value={form.titulo}
                     onChange={(e) => atualizarCampo("titulo", e.target.value)}
                     />
+                    {errosValidacao?.titulo && <div className="invalid-feedback">{errosValidacao.titulo}</div>}
                 </div>
             </fieldset>
             <fieldset className="border rounded p-3 m-2">
                 <legend>Coordenador</legend>
                 <div className="mb-3">
                     <label className="form-label">Matrícula</label>
-                    {/*<input
-                        type="number"
-                        className="form-control"
-                        value={form.matricula_coordenador}
-                        onChange={(e) => atualizarCampo("matricula_coordenador", e.target.value)}
-                    />*/}
                     <select
-                        className="form-select"
+                        className={`form-select ${errosValidacao?.coordenador_vinculo ? 'is-invalid' : ''}`}
                         value={form.coordenador_vinculo}
                         onChange={(e) => {
                             const v = vinculosCoordenador.find((x) => x.id === e.target.value);
@@ -58,15 +53,15 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, de
                             </option>
                         ))}
                     </select>
+                    {errosValidacao?.coordenador_vinculo && <div className="invalid-feedback">{errosValidacao.coordenador_vinculo}</div>}
                 </div>
                 <div className="mb-3">
                     <label className="form-label">Nome</label>
                     <input
-                    type="text"
-                    className="form-control"
-                    value={form.coordenador}
-                    //onChange={(e) => atualizarCampo("coordenador", e.target.value)}
-                    readOnly
+                        type="text"
+                        className="form-control"
+                        value={form.coordenador}
+                        readOnly
                     />
                 </div>
             </fieldset>
@@ -75,11 +70,11 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, de
                 <div className="mb-3">
                     <label className="form-label">Unidade</label>
                     <select
-                        className="form-select"
+                        className={`form-select ${errosValidacao?.unidade ? 'is-invalid' : ''}`}
                         value={form.unidade}
                         onChange={(e) => {
                             atualizarCampo("unidade", e.target.value);
-                            atualizarCampo("departamento", "");//acontece em função da unidade
+                            atualizarCampo("departamento", "");
                         }}
                     >
                         <option value="">Selecione uma unidade</option>
@@ -89,12 +84,12 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, de
                             </option>
                         ))}
                     </select>
+                    {errosValidacao?.unidade && <div className="invalid-feedback">{errosValidacao.unidade}</div>}
                 </div>
                 <div className="mb-3">
                     <label className="form-label">Departamento</label>
-                    
                     <select
-                        className="form-select"
+                        className={`form-select ${errosValidacao?.departamento ? 'is-invalid' : ''}`}
                         value={form.departamento}
                         disabled={!form.unidade}
                         onChange={(e) => atualizarCampo("departamento", e.target.value)}
@@ -103,16 +98,15 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, de
                             {form.unidade ? "Selecione um departamento" : "Escolha uma unidade primeiro"}
                         </option>
                         {departamentos
-                            .filter((d) => String(d.unidade) === String(form.unidade))  // <- o String() do item 2
+                            .filter((d) => String(d.unidade) === String(form.unidade))
                             .map((d) => (
                                 <option key={d.id} value={d.id}>
                                     {d.nome}
                                 </option>
                             ))}
                     </select>
-            
+                    {errosValidacao?.departamento && <div className="invalid-feedback">{errosValidacao.departamento}</div>}
                 </div>
-
             </fieldset>
             <fieldset className="border rounded p-3 m-2">
                 <legend>Contato</legend>
@@ -128,6 +122,7 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, de
                         aoMudar={(indice, valor) => editarContato('telefones', indice, valor)}
                         aoAdicionar={() => adicionarContato('telefones')}
                         aoRemover={(indice) => removerContato('telefones', indice)}
+                        erro={errosValidacao?.telefones && i === 0 ? errosValidacao.telefones : null}
                     />
                 ))}
                 {form.emails.map((email, i) => (
@@ -142,6 +137,7 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, de
                         aoMudar={(indice, valor) => editarContato('emails', indice, valor)}
                         aoAdicionar={() => adicionarContato('emails')}
                         aoRemover={(indice) => removerContato('emails', indice)}
+                        erro={errosValidacao?.emails && i === 0 ? errosValidacao.emails : null}
                     />
                 ))}
             </fieldset>
@@ -150,7 +146,7 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, de
                     <div className="mb-3">
                         <label className="form-label">CEP</label>
                         <input
-                            className="form-control"
+                            className={`form-control ${errosValidacao?.cep ? 'is-invalid' : ''}`}
                             id="cep"
                             placeholder= "00000-000"
                             maxLength={9}
@@ -162,29 +158,32 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, de
                                 }}
                                 onBlur={() => buscarCep(form.cep)}
                             />
+                            {errosValidacao?.cep && <div className="invalid-feedback">{errosValidacao.cep}</div>}
                         </div>
                         <div className="mb-3">
                             <label className="form-label">Logradouro</label>
                             <input
-                                className="form-control"
+                                className={`form-control ${errosValidacao?.logradouro ? 'is-invalid' : ''}`}
                                 id="logradouro"
                                 value={form.logradouro}
                                 onChange={(e) => atualizarCampo('logradouro', e.target.value)}
                             />
+                            {errosValidacao?.logradouro && <div className="invalid-feedback">{errosValidacao.logradouro}</div>}
                         </div>
                         <div className="mb-3">
                             <label className="form-label">Bairro</label>
                             <input
-                                className="form-control"
-                                id="logradouro"
+                                className={`form-control ${errosValidacao?.bairro ? 'is-invalid' : ''}`}
+                                id="bairro"
                                 value={form.bairro}
                                 onChange={(e) => atualizarCampo('bairro', e.target.value)}
                             />
+                            {errosValidacao?.bairro && <div className="invalid-feedback">{errosValidacao.bairro}</div>}
                         </div>
                         <div className="mb-3">
                             <label className="form-label" htmlFor="municipio">Município</label>
                             <select
-                                className="form-select"
+                                className={`form-select ${errosValidacao?.municipio ? 'is-invalid' : ''}`}
                                 id="municipio"
                                 value={form.municipio}
                                 onChange={(e) => atualizarCampo("municipio", e.target.value)}
@@ -196,15 +195,17 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, unidades, de
                                     </option>
                                 ))}
                             </select>
+                            {errosValidacao?.municipio && <div className="invalid-feedback">{errosValidacao.municipio}</div>}
                         </div>
                         <div className="mb-3">
                             <label className="form-label">Numero</label>
                             <input
-                                className="form-control"
+                                className={`form-control ${errosValidacao?.numero ? 'is-invalid' : ''}`}
                                 id="numero"
                                 value={form.numero}
                                 onChange={(e) => atualizarCampo('numero', e.target.value)}
                             />
+                            {errosValidacao?.numero && <div className="invalid-feedback">{errosValidacao.numero}</div>}
                         </div>
                         <div className="mb-3">
                             <label className="form-label">Complemento</label>

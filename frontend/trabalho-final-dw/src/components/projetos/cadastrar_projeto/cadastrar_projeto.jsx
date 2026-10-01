@@ -23,12 +23,7 @@ import { useLinhasExtensao } from '../../../hooks/useLinhasExtensao';
 
 import {
     criarProjeto,
-    atualizarEndereco,
-    criarContato,
-    criarPalavraChave,
-    atualizarCaracterizacao,
-    atualizarDescricao,
-    criarPlanoDeTrabalho
+    criarPalavraChave
 } from '../../../services/projetoService';
 
 const ABAS = [
@@ -42,13 +37,84 @@ const ABAS = [
     { id: "membros-equipe", label: "Membros da Equipe" },
 ];
 
+
 function CadastrarProjeto() {
     const navigate = useNavigate();
 
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
     const token = useAuthStore((state) => state.token);
 
-    const [abaAtiva, setAbaAtiva] = useState("identificacao");
+    const [etapaAtual, setEtapaAtual] = useState(0);
+    const [errosValidacao, setErrosValidacao] = useState({});
+
+    function validarEtapa0() {
+           const erros = {};
+           if (!form.titulo.trim()) erros.titulo = "Título é obrigatório";
+           if (!form.coordenador_vinculo) erros.coordenador_vinculo = "Selecione uma matrícula";
+           if (!form.unidade) erros.unidade = "Selecione uma unidade";
+           if (!form.departamento) erros.departamento = "Selecione um departamento";
+           if (!form.telefones[0]?.trim()) erros.telefones = "Telefone é obrigatório";
+           if (!form.emails[0]?.trim()) erros.emails = "E-mail é obrigatório";
+           if (!form.cep.trim()) erros.cep = "CEP é obrigatório";
+           if (!form.logradouro.trim()) erros.logradouro = "Logradouro é obrigatório";
+           if (!form.bairro.trim()) erros.bairro = "Bairro é obrigatório";
+           if (!form.municipio) erros.municipio = "Selecione um município";
+           if (!form.numero.trim()) erros.numero = "Número é obrigatório";
+           return erros;
+    }
+
+    function validarEtapa1() {
+           const erros = {};
+           if (!form.vinculado_extensao) erros.vinculado_extensao = "Selecione uma opção";
+           if (!form.curricular) erros.curricular = "Selecione uma opção";
+           if (!form.natureza) erros.natureza = "Selecione uma natureza";
+           if (!form.abrangencia) erros.abrangencia = "Selecione uma abrangência";
+           if (!form.publico_alvo.trim()) erros.publico_alvo = "Público alvo é obrigatório";
+           if (!form.area_conhecimento_cnpq) erros.area_conhecimento_cnpq = "Selecione uma área";
+           if (!form.area_tematica_principal) erros.area_tematica_principal = "Selecione uma área temática";
+           if (!form.area_tematica_secundaria) erros.area_tematica_secundaria = "Selecione uma área temática";
+           if (!form.linha_extensao) erros.linha_extensao = "Selecione uma linha de extensão";
+           return erros;
+    }
+
+    function validarEtapa2() {
+           const erros = {};
+           if (!form.resumo.trim()) erros.resumo = "Resumo é obrigatório";
+           if (!form.palavras_chave[0]?.trim()) erros.palavras_chave = "Adicione pelo menos 1 palavra-chave";
+           if (!form.introducao.trim()) erros.introducao = "Introdução é obrigatória";
+           if (!form.justificativa.trim()) erros.justificativa = "Justificativa é obrigatória";
+           if (!form.objetivo_geral.trim()) erros.objetivo_geral = "Objetivo geral é obrigatório";
+           if (!form.objetivos_especificos.trim()) erros.objetivos_especificos = "Objetivos específicos são obrigatórios";
+           if (!form.metodologia_avaliacao.trim()) erros.metodologia_avaliacao = "Metodologia é obrigatória";
+           if (!form.relacao_ensino) erros.relacao_ensino = "Selecione uma opção";
+           if (!form.relacao_pesquisa) erros.relacao_pesquisa = "Selecione uma opção";
+           if (!form.interacao_dialogica.trim()) erros.interacao_dialogica = "Interação dialógica é obrigatória";
+           if (!form.interdisciplinaridade.trim()) erros.interdisciplinaridade = "Interdisciplinaridade é obrigatória";
+           if (!form.impacto_formacao.trim()) erros.impacto_formacao = "Impacto na formação é obrigatório";
+           if (!form.indissociabilidade.trim()) erros.indissociabilidade = "Indissociabilidade é obrigatória";
+           if (!form.impacto_social.trim()) erros.impacto_social = "Impacto social é obrigatório";
+           if (!form.referencias_bibliograficas.trim()) erros.referencias_bibliograficas = "Referências são obrigatórias";
+           return erros;
+    }
+
+    function obterErrosEtapa() {
+           if (etapaAtual === 0) return validarEtapa0();
+           if (etapaAtual === 1) return validarEtapa1();
+           if (etapaAtual === 2) return validarEtapa2();
+           return {};
+    }
+
+    function proximaEtapa() {
+           const erros = obterErrosEtapa();
+           setErrosValidacao(erros);
+           if (Object.keys(erros).length === 0) {
+               setEtapaAtual((prev) => Math.min(prev + 1, ABAS.length - 1));
+           }
+    }
+
+    function etapaAnterior() {
+        setEtapaAtual((prev) => Math.max(prev - 1, 0));
+    }
 
     const [buscandoCep, setBuscandoCep] = useState(false);
     const [avisoCep, setAvisoCep] = useState(null);
@@ -117,11 +183,17 @@ function CadastrarProjeto() {
         //plano de trabalho
         resultados_esperados: "",
         cronograma_atividades: "",
-        //parcerias internas
-        participacao_interna: "",
-        //unidade envolvidas
+        //parcerias internas (prefixo próprio: não podem se misturar com a
+        //unidade e o departamento proponentes, que são os da Identificação)
+        parceria_nome_instituicao: "",
+        parceria_sigla_instituicao: "",
+        parceria_unidade: "",
+        parceria_departamento: "",
+        parceria_participacao: "",
+        //unidade proponente, da Identificação
         unidade: "",
         departamento: "",
+        //abas de tabela
         locaisRealizacao: [],
         membrosEquipe: [],
         unidadesEnvolvidas: [],
@@ -163,7 +235,52 @@ function CadastrarProjeto() {
         setForm((prev) => ({ ...prev, [campo]: valor }));
     }
 
-    // Essa função é responsável por persistir os dados da Identificação em 1 única chamada atômica
+    // Monta as linhas das abas de tabela. A tela deixa a linha meio
+    // preenchida à vontade, então só as completas entram no payload.
+    function linhasDeUnidadesEnvolvidas() {
+        return form.unidadesEnvolvidas
+            .filter((linha) => linha.unidade)
+            .map((linha) => ({
+                // O departamento da linha é só para filtrar o dropdown: quem
+                // guarda o vínculo é ProjetoUnidade, que só tem a unidade.
+                unidade: linha.unidade,
+            }));
+    }
+
+    function linhasDeLocaisRealizacao() {
+        return form.locaisRealizacao
+            .filter((linha) => linha.nome_local && linha.municipio)
+            .map((linha) => ({
+                nome_local: linha.nome_local,
+                municipio: linha.municipio,
+            }));
+    }
+
+    function linhasDeMembrosEquipe() {
+        return form.membrosEquipe
+            .filter((linha) => linha.vinculo && linha.funcao)
+            .map((linha) => ({
+                vinculo: linha.vinculo,
+                funcao: linha.funcao,
+            }));
+    }
+
+    // Parcerias Internas é um formulário de uma linha só: vira lista vazia ou
+    // de um item. A API espera lista, igual às outras abas.
+    function linhasDeParceriasInternas() {
+        const nome = form.parceria_nome_instituicao.trim();
+        const sigla = form.parceria_sigla_instituicao.trim();
+        if (!form.parceria_unidade || !nome || !sigla) return [];
+        return [{
+            unidade: form.parceria_unidade,
+            departamento: form.parceria_departamento || null,
+            nome_instituicao: nome,
+            sigla_instituicao: sigla,
+            participacao: form.parceria_participacao,
+        }];
+    }
+
+    // Essa função é responsável por persistir os dados de todas as abas em 1 única chamada atômica
     async function salvarDadosIdentificacao() {
         const payload = {
             //ABA IDENTIFICAÇÃO
@@ -196,7 +313,37 @@ function CadastrarProjeto() {
                 area_tematica_principal: form.area_tematica_principal || null,
                 area_tematica_secundaria: form.area_tematica_secundaria || null,
                 linha_extensao: form.linha_extensao || null,
-            }
+            },
+            //ABA DESCRIÇÃO
+            // O backend cria a Descrição junto com o projeto, mas o conteúdo
+            // dela só entra por aqui.
+            descricao: {
+                resumo: form.resumo || null,
+                introducao: form.introducao || null,
+                justificativa: form.justificativa || null,
+                objetivo_geral: form.objetivo_geral || null,
+                objetivos_especificos: form.objetivos_especificos || null,
+                metodologia_avaliacao: form.metodologia_avaliacao || null,
+                relacao_ensino: form.relacao_ensino === "sim",
+                relacao_pesquisa: form.relacao_pesquisa === "sim",
+                interacao_dialogica: form.interacao_dialogica || null,
+                interdisciplinaridade: form.interdisciplinaridade || null,
+                impacto_formacao: form.impacto_formacao || null,
+                indissociabilidade: form.indissociabilidade || null,
+                impacto_social: form.impacto_social || null,
+                referencias_bibliograficas: form.referencias_bibliograficas || null,
+            },
+            //ABA PLANO DE TRABALHO
+            planos_trabalho: [{
+                ano: new Date().getFullYear(),
+                resultados_esperados: form.resultados_esperados,
+                cronograma_atividades: form.cronograma_atividades,
+            }],
+            //ABAS DE TABELA
+            unidades_envolvidas: linhasDeUnidadesEnvolvidas(),
+            parcerias_internas: linhasDeParceriasInternas(),
+            locais_realizacao: linhasDeLocaisRealizacao(),
+            membros_equipe: linhasDeMembrosEquipe(),
         };
 
         setEnviando(true);
@@ -208,12 +355,19 @@ function CadastrarProjeto() {
                 setProjetoId(projeto_id);
             }
 
+            // Todas as abas já foram no payload do POST; só as palavras-chave
+            // continuam tendo endpoint próprio.
+            const palavras = form.palavras_chave.map((p) => p.trim()).filter((p) => p);
+            for (const palavra of palavras) {
+                await criarPalavraChave(projeto_id, { palavra });
+            }
+
             navigate("/Projetos/SeusProjetos");
         } catch (erro) {
             const detalhe = erro.response?.data;
             setErroEnvio(detalhe
                 ? Object.values(detalhe).flat().join(' ')
-                : 'Não foi possível salvar a identificação.');
+                : 'Não foi possível salvar o projeto.');
         } finally {
             setEnviando(false);
         }
@@ -232,31 +386,12 @@ function CadastrarProjeto() {
     return (
         <div className="container mt-4">
             {/* Mesma ideia da lista: o titulo fica so para leitor de tela,
-                porque as abas logo abaixo ja dizem onde a pessoa esta. */}
+                porque os botoes de etapa dizem onde a pessoa esta. */}
             <h1 className="visually-hidden">Cadastro de projeto</h1>
-
-            <ul className="nav nav-tabs">
-                {ABAS.map((aba) => (
-                    <li className="nav-item" key={aba.id}>
-                        <a
-                            className={`nav-link ${abaAtiva === aba.id ? "active" : ""}`}
-                            aria-current={abaAtiva === aba.id ? "page" : undefined}
-                            href="#"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                setAbaAtiva(aba.id);
-                            }}
-                            role="button"
-                        >
-                            {aba.label}
-                        </a>
-                    </li>
-                ))}
-            </ul>
 
             <div className="p-3 border rounded bg-body-tertiary">
 
-                {abaAtiva === "identificacao" && (
+                {etapaAtual === 0 && (
                     <Identificacao
                         form={form}
                         atualizarCampo={atualizarCampo}
@@ -266,10 +401,11 @@ function CadastrarProjeto() {
                         buscarCep={buscarCep}
                         buscandoCep={buscandoCep}
                         avisoCep={avisoCep}
+                        errosValidacao={errosValidacao}
                     />
                 )}
 
-                {abaAtiva === "caracterizacao" && (
+                {etapaAtual === 1 && (
                     <Caracterizacao
                         form={form}
                         atualizarCampo={atualizarCampo}
@@ -290,21 +426,22 @@ function CadastrarProjeto() {
                 )}
 
 
-                {abaAtiva === "descricao" && (
+                {etapaAtual === 2 && (
                     <Descricao
                         form={form}
                         atualizarCampo={atualizarCampo}
+                        errosValidacao={errosValidacao}
                     />
                 )}
 
-                {abaAtiva === "plano-de-trabalho" && (
+                {etapaAtual === 3 && (
                     <PlanoTrabalho
                         form={form}
                         atualizarCampo={atualizarCampo}
                     />
                 )}
 
-                {abaAtiva === "unidades-envolvidas" && (
+                {etapaAtual === 4 && (
                     <UnidadesEnvolvidas
                         unidades={unidades}
                         departamentos={departamentos}
@@ -313,7 +450,7 @@ function CadastrarProjeto() {
                     />
                 )}
 
-                {abaAtiva === "parcerias-internas" && (
+                {etapaAtual === 5 && (
                     <ParceriasInternas
                         form={form}
                         atualizarCampo={atualizarCampo}
@@ -324,28 +461,51 @@ function CadastrarProjeto() {
 
                 {/* As abas ficam escondidas, não desmontadas, pra não perder as
                     linhas nem recarregar o dropdown ao trocar de aba. */}
-                <div hidden={abaAtiva !== "locais-realizacao"}>
+                <div hidden={etapaAtual !== 6}>
                     <LocaisRealizacao
                         valor={form.locaisRealizacao}
                         onChange={(linhas) => atualizarCampo("locaisRealizacao", linhas)}
                     />
                 </div>
 
-                <div hidden={abaAtiva !== "membros-equipe"}>
+                <div hidden={etapaAtual !== 7}>
                     <MembrosEquipe
                         coordenador={form.coordenador}
                         valor={form.membrosEquipe}
                         onChange={(linhas) => atualizarCampo("membrosEquipe", linhas)}
                     />
                 </div>
-                <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={salvarDadosIdentificacao}
-                    disabled={enviando}
-                >
-                    Enviar Formulário
-                </button>
+
+                <div className="d-flex justify-content-end gap-2">
+                    {etapaAtual > 0 && (
+                        <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={etapaAnterior}
+                        >
+                            Voltar
+                        </button>
+                    )}
+
+                    {etapaAtual < ABAS.length - 1 ? (
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={proximaEtapa}
+                        >
+                            Avançar
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={salvarDadosIdentificacao}
+                            disabled={enviando}
+                        >
+                            Enviar Formulário
+                        </button>
+                    )}
+                </div>
             </div>
 
         </div>

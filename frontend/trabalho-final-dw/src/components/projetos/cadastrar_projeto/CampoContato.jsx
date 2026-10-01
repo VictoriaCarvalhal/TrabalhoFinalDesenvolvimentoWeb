@@ -5,7 +5,7 @@ import { aplicarMascaraTelefone, formatarEmail, validarEmail, validarTelefone } 
 // o último campo da lista tem "+", que acrescenta mais um embaixo; os anteriores
 // têm "−", que tira aquela entrada. Assim a lista nunca fica vazia, porque o
 // campo que sobra é sempre o último e só oferece o "+".
-function CampoContato({ rotulo, tipoEntrada, placeholder, valor, indice, total, aoMudar, aoAdicionar, aoRemover }) {
+function CampoContato({ rotulo, tipoEntrada, placeholder, valor, indice, total, aoMudar, aoAdicionar, aoRemover, erro }) {
     const id = useId();
     const ultimo = indice === total - 1;
     const [tocado, setTocado] = useState(false);
@@ -32,6 +32,10 @@ function CampoContato({ rotulo, tipoEntrada, placeholder, valor, indice, total, 
         }
     } else if (tentouAdicionar) {
         mensagemErro = `Preencha este campo antes de adicionar outro.`;
+    }
+    
+    if (!mensagemErro) {
+        mensagemErro = erro ?? null;
     }
 
     const handleAdicionar = () => {
