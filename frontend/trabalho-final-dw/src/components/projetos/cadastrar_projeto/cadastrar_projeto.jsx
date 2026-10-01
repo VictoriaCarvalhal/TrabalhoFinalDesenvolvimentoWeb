@@ -21,7 +21,7 @@ import { useAreasTematicas } from '../../../hooks/useAreasTematicas';
 import { useLinhasExtensao } from '../../../hooks/useLinhasExtensao';
 
 
-import { 
+import {
     criarProjeto,
     atualizarEndereco,
     criarContato,
@@ -32,14 +32,14 @@ import {
 } from '../../../services/projetoService';
 
 const ABAS = [
-    {id: "identificacao", label: "Identificação"},
-    {id: "caracterizacao", label: "Caracterização"},
-    {id: "descricao", label: "Descrição"},
-    {id: "plano-de-trabalho", label: "Plano de Trabalho"},
-    {id: "unidades-envolvidas", label: "Unidades Envolvidas"},
-    {id: "parcerias-internas", label: "Parcerias Internas"},
-    {id: "locais-realizacao", label: "Locais de Realização"},
-    {id: "membros-equipe", label: "Membros da Equipe"},
+    { id: "identificacao", label: "Identificação" },
+    { id: "caracterizacao", label: "Caracterização" },
+    { id: "descricao", label: "Descrição" },
+    { id: "plano-de-trabalho", label: "Plano de Trabalho" },
+    { id: "unidades-envolvidas", label: "Unidades Envolvidas" },
+    { id: "parcerias-internas", label: "Parcerias Internas" },
+    { id: "locais-realizacao", label: "Locais de Realização" },
+    { id: "membros-equipe", label: "Membros da Equipe" },
 ];
 
 function CadastrarProjeto() {
@@ -47,7 +47,7 @@ function CadastrarProjeto() {
 
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
     const token = useAuthStore((state) => state.token);
-    
+
     const [abaAtiva, setAbaAtiva] = useState("identificacao");
 
     const [buscandoCep, setBuscandoCep] = useState(false);
@@ -61,13 +61,13 @@ function CadastrarProjeto() {
     const { dados: areasCNPQ, loading: carregandoAreasCNPQ, erro: erroAreasCNPQ } = useAreasCNPQ();
     const { dados: areasTematicas, loading: carregandoAreasTematicas, erro: erroAreasTematicas } = useAreasTematicas();
     const { dados: linhasExtensao, loading: carregandoLinhasExtensao, erro: erroLinhasExtensao } = useLinhasExtensao();
-    
+
 
     //projetoId é UUID vindo do POST; as abas tambem usam
     const [projetoId, setProjetoId] = useState(null);
     const [enviando, setEnviando] = useState(false);
     const [erroEnvio, setErroEnvio] = useState(null);
-    
+
     const [form, setForm] = useState({
         //identificação
         titulo: "",
@@ -163,64 +163,26 @@ function CadastrarProjeto() {
         setForm((prev) => ({ ...prev, [campo]: valor }));
     }
 
-    // Essa função é responsável por persistir os dados
+    // Essa função é responsável por persistir os dados da Identificação em 1 única chamada atômica
     async function salvarDadosIdentificacao() {
-        //json projeto pronto com os dados mínimos de um projeto para enviar ao backend
-        const projeto = {
+        const payload = {
             ano: new Date().getFullYear(),
             titulo: form.titulo,
-            coordenador: form.coordenador_vinculo, //pega o UUID do vínculo, não a matricula do coordenador e nem o UUID do coordenador. Um bom tempo foi gasto pra perceber isso
+            coordenador: form.coordenador_vinculo,
             unidade_proponente: form.unidade ? Number(form.unidade) : null,
             departamento_proponente: form.departamento ? Number(form.departamento) : null,
-        };
-
-        //json endereço pronto para enviar para o backend
-        const endereco = {
-            cep: form.cep,
-            logradouro: form.logradouro,
-            numero: form.numero,
-            complemento: form.complemento,
-            bairro: form.bairro,
-            municipio: form.municipio ? Number(form.municipio) : null, // codigo_ibge (inteiro), vem do dropdown que pode ou não ser movimentado pela requisição ao viaCEP
-        };
-
-        //json caracterizacao pronto para enviar para o backend
-        const caracterizacao = {
-            situacao_academica: "NOVO", //no backend bem que podia ser NOVO por default
-            vinculado_programa_extensao: form.vinculado_extensao === "sim",
-            curricularizado: form.curricular === "sim",
-            natureza: form.natureza || null,
-            abrangencia: form.abrangencia || null,
-            publico_alvo: form.publico_alvo,
-            grande_area_cnpq: form.area_conhecimento_cnpq || null,
-            area_tematica_principal: form.area_tematica_principal || null,
-            area_tematica_secundaria: form.area_tematica_secundaria || null,
-            linha_extensao: form.linha_extensao || null,
-        };
-
-        //json descricao pronto para enviar para o backend
-        const descricao = {
-            resumo: form.resumo || null,
-            introducao: form.introducao || null,
-            justificativa: form.justificativa || null,
-            objetivo_geral: form.objetivo_geral || null,
-            objetivos_especificos: form.objetivos_especificos || null,
-            metodologia_avaliacao: form.metodologia_avaliacao || null,
-            relacao_ensino: form.relacao_ensino === "sim",
-            relacao_pesquisa: form.relacao_pesquisa === "sim",
-            interacao_dialogica: form.interacao_dialogica || null,
-            interdisciplinaridade: form.interdisciplinaridade || null,
-            impacto_formacao: form.impacto_formacao || null,
-            indissociabilidade: form.indissociabilidade || null,
-            impacto_social: form.impacto_social || null,
-            referencias_bibliograficas: form.referencias_bibliograficas || null,
-        };
-
-        //json plano_trabalho pronto para enviar para o backend
-        const plano_trabalho = {
-            "ano": new Date().getFullYear(),
-            "resultados_esperados": form.resultados_esperados,
-            "cronograma_atividades": form.cronograma_atividades
+            endereco: {
+                cep: form.cep,
+                logradouro: form.logradouro,
+                numero: form.numero,
+                complemento: form.complemento,
+                bairro: form.bairro,
+                municipio: form.municipio ? Number(form.municipio) : null,
+            },
+            contatos: [
+                ...form.telefones.map((valor) => ({ tipo_contato: 'TELEFONE', valor: valor.trim() })),
+                ...form.emails.map((valor) => ({ tipo_contato: 'EMAIL', valor: valor.trim() })),
+            ].filter((c) => c.valor)
         };
 
         setEnviando(true);
@@ -228,29 +190,8 @@ function CadastrarProjeto() {
         try {
             let projeto_id = projetoId;
             if (!projeto_id) {
-                projeto_id = await criarProjeto(projeto);
+                projeto_id = await criarProjeto(payload);
                 setProjetoId(projeto_id);
-            }
-
-            // Endereco, Caracterizacao e Descrição foram criados vazio pelo backend
-            await atualizarEndereco(projeto_id, endereco);
-            await atualizarCaracterizacao(projeto_id, caracterizacao);
-            await atualizarDescricao(projeto_id, descricao);
-
-            // Plano de trabalho e contatos não
-            await criarPlanoDeTrabalho(projeto_id, plano_trabalho);
-            const contatos = [
-                ...form.telefones.map((valor) => ({ tipo_contato: 'TELEFONE', valor: valor.trim() })),
-                ...form.emails.map((valor) => ({ tipo_contato: 'EMAIL', valor: valor.trim() })),
-            ].filter((c) => c.valor);
-
-            for (const contato of contatos) {
-                await criarContato(projeto_id, contato);
-            }
-            
-            const palavras = form.palavras_chave.map((p) => p.trim()).filter((p) => p);
-            for (const palavra of palavras) {
-                await criarPalavraChave(projeto_id, { palavra });
             }
 
             navigate("/Projetos/SeusProjetos");
@@ -258,11 +199,12 @@ function CadastrarProjeto() {
             const detalhe = erro.response?.data;
             setErroEnvio(detalhe
                 ? Object.values(detalhe).flat().join(' ')
-                : 'Nao foi possivel salvar a identificacao.');
+                : 'Não foi possível salvar a identificação.');
         } finally {
             setEnviando(false);
         }
     }
+
 
     // Se houver apenas um vínculo ativo, preenche automaticamente o coordenador
     useEffect(() => {
@@ -272,34 +214,34 @@ function CadastrarProjeto() {
             atualizarCampo('coordenador', vinculosCoordenador[0].nome_completo);
         }
     }, [vinculosCoordenador]);
-    
+
     return (
         <div className="container mt-4">
             {/* Mesma ideia da lista: o titulo fica so para leitor de tela,
                 porque as abas logo abaixo ja dizem onde a pessoa esta. */}
             <h1 className="visually-hidden">Cadastro de projeto</h1>
 
-             <ul className="nav nav-tabs">
+            <ul className="nav nav-tabs">
                 {ABAS.map((aba) => (
                     <li className="nav-item" key={aba.id}>
-                    <a
-                        className={`nav-link ${abaAtiva === aba.id ? "active" : ""}`}
-                        aria-current={abaAtiva === aba.id ? "page" : undefined}
-                        href="#"
-                        onClick={(e) => {
-                        e.preventDefault();
-                        setAbaAtiva(aba.id);
-                        }}
-                        role="button"
-                    >
-                        {aba.label}
-                    </a>
+                        <a
+                            className={`nav-link ${abaAtiva === aba.id ? "active" : ""}`}
+                            aria-current={abaAtiva === aba.id ? "page" : undefined}
+                            href="#"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setAbaAtiva(aba.id);
+                            }}
+                            role="button"
+                        >
+                            {aba.label}
+                        </a>
                     </li>
                 ))}
             </ul>
-            
+
             <div className="p-3 border rounded bg-body-tertiary">
-                
+
                 {abaAtiva === "identificacao" && (
                     <Identificacao
                         form={form}
@@ -329,7 +271,7 @@ function CadastrarProjeto() {
                         linhasExtensao={linhasExtensao}
                         carregandoLinhasExtensao={carregandoLinhasExtensao}
                         erroLinhasExtensao={erroLinhasExtensao}
-                        
+
                     />
                 )}
 
@@ -357,7 +299,7 @@ function CadastrarProjeto() {
                     />
                 )}
 
-                {abaAtiva==="parcerias-internas" && (
+                {abaAtiva === "parcerias-internas" && (
                     <ParceriasInternas
                         form={form}
                         atualizarCampo={atualizarCampo}
