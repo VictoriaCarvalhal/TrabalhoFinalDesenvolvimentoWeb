@@ -10,6 +10,7 @@ import Caracterizacao from './abas/Caracterizacao';
 import Descricao from './abas/Descricao';
 import PlanoTrabalho from './abas/PlanoTrabalho';
 import Parcerias from './abas/Parcerias';
+import DemandasBolsa from './abas/DemandasBolsa';
 
 import { MUNICIPIOS_RJ } from '../../../dados/municipiosRJ';
 import { useUnidades } from '../../../hooks/useUnidades';
@@ -33,6 +34,7 @@ const ABAS = [
     { id: "plano-de-trabalho", label: "Plano de Trabalho" },
     { id: "unidades-envolvidas", label: "Unidades Envolvidas" },
     { id: "parcerias", label: "Parcerias" },
+    { id: "demandas-bolsa", label: "Demanda de Bolsa" },
     { id: "locais-realizacao", label: "Locais de Realização" },
     { id: "membros-equipe", label: "Membros da Equipe" },
 ];
@@ -47,60 +49,64 @@ function CadastrarProjeto() {
     const [etapaAtual, setEtapaAtual] = useState(0);
     const [errosValidacao, setErrosValidacao] = useState({});
 
-    function validarEtapa0() {
+    function validarEtapa0(f) {
            const erros = {};
-           if (!form.titulo.trim()) erros.titulo = "Título é obrigatório";
-           if (!form.coordenador_vinculo) erros.coordenador_vinculo = "Selecione uma matrícula";
-           if (!form.unidade) erros.unidade = "Selecione uma unidade";
-           if (!form.departamento) erros.departamento = "Selecione um departamento";
-           if (!form.telefones[0]?.trim()) erros.telefones = "Telefone é obrigatório";
-           if (!form.emails[0]?.trim()) erros.emails = "E-mail é obrigatório";
-           if (!form.cep.trim()) erros.cep = "CEP é obrigatório";
-           if (!form.logradouro.trim()) erros.logradouro = "Logradouro é obrigatório";
-           if (!form.bairro.trim()) erros.bairro = "Bairro é obrigatório";
-           if (!form.municipio) erros.municipio = "Selecione um município";
-           if (!form.numero.trim()) erros.numero = "Número é obrigatório";
+           if (!f.titulo.trim()) erros.titulo = "Título é obrigatório";
+           if (!f.coordenador_vinculo) erros.coordenador_vinculo = "Selecione uma matrícula";
+           if (!f.unidade) erros.unidade = "Selecione uma unidade";
+           // Unidade sem departamento cadastrado nao tem o que escolher,
+           // entao o campo fica como "Nao se aplica" e nao e cobrado.
+           const temDepartamento = departamentos.some(
+               (d) => String(d.unidade) === String(f.unidade));
+           if (temDepartamento && !f.departamento) erros.departamento = "Selecione um departamento";
+           if (!f.telefones[0]?.trim()) erros.telefones = "Telefone é obrigatório";
+           if (!f.emails[0]?.trim()) erros.emails = "E-mail é obrigatório";
+           if (!f.cep.trim()) erros.cep = "CEP é obrigatório";
+           if (!f.logradouro.trim()) erros.logradouro = "Logradouro é obrigatório";
+           if (!f.bairro.trim()) erros.bairro = "Bairro é obrigatório";
+           if (!f.municipio) erros.municipio = "Selecione um município";
+           if (!f.numero.trim()) erros.numero = "Número é obrigatório";
            return erros;
     }
 
-    function validarEtapa1() {
+    function validarEtapa1(f) {
            const erros = {};
-           if (!form.vinculado_extensao) erros.vinculado_extensao = "Selecione uma opção";
-           if (!form.curricular) erros.curricular = "Selecione uma opção";
-           if (!form.natureza) erros.natureza = "Selecione uma natureza";
-           if (!form.abrangencia) erros.abrangencia = "Selecione uma abrangência";
-           if (!form.publico_alvo.trim()) erros.publico_alvo = "Público alvo é obrigatório";
-           if (!form.area_conhecimento_cnpq) erros.area_conhecimento_cnpq = "Selecione uma área";
-           if (!form.area_tematica_principal) erros.area_tematica_principal = "Selecione uma área temática";
-           if (!form.area_tematica_secundaria) erros.area_tematica_secundaria = "Selecione uma área temática";
-           if (!form.linha_extensao) erros.linha_extensao = "Selecione uma linha de extensão";
+           if (!f.vinculado_extensao) erros.vinculado_extensao = "Selecione uma opção";
+           if (!f.curricular) erros.curricular = "Selecione uma opção";
+           if (!f.natureza) erros.natureza = "Selecione uma natureza";
+           if (!f.abrangencia) erros.abrangencia = "Selecione uma abrangência";
+           if (!f.publico_alvo.trim()) erros.publico_alvo = "Público alvo é obrigatório";
+           if (!f.area_conhecimento_cnpq) erros.area_conhecimento_cnpq = "Selecione uma área";
+           if (!f.area_tematica_principal) erros.area_tematica_principal = "Selecione uma área temática";
+           if (!f.area_tematica_secundaria) erros.area_tematica_secundaria = "Selecione uma área temática";
+           if (!f.linha_extensao) erros.linha_extensao = "Selecione uma linha de extensão";
            return erros;
     }
 
-    function validarEtapa2() {
+    function validarEtapa2(f) {
            const erros = {};
-           if (!form.resumo.trim()) erros.resumo = "Resumo é obrigatório";
-           if (!form.palavras_chave[0]?.trim()) erros.palavras_chave = "Adicione pelo menos 1 palavra-chave";
-           if (!form.introducao.trim()) erros.introducao = "Introdução é obrigatória";
-           if (!form.justificativa.trim()) erros.justificativa = "Justificativa é obrigatória";
-           if (!form.objetivo_geral.trim()) erros.objetivo_geral = "Objetivo geral é obrigatório";
-           if (!form.objetivos_especificos.trim()) erros.objetivos_especificos = "Objetivos específicos são obrigatórios";
-           if (!form.metodologia_avaliacao.trim()) erros.metodologia_avaliacao = "Metodologia é obrigatória";
-           if (!form.relacao_ensino) erros.relacao_ensino = "Selecione uma opção";
-           if (!form.relacao_pesquisa) erros.relacao_pesquisa = "Selecione uma opção";
-           if (!form.interacao_dialogica.trim()) erros.interacao_dialogica = "Interação dialógica é obrigatória";
-           if (!form.interdisciplinaridade.trim()) erros.interdisciplinaridade = "Interdisciplinaridade é obrigatória";
-           if (!form.impacto_formacao.trim()) erros.impacto_formacao = "Impacto na formação é obrigatório";
-           if (!form.indissociabilidade.trim()) erros.indissociabilidade = "Indissociabilidade é obrigatória";
-           if (!form.impacto_social.trim()) erros.impacto_social = "Impacto social é obrigatório";
-           if (!form.referencias_bibliograficas.trim()) erros.referencias_bibliograficas = "Referências são obrigatórias";
+           if (!f.resumo.trim()) erros.resumo = "Resumo é obrigatório";
+           if (!f.palavras_chave[0]?.trim()) erros.palavras_chave = "Adicione pelo menos 1 palavra-chave";
+           if (!f.introducao.trim()) erros.introducao = "Introdução é obrigatória";
+           if (!f.justificativa.trim()) erros.justificativa = "Justificativa é obrigatória";
+           if (!f.objetivo_geral.trim()) erros.objetivo_geral = "Objetivo geral é obrigatório";
+           if (!f.objetivos_especificos.trim()) erros.objetivos_especificos = "Objetivos específicos são obrigatórios";
+           if (!f.metodologia_avaliacao.trim()) erros.metodologia_avaliacao = "Metodologia é obrigatória";
+           if (!f.relacao_ensino) erros.relacao_ensino = "Selecione uma opção";
+           if (!f.relacao_pesquisa) erros.relacao_pesquisa = "Selecione uma opção";
+           if (!f.interacao_dialogica.trim()) erros.interacao_dialogica = "Interação dialógica é obrigatória";
+           if (!f.interdisciplinaridade.trim()) erros.interdisciplinaridade = "Interdisciplinaridade é obrigatória";
+           if (!f.impacto_formacao.trim()) erros.impacto_formacao = "Impacto na formação é obrigatório";
+           if (!f.indissociabilidade.trim()) erros.indissociabilidade = "Indissociabilidade é obrigatória";
+           if (!f.impacto_social.trim()) erros.impacto_social = "Impacto social é obrigatório";
+           if (!f.referencias_bibliograficas.trim()) erros.referencias_bibliograficas = "Referências são obrigatórias";
            return erros;
     }
 
-    function obterErrosEtapa() {
-           if (etapaAtual === 0) return validarEtapa0();
-           if (etapaAtual === 1) return validarEtapa1();
-           if (etapaAtual === 2) return validarEtapa2();
+    function obterErrosEtapa(f = form) {
+           if (etapaAtual === 0) return validarEtapa0(f);
+           if (etapaAtual === 1) return validarEtapa1(f);
+           if (etapaAtual === 2) return validarEtapa2(f);
            return {};
     }
 
@@ -116,6 +122,25 @@ function CadastrarProjeto() {
         setEtapaAtual((prev) => Math.max(prev - 1, 0));
     }
 
+    // Clicar numa aba leva direto para ela. Voltar para uma aba anterior nao
+    // cobra nada, so avancar e que cobra o que falta na aba atual, igual ao
+    // botao Avancar.
+    function irParaEtapa(indice) {
+        if (indice === etapaAtual) return;
+        if (indice < etapaAtual) {
+            setErrosValidacao({});
+            setEtapaAtual(indice);
+            return;
+        }
+        const erros = obterErrosEtapa();
+        setErrosValidacao(erros);
+        if (Object.keys(erros).length === 0) {
+            setEtapaAtual(indice);
+        }
+    }
+
+    const [confirmando, setConfirmando] = useState(false);
+    const [pendencias, setPendencias] = useState([]);
     const [buscandoCep, setBuscandoCep] = useState(false);
     const [avisoCep, setAvisoCep] = useState(null);
 
@@ -192,6 +217,7 @@ function CadastrarProjeto() {
         unidadesEnvolvidas: [],
         parceriasInternas: [],
         parceriasExternas: [],
+        demandasBolsa: [],
     });
 
     const buscarCep = async (cep) => {
@@ -227,7 +253,18 @@ function CadastrarProjeto() {
     };
 
     function atualizarCampo(campo, valor) {
-        setForm((prev) => ({ ...prev, [campo]: valor }));
+        setForm((prev) => {
+            const atualizado = { ...prev, [campo]: valor };
+            // A caixa vermelha some assim que o campo deixa de estar errado,
+            // em vez de so sumir no proximo clique em Avancar.
+            setErrosValidacao((errosAtuais) => {
+                if (!errosAtuais[campo]) return errosAtuais;
+                if (obterErrosEtapa(atualizado)[campo]) return errosAtuais;
+                const { [campo]: _corrigido, ...restantes } = errosAtuais;
+                return restantes;
+            });
+            return atualizado;
+        });
     }
 
     // Monta as linhas das abas de tabela. A tela deixa a linha meio
@@ -273,6 +310,16 @@ function CadastrarProjeto() {
             }));
     }
 
+    function linhasDeDemandasBolsa() {
+        return form.demandasBolsa
+            .filter((linha) => linha.tipo_bolsa && Number(linha.quantidade) >= 1)
+            .map((linha) => ({
+                tipo_bolsa: linha.tipo_bolsa,
+                quantidade: Number(linha.quantidade),
+                justificativa: linha.justificativa ?? '',
+            }));
+    }
+
     function linhasDeParceriasExternas() {
         return form.parceriasExternas
             .filter((linha) => linha.nome_instituicao && linha.tipo_instituicao)
@@ -285,6 +332,27 @@ function CadastrarProjeto() {
     }
 
     // Essa função é responsável por persistir os dados de todas as abas em 1 única chamada atômica
+    // Antes de enviar, confere as tres etapas que tem campo obrigatorio e
+    // mostra o que falta. So abre a confirmacao se estiver tudo certo.
+    function abrirConfirmacao() {
+        const faltando = [
+            { indice: 0, nome: ABAS[0].label, erros: validarEtapa0(form) },
+            { indice: 1, nome: ABAS[1].label, erros: validarEtapa1(form) },
+            { indice: 2, nome: ABAS[2].label, erros: validarEtapa2(form) },
+        ].filter((etapa) => Object.keys(etapa.erros).length > 0);
+
+        if (faltando.length > 0) {
+            setPendencias(faltando);
+            // leva para a primeira aba com problema e marca os campos dela
+            setEtapaAtual(faltando[0].indice);
+            setErrosValidacao(faltando[0].erros);
+            return;
+        }
+
+        setPendencias([]);
+        setConfirmando(true);
+    }
+
     async function salvarDadosIdentificacao() {
         const payload = {
             //ABA IDENTIFICAÇÃO
@@ -347,12 +415,14 @@ function CadastrarProjeto() {
             unidades_envolvidas: linhasDeUnidadesEnvolvidas(),
             parcerias_internas: linhasDeParceriasInternas(),
             parcerias_externas: linhasDeParceriasExternas(),
+            demandas_bolsa: linhasDeDemandasBolsa(),
             locais_realizacao: linhasDeLocaisRealizacao(),
             membros_equipe: linhasDeMembrosEquipe(),
         };
 
         setEnviando(true);
         setErroEnvio(null);
+        setConfirmando(false);
         try {
             let projeto_id = projetoId;
             if (!projeto_id) {
@@ -395,7 +465,25 @@ function CadastrarProjeto() {
                 porque os botoes de etapa dizem onde a pessoa esta. */}
             <h1 className="visually-hidden">Cadastro de projeto</h1>
 
-            <div className="p-3 border rounded bg-body-tertiary">
+            {/* A tira de abas: mostra todas as partes do formulario e deixa ir
+                direto para uma delas, em vez de so avancar de uma em uma. */}
+            <ul className="nav nav-tabs" role="tablist">
+                {ABAS.map((aba, indice) => (
+                    <li className="nav-item" key={aba.id} role="presentation">
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={indice === etapaAtual}
+                            className={`nav-link ${indice === etapaAtual ? 'active' : ''}`}
+                            onClick={() => irParaEtapa(indice)}
+                        >
+                            {aba.label}
+                        </button>
+                    </li>
+                ))}
+            </ul>
+
+            <div className="p-3 border border-top-0 rounded-bottom bg-body-tertiary">
 
                 {etapaAtual === 0 && (
                     <Identificacao
@@ -468,22 +556,49 @@ function CadastrarProjeto() {
                     />
                 )}
 
+                {etapaAtual === 6 && (
+                    <DemandasBolsa
+                        valor={form.demandasBolsa}
+                        onChange={(linhas) => atualizarCampo("demandasBolsa", linhas)}
+                    />
+                )}
+
                 {/* As abas ficam escondidas, não desmontadas, pra não perder as
                     linhas nem recarregar o dropdown ao trocar de aba. */}
-                <div hidden={etapaAtual !== 6}>
+                <div hidden={etapaAtual !== 7}>
                     <LocaisRealizacao
                         valor={form.locaisRealizacao}
                         onChange={(linhas) => atualizarCampo("locaisRealizacao", linhas)}
                     />
                 </div>
 
-                <div hidden={etapaAtual !== 7}>
+                <div hidden={etapaAtual !== 8}>
                     <MembrosEquipe
                         coordenador={form.coordenador}
                         valor={form.membrosEquipe}
                         onChange={(linhas) => atualizarCampo("membrosEquipe", linhas)}
                     />
                 </div>
+
+                {pendencias.length > 0 && (
+                    <div className="alert alert-danger" role="alert">
+                        <p className="mb-1 fw-semibold">Faltam dados para enviar o projeto:</p>
+                        <ul className="mb-0">
+                            {pendencias.map((etapa) => (
+                                <li key={etapa.indice}>
+                                    <button
+                                        type="button"
+                                        className="btn btn-link p-0 align-baseline"
+                                        onClick={() => { setEtapaAtual(etapa.indice); setErrosValidacao(etapa.erros); }}
+                                    >
+                                        {etapa.nome}
+                                    </button>
+                                    : {Object.values(etapa.erros).join('; ')}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 <div className="d-flex justify-content-end gap-2">
                     {etapaAtual > 0 && (
@@ -496,26 +611,72 @@ function CadastrarProjeto() {
                         </button>
                     )}
 
-                    {etapaAtual < ABAS.length - 1 ? (
+                    {etapaAtual < ABAS.length - 1 && (
                         <button
                             type="button"
-                            className="btn btn-primary"
+                            className="btn btn-secondary"
                             onClick={proximaEtapa}
                         >
                             Avançar
                         </button>
-                    ) : (
-                        <button
-                            type="button"
-                            className="btn btn-primary"
-                            onClick={salvarDadosIdentificacao}
-                            disabled={enviando}
-                        >
-                            Enviar Formulário
-                        </button>
                     )}
+
+                    {/* O envio e um so, e aparece em qualquer aba: quem terminou
+                        de preencher nao precisa andar ate a ultima para enviar. */}
+                    <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={abrirConfirmacao}
+                        disabled={enviando}
+                    >
+                        Enviar projeto
+                    </button>
                 </div>
             </div>
+
+            {confirmando && (
+                <div
+                    className="modal d-block"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="titulo-confirmar-envio"
+                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+                    onClick={() => setConfirmando(false)}
+                >
+                    <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h2 className="modal-title h5" id="titulo-confirmar-envio">Enviar o projeto?</h2>
+                                <button type="button" className="btn-close" aria-label="Fechar" onClick={() => setConfirmando(false)}></button>
+                            </div>
+                            <div className="modal-body">
+                                <p>
+                                    O projeto <strong>{form.titulo}</strong> será enviado para a
+                                    Pró-Reitoria de Extensão e ficará como proposta aguardando
+                                    documentação.
+                                </p>
+                                <p className="mb-0">
+                                    Confira se está tudo preenchido antes de enviar. Depois do envio,
+                                    as mudanças passam pela lista de projetos.
+                                </p>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-outline-secondary" onClick={() => setConfirmando(false)}>
+                                    Revisar antes
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-primary"
+                                    onClick={salvarDadosIdentificacao}
+                                    disabled={enviando}
+                                >
+                                    {enviando ? 'Enviando...' : 'Confirmar envio'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );

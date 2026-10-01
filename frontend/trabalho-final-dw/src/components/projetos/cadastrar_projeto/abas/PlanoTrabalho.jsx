@@ -1,20 +1,13 @@
 import React from 'react';
 import CampoTextoLongo from '../CampoTextoLongo';
+import CampoSomenteLeitura from '../CampoSomenteLeitura';
 
 function PlanoTrabalho({ form, atualizarCampo }) {
     return (
         <fieldset>
             <legend>Plano de Trabalho</legend>
 
-            <div className="mb-3">
-                <label className="form-label">Ano</label>
-                <input
-                    type="text"
-                    className="form-control"
-                    value={new Date().getFullYear()}
-                    readOnly
-                />
-            </div>
+            <CampoSomenteLeitura rotulo="Ano" valor={new Date().getFullYear()} />
 
             <CampoTextoLongo
                 rotulo="Resultados esperados para o biênio"
