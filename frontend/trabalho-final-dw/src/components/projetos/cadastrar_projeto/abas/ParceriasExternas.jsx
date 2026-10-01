@@ -20,7 +20,7 @@ const LINHA_VAZIA = {
 
 // Mesma forma das parcerias internas: a aba lista o que já existe e o
 // preenchimento acontece num diálogo.
-function ParceriasExternas({ projetoId, valor = [], onChange }) {
+function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = false }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
     const [edicao, setEdicao] = useState(null);
@@ -114,7 +114,7 @@ function ParceriasExternas({ projetoId, valor = [], onChange }) {
 
     return (
         <fieldset>
-            <legend>Parcerias Externas</legend>
+            <legend className={tituloOculto ? 'visually-hidden' : ''}>Parcerias Externas</legend>
 
             <p className="small text-body-secondary">
                 Instituições de fora da universidade que colaboram com o projeto.

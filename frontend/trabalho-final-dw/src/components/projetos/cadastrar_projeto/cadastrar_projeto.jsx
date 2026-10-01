@@ -9,8 +9,7 @@ import Identificacao from './abas/Identificacao';
 import Caracterizacao from './abas/Caracterizacao';
 import Descricao from './abas/Descricao';
 import PlanoTrabalho from './abas/PlanoTrabalho';
-import ParceriasInternas from './abas/ParceriasInternas';
-import ParceriasExternas from './abas/ParceriasExternas';
+import Parcerias from './abas/Parcerias';
 
 import { MUNICIPIOS_RJ } from '../../../dados/municipiosRJ';
 import { useUnidades } from '../../../hooks/useUnidades';
@@ -33,8 +32,7 @@ const ABAS = [
     { id: "descricao", label: "Descrição" },
     { id: "plano-de-trabalho", label: "Plano de Trabalho" },
     { id: "unidades-envolvidas", label: "Unidades Envolvidas" },
-    { id: "parcerias-internas", label: "Parcerias Internas" },
-    { id: "parcerias-externas", label: "Parcerias Externas" },
+    { id: "parcerias", label: "Parcerias" },
     { id: "locais-realizacao", label: "Locais de Realização" },
     { id: "membros-equipe", label: "Membros da Equipe" },
 ];
@@ -459,31 +457,24 @@ function CadastrarProjeto() {
                 )}
 
                 {etapaAtual === 5 && (
-                    <ParceriasInternas
+                    <Parcerias
                         unidades={unidades}
                         departamentos={departamentos}
-                        valor={form.parceriasInternas}
-                        onChange={(linhas) => atualizarCampo("parceriasInternas", linhas)}
-                    />
-                )}
-
-                {etapaAtual === 6 && (
-                    <ParceriasExternas
-                        valor={form.parceriasExternas}
-                        onChange={(linhas) => atualizarCampo("parceriasExternas", linhas)}
+                        form={form}
+                        atualizarCampo={atualizarCampo}
                     />
                 )}
 
                 {/* As abas ficam escondidas, não desmontadas, pra não perder as
                     linhas nem recarregar o dropdown ao trocar de aba. */}
-                <div hidden={etapaAtual !== 7}>
+                <div hidden={etapaAtual !== 6}>
                     <LocaisRealizacao
                         valor={form.locaisRealizacao}
                         onChange={(linhas) => atualizarCampo("locaisRealizacao", linhas)}
                     />
                 </div>
 
-                <div hidden={etapaAtual !== 8}>
+                <div hidden={etapaAtual !== 7}>
                     <MembrosEquipe
                         coordenador={form.coordenador}
                         valor={form.membrosEquipe}

@@ -11,7 +11,7 @@ const LINHA_VAZIA = {
 // preenchimento acontece num diálogo, igual às outras abas de lista. Assim a
 // tabela não acumula as duas tarefas, mostrar e editar, e cada parceria fica
 // resumida a uma linha depois de salva.
-function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onChange }) {
+function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onChange, tituloOculto = false }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
 
@@ -116,7 +116,7 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
 
     return (
         <fieldset>
-            <legend>Parcerias Internas</legend>
+            <legend className={tituloOculto ? 'visually-hidden' : ''}>Parcerias Internas</legend>
 
             <p className="small text-body-secondary">
                 Unidades da própria universidade que colaboram com o projeto.
