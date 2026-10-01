@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../../../services/api';
 import CampoTextoLongo from '../CampoTextoLongo';
 
-function ParceriasInternas({ projetoId, atualizarCampo, unidades, departamentos, valor=[]}) {
+function ParceriasInternas({ projetoId, atualizarCampo, unidades, departamentos, valor=[], onChange}) {
 
     const [parceria, setParceria] = useState(valor);
     const [erro, setErro] = useState(null);
@@ -55,8 +55,8 @@ function ParceriasInternas({ projetoId, atualizarCampo, unidades, departamentos,
                 <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Novo
             </button>
 
-            {parceria.map((parceria,i) => (
-                <div key={parceria.id ?? `nova-${i}`}>
+            {parceria.map((parcerias,i) => (
+                <div key={parcerias.id ?? `nova-${i}`}>
                     <div>Parceria {i+1}</div>
 
                     <button 
@@ -74,7 +74,7 @@ function ParceriasInternas({ projetoId, atualizarCampo, unidades, departamentos,
                         <input
                         type="text"
                         className="form-control"
-                        value={parceria.area}
+                        value={parcerias.area}
                         onChange={(e) => editar(i ,"area", e.target.value)}
                         required
                         />
@@ -86,7 +86,7 @@ function ParceriasInternas({ projetoId, atualizarCampo, unidades, departamentos,
                         <input
                         type="text"
                         className="form-control"
-                        value={parceria.sigla}
+                        value={parcerias.sigla}
                         onChange={(e) => editar(i,"sigla", e.target.value)}
                         required
                         />
@@ -96,7 +96,7 @@ function ParceriasInternas({ projetoId, atualizarCampo, unidades, departamentos,
                         <label className="form-label">Unidade</label><br/>
                         <select
                             className="form-select"
-                            value={parceria.unidade}
+                            value={parcerias.unidade}
                             onChange={(e) => editar(i,"unidade", e.target.value)}
                             required
                         >
@@ -115,7 +115,7 @@ function ParceriasInternas({ projetoId, atualizarCampo, unidades, departamentos,
 
                         <select
                             className="form-select"
-                            value={parceria.departamento}
+                            value={parcerias.departamento}
                             onChange={(e) =>
                                 editar(i,"departamento", e.target.value)
                             }
@@ -141,7 +141,7 @@ function ParceriasInternas({ projetoId, atualizarCampo, unidades, departamentos,
                         campo="participacao_interna"
                         limite={500}
                         linhas={4}
-                        valor={parceria.participacao_interna}
+                        valor={parcerias.participacao_interna}
                         aoMudar={atualizarCampo}
                         required
                     />
