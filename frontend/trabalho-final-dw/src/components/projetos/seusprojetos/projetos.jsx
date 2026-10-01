@@ -15,6 +15,8 @@ function Projetos() {
     // id do projeto aberto no diálogo de dados; null = diálogo fechado
     const [vendoId, setVendoId] = useState(null);
     const navigate = useNavigate();
+    const [paginaAtual, setPaginaAtual] = useState(1);
+    const [totalPaginas, setTotalPaginas] = useState(1);
 
     function redirecionaProCadastro() {
         navigate('/Projetos/CadastrarProjeto');
@@ -53,8 +55,16 @@ function Projetos() {
                 setErro(null);
 
                 // O token já é injetado automaticamente pelo interceptor do api.js.
-                const resposta = await api.get('/projetos/');
+                const resposta = await api.get('/projetos/', {
+                    params: { page: paginaAtual }
+                });
                 const dados = resposta.data;
+
+                if (dados && dados.count != undefined) {
+                    setTotalPaginas(Math.ceil(dados.count / 20));
+                } else {
+                    setTotalPaginas(1);
+                }
 
                 // A API pagina a resposta (PAGE_SIZE: 20), então os itens vêm em "results".
                 // Filtro defensivo: o backend já oculta excluido=True, mas garante aqui também.
@@ -72,7 +82,15 @@ function Projetos() {
         }
 
         buscarProjetos();
-    }, [isAutenticado]);
+    }, [isAutenticado, paginaAtual]);
+
+    function irParaPagina(novaPagina, evento) {
+        if (evento) evento.preventDefault();
+        if (novaPagina >= 1 && novaPagina <= totalPaginas) {
+            setPaginaAtual(novaPagina);
+        }
+    }
+
 
     return (
         <div>
@@ -178,6 +196,53 @@ function Projetos() {
                                 ))}
                             </tbody>
                         </table>
+
+                        {totalPaginas > 1 && (
+                            <nav aria-label="Navegação de páginas">
+                                <ul className="pagination justify-content-center">
+                                    {/* Botão Anterior */}
+                                    <li className={`page-item ${paginaAtual === 1 ? 'disabled' : ''}`}>
+                                        <a
+                                            className="page-link"
+                                            href="#"
+                                            onClick={(e) => irParaPagina(paginaAtual - 1, e)}
+                                            aria-label="Anterior"
+                                        >
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+
+                                    {/* Renderiza os números das páginas */}
+                                    {[...Array(totalPaginas)].map((_, index) => {
+                                        const numPagina = index + 1;
+                                        return (
+                                            <li key={numPagina} className={`page-item ${paginaAtual === numPagina ? 'active' : ''}`}>
+                                                <a
+                                                    className="page-link"
+                                                    href="#"
+                                                    onClick={(e) => irParaPagina(numPagina, e)}
+                                                >
+                                                    {numPagina}
+                                                </a>
+                                            </li>
+                                        );
+                                    })}
+
+                                    {/* Botão Próximo */}
+                                    <li className={`page-item ${paginaAtual === totalPaginas ? 'disabled' : ''}`}>
+                                        <a
+                                            className="page-link"
+                                            href="#"
+                                            onClick={(e) => irParaPagina(paginaAtual + 1, e)}
+                                            aria-label="Próximo"
+                                        >
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        )}
+
                         {vendoId && (
                             <DialogoDadosProjeto projetoId={vendoId} aoFechar={() => setVendoId(null)} />
                         )}
