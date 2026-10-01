@@ -28,7 +28,7 @@ const LINHA_VAZIA = {
     nome: '', funcao: '', busca: '', filtroTipo: '',
 };
 
-// Máscara de CPF pra exibição: 123.456.789-00
+// Aplica máscara de CPF
 function mascaraCpf(valor) {
     const nums = (valor || '').replace(/\D/g, '').slice(0, 11);
     if (nums.length <= 3) return nums;
@@ -37,9 +37,6 @@ function mascaraCpf(valor) {
     return nums.slice(0, 3) + '.' + nums.slice(3, 6) + '.' + nums.slice(6, 9) + '-' + nums.slice(9);
 }
 
-// Aba "Membros da Equipe" do cadastro de projeto.
-// O usuário pode filtrar por tipo de vínculo e/ou digitar matrícula/CPF/nome.
-// O sistema mostra as pessoas encontradas pra ele escolher.
 function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
@@ -103,47 +100,34 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
         // Precisa ter pelo menos um filtro
         if (!termo && !filtroTipo) return;
 
-        setBuscando((a) => ({ ...a, [indice]: true }));
+        setBuscando((estadoAtual) => ({ ...estadoAtual, [indice]: true }));
         setErro(null);
-        setSugestoes((a) => ({ ...a, [indice]: [] }));
+        setSugestoes((estadoAtual) => ({ ...estadoAtual, [indice]: [] }));
 
         try {
-            const resposta = await api.get('/dominios/vinculos/');
-            const termoLower = termo.toLowerCase();
-            const termoDigitos = termo.replace(/\D/g, '');
+            const params = new URLSearchParams();
+            if (termo) params.append('q', termo);
+            if (filtroTipo) params.append('tipo', filtroTipo);
 
-            const encontrados = resposta.data.filter((v) => {
-                // Filtro por tipo de vínculo (se selecionou)
-                if (filtroTipo && v.tipo_vinculo !== filtroTipo) return false;
-
-                // Se não digitou nada no campo texto, aceita todos do tipo
-                if (!termo) return true;
-
-                const matriculaOk = v.matricula
-                    && v.matricula.toLowerCase().includes(termoLower);
-                // CPF: compara só os dígitos
-                const cpfOk = termoDigitos.length >= 3
-                    && v.cpf
-                    && v.cpf.replace(/\D/g, '').includes(termoDigitos);
-                return matriculaOk || cpfOk;
-            });
+            const resposta = await api.get(`/dominios/vinculos/?${params.toString()}`);
+            const encontrados = resposta.data;
 
             if (encontrados.length === 0) {
                 setErro('Nenhuma pessoa encontrada. Verifique os filtros.');
             } else if (encontrados.length === 1) {
                 selecionarPessoa(indice, encontrados[0]);
             } else {
-                setSugestoes((a) => ({ ...a, [indice]: encontrados }));
+                setSugestoes((estadoAtual) => ({ ...estadoAtual, [indice]: encontrados }));
             }
         } catch {
             setErro('Erro ao buscar pessoa. Tente novamente.');
         } finally {
-            setBuscando((a) => ({ ...a, [indice]: false }));
+            setBuscando((estadoAtual) => ({ ...estadoAtual, [indice]: false }));
         }
     }
 
     function selecionarPessoa(indice, vinculo) {
-        const jaEsta = linhas.some((l, i) => i !== indice && l.vinculo === vinculo.id);
+        const jaEsta = linhas.some((linhaAtual, i) => i !== indice && linhaAtual.vinculo === vinculo.id);
         if (jaEsta) {
             setErro('Esta pessoa já está na equipe.');
             return;
@@ -244,8 +228,8 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
                                         }}
                                     >
                                         <option value="">[Todos]</option>
-                                        {TIPOS_VINCULO.map((t) => (
-                                            <option key={t.valor} value={t.valor}>{t.rotulo}</option>
+                                        {TIPOS_VINCULO.map((tipoOpcao) => (
+                                            <option key={tipoOpcao.valor} value={tipoOpcao.valor}>{tipoOpcao.rotulo}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -265,17 +249,17 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
                             {sugestoes[i] && sugestoes[i].length > 0 && (
                                 <div className="mt-2">
                                     <p className="small fw-bold mb-1">Selecione a pessoa:</p>
-                                    <div className="list-group">
-                                        {sugestoes[i].map((v) => (
+                                    <div className="list-group" style={{ maxHeight: '250px', overflowY: 'auto' }}>
+                                        {sugestoes[i].map((vinculoSugerido) => (
                                             <button
-                                                key={v.id}
+                                                key={vinculoSugerido.id}
                                                 type="button"
                                                 className="list-group-item list-group-item-action d-flex justify-content-between"
-                                                onClick={() => selecionarPessoa(i, v)}
+                                                onClick={() => selecionarPessoa(i, vinculoSugerido)}
                                             >
-                                                <span>{v.nome_completo}</span>
+                                                <span>{vinculoSugerido.nome_completo}</span>
                                                 <span className="text-muted">
-                                                    {v.matricula || mascaraCpf(v.cpf)} — {v.tipo_vinculo_display}
+                                                    {vinculoSugerido.matricula || mascaraCpf(vinculoSugerido.cpf)} — {vinculoSugerido.tipo_vinculo_display}
                                                 </span>
                                             </button>
                                         ))}
@@ -313,8 +297,8 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
                                         onChange={(e) => trocarFuncao(i, e.target.value)}
                                     >
                                         <option value="">[Selecione]</option>
-                                        {FUNCOES.map((f) => (
-                                            <option key={f.valor} value={f.valor}>{f.rotulo}</option>
+                                        {FUNCOES.map((funcaoOpcao) => (
+                                            <option key={funcaoOpcao.valor} value={funcaoOpcao.valor}>{funcaoOpcao.rotulo}</option>
                                         ))}
                                     </select>
                                 </div>

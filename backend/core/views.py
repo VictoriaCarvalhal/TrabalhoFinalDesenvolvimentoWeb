@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -111,8 +112,22 @@ class VinculoInstitucionalViewSet(LookupViewSet):
     serializer_class = VinculoInstitucionalSerializer
 
     def get_queryset(self):
-        return (
+        queryset_vinculos = (
             VinculoInstitucional.objects
             .filter(status='ATIVO')
             .select_related('pessoa')
         )
+        
+        filtro_tipo = self.request.query_params.get('tipo', '')
+        if filtro_tipo:
+            queryset_vinculos = queryset_vinculos.filter(tipo_vinculo=filtro_tipo)
+            
+        termo_busca = self.request.query_params.get('q', '').strip()
+        if termo_busca:
+            apenas_digitos = ''.join(filter(str.isdigit, termo_busca))
+            condicoes_busca = Q(matricula__icontains=termo_busca) | Q(pessoa__nome_completo__icontains=termo_busca)
+            if len(apenas_digitos) >= 3:
+                condicoes_busca |= Q(pessoa__cpf__icontains=apenas_digitos)
+            queryset_vinculos = queryset_vinculos.filter(condicoes_busca)
+            
+        return queryset_vinculos[:200] if termo_busca or filtro_tipo else queryset_vinculos
