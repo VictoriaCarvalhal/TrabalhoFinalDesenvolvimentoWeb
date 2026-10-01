@@ -4,6 +4,7 @@ import CampoTextoLongo from '../CampoTextoLongo';
 function ParceriasInternas({ form, atualizarCampo, unidades, departamentos, valor=[]}) {
 
     const [parceria, setParceria] = useState(valor);
+    const [ativo, setAtivo] = useState({});
 
     function novaParceria(){
         setParceria((atuais) => [...atuais, 
@@ -31,7 +32,7 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos, valo
 
             {parceria.map((parceria,i) => (
                 <div key={parceria.id ?? `nova-${i}`}>
-                    <div>{i+1}.</div>
+                    <div>Parceria {i+1}</div>
 
                     <button 
                         type="button"
@@ -41,7 +42,8 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos, valo
                     >
                        <i className="bi bi-trash" aria-hidden="true"></i> 
                     </button>
-
+                    
+                    
                     <div className="mb-3">
                         <label className="form-label">Nome da Instituição</label>
                         <input
@@ -49,6 +51,7 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos, valo
                         className="form-control"
                         value={form.area}
                         onChange={(e) => editar(i ,"area", e.target.value)}
+                        required
                         />
                     </div>
                 
@@ -60,6 +63,7 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos, valo
                         className="form-control"
                         value={form.sigla}
                         onChange={(e) => editar(i,"sigla", e.target.value)}
+                        required
                         />
                     </div>
 
@@ -69,6 +73,7 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos, valo
                             className="form-select"
                             value={form.unidade}
                             onChange={(e) => editar(i,"unidade", e.target.value)}
+                            required
                         >
                             <option value="">Selecione uma unidade</option>
 
@@ -89,6 +94,7 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos, valo
                             onChange={(e) =>
                                 editar(i,"departamento", e.target.value)
                             }
+                            required
                         >
                             <option value="">
                                 Selecione um departamento
@@ -112,9 +118,15 @@ function ParceriasInternas({ form, atualizarCampo, unidades, departamentos, valo
                         linhas={4}
                         valor={form.participacao_interna}
                         aoMudar={atualizarCampo}
+                        required
                     />
+                    <button type="button" className="btn btn-sm btn-primary mb-3">
+                        <i className="bi bi-floppy me-1" aria-hidden="true"></i>Adicionar Parceria
+                    </button>
+
                 
                 </div>
+
             ))}
 
 
