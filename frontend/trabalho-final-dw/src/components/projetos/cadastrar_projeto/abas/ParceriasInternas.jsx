@@ -41,7 +41,7 @@ function ParceriasInternas({ projetoId, atualizarCampo, unidades, departamentos,
                     return;
                 }
             }
-            setLinhas((atuais) => atuais.filter((_, i) => i !== indice));
+            setParceria((atuais) => atuais.filter((_, i) => i !== indice));
         }
 
 
