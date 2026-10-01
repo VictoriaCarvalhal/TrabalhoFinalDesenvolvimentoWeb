@@ -91,15 +91,12 @@ body {
 
 #navbar .navbar-nav {
     display: flex;
+    align-items: center;
     padding: 0;
     margin: 0;
     list-style-type: none;
     justify-content: flex-start;
     gap: 4px;
-}
-
-#navbar .navbar-nav > li {
-    padding-top: 10px;
 }
 
 #navbar li a,
@@ -148,10 +145,17 @@ body {
 .navbar-acao {
     color: #45718C;
     border: 1px solid transparent;
-    padding: 6px 10px;
-    font-size: 18px;
-    line-height: 1;
+    padding: 10px 15px;
+    font-weight: 800;
+    background: transparent;
+    display: flex;
+    align-items: center;
     transition: color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.navbar-acao i {
+    font-size: 20px;
+    margin-top: -2px;
 }
 
 .navbar-acao:hover,
@@ -162,8 +166,10 @@ body {
 
 .navbar-usuario {
     color: #45718C;
-    font-weight: 700;
-    font-size: 14px;
+    font-weight: 800;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
 }
 
 /* Estilos específicos para o Dropdown Menu */
@@ -276,10 +282,6 @@ h1, h2, h3 {
     color: var(--cor-texto);
 }
 
-h1 {
-    font-size: 25px;
-}
-
 strong {
     color: var(--cor-texto);
 }
@@ -344,6 +346,11 @@ strong {
     margin: 0;
     color: #000000;
     font-size: 10px;
+}
+
+.table-fade{
+    -webkit-mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
 }
 
 /* Responsividade celular e tablet */

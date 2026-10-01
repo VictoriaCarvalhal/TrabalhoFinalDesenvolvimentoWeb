@@ -1,32 +1,30 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from "react-router-dom";
 import Inicial from './components/Inicial/inicial';
-import Bemvindo from './components/Bemvindo'; // Ajuste o caminho conforme onde estiver seu componente Bemvindo
-import ProtectedRoute from './components/ProtectedRoute'; // O componente do Passo 1
-
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Inicial from './components/Inicial/inicial';
-import Bemvindo from './components/Bemvindo'; // Ajuste o caminho conforme onde estiver seu componente Bemvindo
-import ProtectedRoute from './components/ProtectedRoute'; // O componente do Passo 1
+import LayoutAutenticated from './components/layout/layoutAutenticated.jsx';
+import LayoutNotAutenticated from './components/layout/layoutNotAutenticated.jsx';
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx';
+import Projetos from './components/projetos/seusprojetos/projetos.jsx';
+import CadastrarProjeto from './components/projetos/cadastrar_projeto/cadastrar_projeto.jsx';
+import ImprimirProjeto from './components/projetos/imprimir/ImprimirProjeto.jsx';
+import Bemvindo from './components/bemvindo/bemvindo.jsx';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* ROTA PÚBLICA (Tela de Login) */}
+    <Routes>
+      <Route element={<LayoutNotAutenticated />}>
         <Route path="/" element={<Inicial />} />
-
-        {/* ROTAS PROTEGIDAS (Exigem autenticação) */}
-        <Route element={<ProtectedRoute />}>
+      </Route>
+      <Route element={<ProtectedRoute />}>
+        <Route element={<LayoutAutenticated />}>
           <Route path="/Bemvindo" element={<Bemvindo />} />
-          {/* Outras páginas privadas entram aqui no futuro */}
+          <Route path="/Projetos">
+            <Route path="SeusProjetos" element={<Projetos />}/>
+            <Route path="CadastrarProjeto" element={<CadastrarProjeto />}/>
+            <Route path=":id/imprimir" element={<ImprimirProjeto />}/>
+          </Route>
         </Route>
-
-        {/* Rota genérica para URLs inexistentes (manda de volta para o login) */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+      </Route>
+    </Routes>
   );
 }
 

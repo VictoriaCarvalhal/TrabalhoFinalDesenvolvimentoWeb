@@ -24,16 +24,18 @@ from rest_framework.views import APIView
 from projetos.models import (
     DemandaBolsa, LocalRealizacao, MembroEquipe, ParceriaExterna,
     ParceriaInterna, PlanoTrabalho, ProjetoUnidade,
-    ProjetoEndereco, ProjetoCaracterizacao, ProjetoDescricao,Projeto
+    ProjetoEndereco, ProjetoCaracterizacao, ProjetoDescricao,
+    ProjetoPalavraChave, Projeto
 )
 from projetos.permissions import projetos_visiveis_para
 from projetos.serializers import (
     DemandaBolsaSerializer, LocalRealizacaoSerializer, MembroEquipeSerializer,
     ParceriaExternaSerializer, ParceriaInternaSerializer,
     PlanoTrabalhoSerializer, UnidadeEnvolvidaSerializer,
-    ProjetoResumoSerializer, ProjetoDetalheSimplesSerializer,
+    ProjetoResumoSerializer, ProjetoDetalheSimplesSerializer, ProjetoCreateSerializer,
     ProjetoEnderecoSerializer, ProjetoContatoSerializer,
-    ProjetoCaracterizacaoSerializer, ProjetoDescricaoSerializer
+    ProjetoCaracterizacaoSerializer, ProjetoDescricaoSerializer,
+    ProjetoPalavraChaveSerializer
 )
 
 
@@ -115,6 +117,11 @@ class PlanoTrabalhoViewSet(AbaDoProjetoViewSet):
     serializer_class = PlanoTrabalhoSerializer
 
 
+class PalavraChaveViewSet(AbaDoProjetoViewSet):
+    queryset = ProjetoPalavraChave.objects.all()
+    serializer_class = ProjetoPalavraChaveSerializer
+
+
 # Aba -> (viewset, related_name no Projeto). A ordem e a das abas na tela.
 ABAS = [
     ('unidades_envolvidas', UnidadeEnvolvidaViewSet, 'projeto_unidades'),
@@ -124,6 +131,7 @@ ABAS = [
     ('membros_equipe', MembroEquipeViewSet, 'membros'),
     ('demandas_bolsa', DemandaBolsaViewSet, 'demandas_bolsa'),
     ('planos_trabalho', PlanoTrabalhoViewSet, 'planos_trabalho'),
+    ('palavras_chave', PalavraChaveViewSet, 'palavras_chave'),
 ]
 
 
@@ -166,14 +174,16 @@ class ProjetoViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'list':
             return ProjetoResumoSerializer
+        if self.action == 'create':
+            return ProjetoCreateSerializer
         return ProjetoDetalheSimplesSerializer
 
     def perform_create(self, serializer):
-        projeto = serializer.save()
+        serializer.save()
 
-        ProjetoEndereco.objects.get_or_create(projeto=projeto)
-        ProjetoCaracterizacao.objects.get_or_create(projeto=projeto)
-        ProjetoDescricao.objects.get_or_create(projeto=projeto)
+    def perform_destroy(self, instance):
+        instance.excluido = True
+        instance.save(update_fields=['excluido', 'updated_at'])
 
     # --- endpoint para cada "Salvar" de aba simples ---
 
@@ -222,6 +232,16 @@ class ProjetoViewSet(viewsets.ModelViewSet):
             return Response(ProjetoContatoSerializer(projeto.contatos.all(), many=True).data)
 
         serializer = ProjetoContatoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(projeto=projeto)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    @action(detail=True, methods=['get', 'post'])
+    def palavras_chave(self, request, pk=None):
+        projeto = self.get_object()
+        if request.method == 'GET':
+            return Response(ProjetoPalavraChaveSerializer(projeto.palavras_chave.all(), many=True).data)
+
+        serializer = ProjetoPalavraChaveSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(projeto=projeto)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
