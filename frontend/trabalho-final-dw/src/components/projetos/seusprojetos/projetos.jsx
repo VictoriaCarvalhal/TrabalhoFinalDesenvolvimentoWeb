@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
 import { excluirProjeto } from '../../../services/projetoService';
 
-function Projetos({isPrevia = false, limite = 5}) {
+function Projetos() {
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
 
     const [projetos, setProjetos] = useState([]);
@@ -12,13 +12,12 @@ function Projetos({isPrevia = false, limite = 5}) {
     const [erro, setErro] = useState(null);
     const [excluindoId, setExcluindoId] = useState(null);
     const navigate = useNavigate();
-    const controlFade = isPrevia && projetos.length > limite;
 
-    function redirecionaProCadastro(){
+    function redirecionaProCadastro() {
         navigate('/Projetos/CadastrarProjeto');
     }
 
-    function redirecionaParaImpressao(id){
+    function redirecionaParaImpressao(id) {
         navigate(`/Projetos/${id}/imprimir`);
     }
 
@@ -78,10 +77,9 @@ function Projetos({isPrevia = false, limite = 5}) {
                 {/* O menu ja diz em que tela a pessoa esta, entao o titulo nao
                 aparece de novo aqui. Ele continua no html, escondido, porque a
                 pagina precisa de um h1 para quem usa leitor de tela. */}
-                <h1 className="visually-hidden">Seus projetos</h1>
 
-                {!isPrevia && (
-                    <div className="d-flex flex-wrap align-items-center justify-content-end gap-2">
+                
+                <div className="d-flex flex-wrap align-items-center justify-content-end gap-2">
                         <button
                             type="button"
                             className="btn btn-primary"
@@ -90,8 +88,8 @@ function Projetos({isPrevia = false, limite = 5}) {
                             <i className="bi bi-plus-lg me-2" aria-hidden="true"></i>
                             Novo projeto
                         </button>
-                    </div>
-                )}
+                </div>
+            
 
                 {!isAutenticado && (
                     <div className="alert alert-warning mt-3">
@@ -111,74 +109,76 @@ function Projetos({isPrevia = false, limite = 5}) {
                     <p className="mt-3">Você ainda não tem projetos cadastrados.</p>
                 )}
 
-                {isAutenticado && !carregando && !erro && projetos.length > 0 && (
+                {isAutenticado && !carregando && !erro && (
                     <>
-                        <div className={controlFade? "table-fade" : ""}>
-                            <table className="table table-striped table-hover mt-3">
-                                <thead>
-                                    <tr>
-                                        <th>Ano</th>
-                                        <th>Número</th>
-                                        <th>Título</th>
-                                        <th>Situação</th>
-                                        <th>Unidade</th>
-                                        <th>Coordenador(a)</th>
-                                        <th>Atualizado em</th>
-                                        <th className="text-nowrap">Ações</th>
+
+                        <table className="table table-striped table-hover mt-3">
+                            <thead>
+                                <tr>
+                                    <th>Ano</th>
+                                    <th>Número</th>
+                                    <th>Título</th>
+                                    <th>Situação</th>
+                                    <th>Unidade</th>
+                                    <th>Coordenador(a)</th>
+                                    <th>Atualizado em</th>
+                                    <th className="text-nowrap">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {projetos.slice(0,projetos.length).map((projeto) => (
+                                    <tr key={projeto.id}>
+                                        <td>{projeto.ano}</td>
+                                        <td>{projeto.numero ?? 'S/N'}</td>
+                                        <td>{projeto.titulo}</td>
+                                        <td>{projeto.situacao_display}</td>
+                                        <td>{projeto.unidade_sigla}</td>
+                                        <td>{projeto.coordenador_nome}</td>
+                                        <td>
+                                            {projeto.updated_at
+                                                ? new Date(projeto.updated_at).toLocaleDateString('pt-BR')
+                                                : '-'}
+                                        </td>
+                                        <td className="text-nowrap">
+                                            <div className="d-flex gap-2">
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-outline-secondary"
+                                                    title="Ver os dados do projeto"
+                                                    aria-label={`Ver os dados do projeto ${projeto.titulo}`}
+                                                    onClick={() => setVendoId(projeto.id)}
+                                                >
+                                                    <i className="bi bi-eye"></i>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-outline-secondary"
+                                                    title="Imprimir projeto"
+                                                    aria-label={`Imprimir projeto ${projeto.titulo}`}
+                                                    onClick={() => redirecionaParaImpressao(projeto.id)}
+                                                >
+                                                    <i className="bi bi-printer"></i>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-outline-danger"
+                                                    title="Excluir projeto"
+                                                    aria-label={`Excluir projeto ${projeto.titulo}`}
+                                                    disabled={excluindoId === projeto.id}
+                                                    onClick={() => handleExcluir(projeto)}
+                                                >
+                                                    <i className="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    {projetos.slice(0, isPrevia ? limite : projetos.length).map((projeto) => (
-                                        <tr key={projeto.id}>
-                                            <td>{projeto.ano}</td>
-                                            <td>{projeto.numero ?? 'S/N'}</td>
-                                            <td>{projeto.titulo}</td>
-                                            <td>{projeto.situacao_display}</td>
-                                            <td>{projeto.unidade_sigla}</td>
-                                            <td>{projeto.coordenador_nome}</td>
-                                            <td>
-                                                {projeto.updated_at
-                                                    ? new Date(projeto.updated_at).toLocaleDateString('pt-BR')
-                                                    : '-'}
-                                            </td>
-                                            <td className="text-nowrap">
-                                                <div className="d-flex gap-2">
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-sm btn-outline-secondary"
-                                                        title="Imprimir projeto"
-                                                        aria-label={`Imprimir projeto ${projeto.titulo}`}
-                                                        onClick={() => redirecionaParaImpressao(projeto.id)}
-                                                    >
-                                                        <i className="bi bi-printer"></i>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-sm btn-outline-danger"
-                                                        title="Excluir projeto"
-                                                        aria-label={`Excluir projeto ${projeto.titulo}`}
-                                                        disabled={excluindoId === projeto.id}
-                                                        onClick={() => handleExcluir(projeto)}
-                                                    >
-                                                        <i className="bi bi-trash"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        {isPrevia && (projetos.length > 0) && (
-                            <div className="mt-4 text-center">
-                                <button
-                                    className="btn btn-outline-primary"
-                                    onClick={() => navigate('/Projetos/SeusProjetos')}
-                                >
-                                    Ver todos projetos
-                                </button>
-                            </div>
+                                ))}
+                            </tbody>
+                        </table>
+                        {vendoId && (
+                            <DialogoDadosProjeto projetoId={vendoId} aoFechar={() => setVendoId(null)} />
                         )}
+
                     </>
                 )}
 
