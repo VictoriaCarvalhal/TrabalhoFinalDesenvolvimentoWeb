@@ -21,7 +21,7 @@ import { useAreasTematicas } from '../../../hooks/useAreasTematicas';
 import { useLinhasExtensao } from '../../../hooks/useLinhasExtensao';
 
 
-import { 
+import {
     criarProjeto,
     atualizarEndereco,
     criarContato,
@@ -42,13 +42,88 @@ const ABAS = [
     {id: "membros-equipe", label: "Membros da Equipe"},
 ];
 
+
 function CadastrarProjeto() {
     const navigate = useNavigate();
 
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
     const token = useAuthStore((state) => state.token);
-    
-    const [abaAtiva, setAbaAtiva] = useState("identificacao");
+
+    const [etapaAtual, setEtapaAtual] = useState(0);
+    const [errosValidacao, setErrosValidacao] = useState({});
+
+    function validarEtapa0() {
+           const erros = {};
+           if (!form.titulo.trim()) erros.titulo = "Título é obrigatório";
+           if (!form.coordenador_vinculo) erros.coordenador_vinculo = "Selecione uma matrícula";
+           if (!form.unidade) erros.unidade = "Selecione uma unidade";
+           if (!form.departamento) erros.departamento = "Selecione um departamento";
+           if (!form.telefones[0]?.trim()) erros.telefones = "Telefone é obrigatório";
+           if (!form.emails[0]?.trim()) erros.emails = "E-mail é obrigatório";
+           if (!form.cep.trim()) erros.cep = "CEP é obrigatório";
+           if (!form.logradouro.trim()) erros.logradouro = "Logradouro é obrigatório";
+           if (!form.bairro.trim()) erros.bairro = "Bairro é obrigatório";
+           if (!form.municipio) erros.municipio = "Selecione um município";
+           if (!form.numero.trim()) erros.numero = "Número é obrigatório";
+           return erros;
+    }
+
+    function validarEtapa1() {
+           const erros = {};
+           if (!form.vinculado_extensao) erros.vinculado_extensao = "Selecione uma opção";
+           if (!form.curricular) erros.curricular = "Selecione uma opção";
+           if (!form.natureza) erros.natureza = "Selecione uma natureza";
+           if (!form.abrangencia) erros.abrangencia = "Selecione uma abrangência";
+           if (!form.publico_alvo.trim()) erros.publico_alvo = "Público alvo é obrigatório";
+           if (!form.area_conhecimento_cnpq) erros.area_conhecimento_cnpq = "Selecione uma área";
+           if (!form.area_tematica_principal) erros.area_tematica_principal = "Selecione uma área temática";
+           if (!form.area_tematica_secundaria) erros.area_tematica_secundaria = "Selecione uma área temática";
+           if (!form.linha_extensao) erros.linha_extensao = "Selecione uma linha de extensão";
+           return erros;
+    }
+
+    function validarEtapa2() {
+           const erros = {};
+           if (!form.resumo.trim()) erros.resumo = "Resumo é obrigatório";
+           if (!form.palavras_chave[0]?.trim()) erros.palavras_chave = "Adicione pelo menos 1 palavra-chave";
+           if (!form.introducao.trim()) erros.introducao = "Introdução é obrigatória";
+           if (!form.justificativa.trim()) erros.justificativa = "Justificativa é obrigatória";
+           if (!form.objetivo_geral.trim()) erros.objetivo_geral = "Objetivo geral é obrigatório";
+           if (!form.objetivos_especificos.trim()) erros.objetivos_especificos = "Objetivos específicos são obrigatórios";
+           if (!form.metodologia_avaliacao.trim()) erros.metodologia_avaliacao = "Metodologia é obrigatória";
+           if (!form.relacao_ensino) erros.relacao_ensino = "Selecione uma opção";
+           if (!form.relacao_pesquisa) erros.relacao_pesquisa = "Selecione uma opção";
+           if (!form.interacao_dialogica.trim()) erros.interacao_dialogica = "Interação dialógica é obrigatória";
+           if (!form.interdisciplinaridade.trim()) erros.interdisciplinaridade = "Interdisciplinaridade é obrigatória";
+           if (!form.impacto_formacao.trim()) erros.impacto_formacao = "Impacto na formação é obrigatório";
+           if (!form.indissociabilidade.trim()) erros.indissociabilidade = "Indissociabilidade é obrigatória";
+           if (!form.impacto_social.trim()) erros.impacto_social = "Impacto social é obrigatório";
+           if (!form.referencias_bibliograficas.trim()) erros.referencias_bibliograficas = "Referências são obrigatórias";
+           return erros;
+    }
+
+    function obterErrosEtapa() {
+           if (etapaAtual === 0) return validarEtapa0();
+           if (etapaAtual === 1) return validarEtapa1();
+           if (etapaAtual === 2) return validarEtapa2();
+           return {};
+    }
+
+    function etapaValida() {
+           return Object.keys(obterErrosEtapa()).length === 0;
+    }
+
+    function proximaEtapa() {
+           const erros = obterErrosEtapa();
+           setErrosValidacao(erros);
+           if (Object.keys(erros).length === 0) {
+               setEtapaAtual((prev) => Math.min(prev + 1, ABAS.length - 1));
+           }
+    }
+
+    function etapaAnterior() {
+        setEtapaAtual((prev) => Math.max(prev - 1, 0));
+    }
 
     const [buscandoCep, setBuscandoCep] = useState(false);
     const [avisoCep, setAvisoCep] = useState(null);
@@ -61,13 +136,13 @@ function CadastrarProjeto() {
     const { dados: areasCNPQ, loading: carregandoAreasCNPQ, erro: erroAreasCNPQ } = useAreasCNPQ();
     const { dados: areasTematicas, loading: carregandoAreasTematicas, erro: erroAreasTematicas } = useAreasTematicas();
     const { dados: linhasExtensao, loading: carregandoLinhasExtensao, erro: erroLinhasExtensao } = useLinhasExtensao();
-    
+
 
     //projetoId é UUID vindo do POST; as abas tambem usam
     const [projetoId, setProjetoId] = useState(null);
     const [enviando, setEnviando] = useState(false);
     const [erroEnvio, setErroEnvio] = useState(null);
-    
+
     const [form, setForm] = useState({
         //identificação
         titulo: "",
@@ -247,7 +322,7 @@ function CadastrarProjeto() {
             for (const contato of contatos) {
                 await criarContato(projeto_id, contato);
             }
-            
+
             const palavras = form.palavras_chave.map((p) => p.trim()).filter((p) => p);
             for (const palavra of palavras) {
                 await criarPalavraChave(projeto_id, { palavra });
@@ -272,35 +347,16 @@ function CadastrarProjeto() {
             atualizarCampo('coordenador', vinculosCoordenador[0].nome_completo);
         }
     }, [vinculosCoordenador]);
-    
+
     return (
         <div className="container mt-4">
             {/* Mesma ideia da lista: o titulo fica so para leitor de tela,
                 porque as abas logo abaixo ja dizem onde a pessoa esta. */}
             <h1 className="visually-hidden">Cadastro de projeto</h1>
 
-             <ul className="nav nav-tabs">
-                {ABAS.map((aba) => (
-                    <li className="nav-item" key={aba.id}>
-                    <a
-                        className={`nav-link ${abaAtiva === aba.id ? "active" : ""}`}
-                        aria-current={abaAtiva === aba.id ? "page" : undefined}
-                        href="#"
-                        onClick={(e) => {
-                        e.preventDefault();
-                        setAbaAtiva(aba.id);
-                        }}
-                        role="button"
-                    >
-                        {aba.label}
-                    </a>
-                    </li>
-                ))}
-            </ul>
-            
             <div className="p-3 border rounded bg-body-tertiary">
-                
-                {abaAtiva === "identificacao" && (
+
+                {etapaAtual === 0 && (
                     <Identificacao
                         form={form}
                         atualizarCampo={atualizarCampo}
@@ -310,10 +366,11 @@ function CadastrarProjeto() {
                         buscarCep={buscarCep}
                         buscandoCep={buscandoCep}
                         avisoCep={avisoCep}
+                        errosValidacao={errosValidacao}
                     />
                 )}
 
-                {abaAtiva === "caracterizacao" && (
+                {etapaAtual === 1 && (
                     <Caracterizacao
                         form={form}
                         atualizarCampo={atualizarCampo}
@@ -329,26 +386,27 @@ function CadastrarProjeto() {
                         linhasExtensao={linhasExtensao}
                         carregandoLinhasExtensao={carregandoLinhasExtensao}
                         erroLinhasExtensao={erroLinhasExtensao}
-                        
+
                     />
                 )}
 
 
-                {abaAtiva === "descricao" && (
+                {etapaAtual === 2 && (
                     <Descricao
                         form={form}
                         atualizarCampo={atualizarCampo}
+                        errosValidacao={errosValidacao}
                     />
                 )}
 
-                {abaAtiva === "plano-de-trabalho" && (
+                {etapaAtual === 3 && (
                     <PlanoTrabalho
                         form={form}
                         atualizarCampo={atualizarCampo}
                     />
                 )}
 
-                {abaAtiva === "unidades-envolvidas" && (
+                {etapaAtual === 4 && (
                     <UnidadesEnvolvidas
                         unidades={unidades}
                         departamentos={departamentos}
@@ -357,7 +415,7 @@ function CadastrarProjeto() {
                     />
                 )}
 
-                {abaAtiva==="parcerias-internas" && (
+                {etapaAtual === 5 && (
                     <ParceriasInternas
                         form={form}
                         atualizarCampo={atualizarCampo}
@@ -368,28 +426,51 @@ function CadastrarProjeto() {
 
                 {/* As abas ficam escondidas, não desmontadas, pra não perder as
                     linhas nem recarregar o dropdown ao trocar de aba. */}
-                <div hidden={abaAtiva !== "locais-realizacao"}>
+                <div hidden={etapaAtual !== 6}>
                     <LocaisRealizacao
                         valor={form.locaisRealizacao}
                         onChange={(linhas) => atualizarCampo("locaisRealizacao", linhas)}
                     />
                 </div>
 
-                <div hidden={abaAtiva !== "membros-equipe"}>
+                <div hidden={etapaAtual !== 7}>
                     <MembrosEquipe
                         coordenador={form.coordenador}
                         valor={form.membrosEquipe}
                         onChange={(linhas) => atualizarCampo("membrosEquipe", linhas)}
                     />
                 </div>
-                <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={salvarDadosIdentificacao}
-                    disabled={enviando}
-                >
-                    Enviar Formulário
-                </button>
+
+                <div className="d-flex justify-content-end gap-2">
+                    {etapaAtual > 0 && (
+                        <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={etapaAnterior}
+                        >
+                            Voltar
+                        </button>
+                    )}
+
+                    {etapaAtual < ABAS.length - 1 ? (
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={proximaEtapa}
+                        >
+                            Avançar
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={salvarDadosIdentificacao}
+                            disabled={enviando}
+                        >
+                            Enviar Formulário
+                        </button>
+                    )}
+                </div>
             </div>
 
         </div>

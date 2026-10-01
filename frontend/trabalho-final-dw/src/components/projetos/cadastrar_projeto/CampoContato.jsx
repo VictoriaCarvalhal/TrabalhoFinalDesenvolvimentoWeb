@@ -4,7 +4,7 @@ import React, { useId } from 'react';
 // o último campo da lista tem "+", que acrescenta mais um embaixo; os anteriores
 // têm "−", que tira aquela entrada. Assim a lista nunca fica vazia, porque o
 // campo que sobra é sempre o último e só oferece o "+".
-function CampoContato({ rotulo, tipoEntrada, placeholder, valor, indice, total, aoMudar, aoAdicionar, aoRemover }) {
+function CampoContato({ rotulo, tipoEntrada, placeholder, valor, indice, total, aoMudar, aoAdicionar, aoRemover, erro }) {
     const id = useId();
     const ultimo = indice === total - 1;
 
@@ -14,12 +14,13 @@ function CampoContato({ rotulo, tipoEntrada, placeholder, valor, indice, total, 
                 <label className="form-label" htmlFor={id}>{rotulo}</label>
                 <input
                     id={id}
-                    className="form-control"
+                    className={`form-control ${erro ? 'is-invalid' : ''}`}
                     type={tipoEntrada}
                     placeholder={placeholder}
                     value={valor}
                     onChange={(e) => aoMudar(indice, e.target.value)}
                 />
+                {erro && <div className="invalid-feedback">{erro}</div>}
             </div>
 
             {ultimo ? (
