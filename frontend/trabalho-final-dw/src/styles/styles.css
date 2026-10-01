@@ -143,7 +143,9 @@ body {
 
 /* Acoes da barra (tema, e depois sair): sao botoes, nao itens de menu */
 .navbar-acao {
-    color: #45718C;
+    color: #45718C !important;
+    --bs-btn-color: #45718C;
+    --bs-btn-hover-color: #FFFFFF;
     border: 1px solid transparent;
     padding: 10px 15px;
     font-weight: 800;
