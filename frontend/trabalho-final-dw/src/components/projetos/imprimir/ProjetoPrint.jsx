@@ -87,7 +87,9 @@ function ProjetoPrint({ dados, geradoEm, geradoPor }) {
     const contatos = dados?.contatos ?? [];
     const caracterizacao = dados?.caracterizacao ?? {};
     const descricao = dados?.descricao ?? {};
-    const palavrasChave = descricao.palavras_chave ?? [];
+    const palavrasChave = (dados?.palavras_chave ?? []) //palavras_chave não estão em descrição
+        .map((palavra) => palavra?.palavra)
+        .filter(Boolean);
     const planosTrabalho = dados?.planos_trabalho ?? [];
     const demandasBolsa = dados?.demandas_bolsa ?? [];
     const unidadesEnvolvidas = dados?.unidades_envolvidas ?? [];
