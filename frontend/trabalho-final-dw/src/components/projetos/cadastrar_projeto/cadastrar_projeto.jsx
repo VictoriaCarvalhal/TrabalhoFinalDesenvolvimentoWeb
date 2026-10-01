@@ -10,6 +10,7 @@ import Caracterizacao from './abas/Caracterizacao';
 import Descricao from './abas/Descricao';
 import PlanoTrabalho from './abas/PlanoTrabalho';
 import Parcerias from './abas/Parcerias';
+import DemandasBolsa from './abas/DemandasBolsa';
 
 import { MUNICIPIOS_RJ } from '../../../dados/municipiosRJ';
 import { useUnidades } from '../../../hooks/useUnidades';
@@ -33,6 +34,7 @@ const ABAS = [
     { id: "plano-de-trabalho", label: "Plano de Trabalho" },
     { id: "unidades-envolvidas", label: "Unidades Envolvidas" },
     { id: "parcerias", label: "Parcerias" },
+    { id: "demandas-bolsa", label: "Demanda de Bolsa" },
     { id: "locais-realizacao", label: "Locais de Realização" },
     { id: "membros-equipe", label: "Membros da Equipe" },
 ];
@@ -213,6 +215,7 @@ function CadastrarProjeto() {
         unidadesEnvolvidas: [],
         parceriasInternas: [],
         parceriasExternas: [],
+        demandasBolsa: [],
     });
 
     const buscarCep = async (cep) => {
@@ -305,6 +308,16 @@ function CadastrarProjeto() {
             }));
     }
 
+    function linhasDeDemandasBolsa() {
+        return form.demandasBolsa
+            .filter((linha) => linha.tipo_bolsa && Number(linha.quantidade) >= 1)
+            .map((linha) => ({
+                tipo_bolsa: linha.tipo_bolsa,
+                quantidade: Number(linha.quantidade),
+                justificativa: linha.justificativa ?? '',
+            }));
+    }
+
     function linhasDeParceriasExternas() {
         return form.parceriasExternas
             .filter((linha) => linha.nome_instituicao && linha.tipo_instituicao)
@@ -379,6 +392,7 @@ function CadastrarProjeto() {
             unidades_envolvidas: linhasDeUnidadesEnvolvidas(),
             parcerias_internas: linhasDeParceriasInternas(),
             parcerias_externas: linhasDeParceriasExternas(),
+            demandas_bolsa: linhasDeDemandasBolsa(),
             locais_realizacao: linhasDeLocaisRealizacao(),
             membros_equipe: linhasDeMembrosEquipe(),
         };
@@ -518,16 +532,23 @@ function CadastrarProjeto() {
                     />
                 )}
 
+                {etapaAtual === 6 && (
+                    <DemandasBolsa
+                        valor={form.demandasBolsa}
+                        onChange={(linhas) => atualizarCampo("demandasBolsa", linhas)}
+                    />
+                )}
+
                 {/* As abas ficam escondidas, não desmontadas, pra não perder as
                     linhas nem recarregar o dropdown ao trocar de aba. */}
-                <div hidden={etapaAtual !== 6}>
+                <div hidden={etapaAtual !== 7}>
                     <LocaisRealizacao
                         valor={form.locaisRealizacao}
                         onChange={(linhas) => atualizarCampo("locaisRealizacao", linhas)}
                     />
                 </div>
 
-                <div hidden={etapaAtual !== 7}>
+                <div hidden={etapaAtual !== 8}>
                     <MembrosEquipe
                         coordenador={form.coordenador}
                         valor={form.membrosEquipe}
