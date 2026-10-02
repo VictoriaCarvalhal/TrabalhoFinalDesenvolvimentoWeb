@@ -7,27 +7,62 @@ import Projetos from './components/projetos/seusprojetos/projetos.jsx';
 import CadastrarProjeto from './components/projetos/cadastrar_projeto/cadastrar_projeto.jsx';
 import ImprimirProjeto from './components/projetos/imprimir/ImprimirProjeto.jsx';
 import Bemvindo from './components/bemvindo/bemvindo.jsx';
-import { useAutoRefreshOnActivity } from './hooks/useAutoRefreshOnActivity'; // Importar o hook
+import { useAutoRefreshOnActivity } from './hooks/useAutoRefreshOnActivity';// Importar o hook de sessão
 
 function App() {
-  useAutoRefreshOnActivity(); // Ativar o monitoramento aqui no topo
+  const { isSessionExpired, closeSessionExpiredModal } = useAutoRefreshOnActivity(); // Ativar o monitoramento aqui no topo
+
   return (
-    <Routes>
-      <Route element={<LayoutNotAutenticated />}>
-        <Route path="/" element={<Inicial />} />
-      </Route>
-      <Route element={<ProtectedRoute />}>
-        <Route element={<LayoutAutenticated />}>
-          <Route path="/Bemvindo" element={<Bemvindo />} />
-          <Route path="/Projetos">
-            <Route path="SeusProjetos" element={<Projetos />}/>
-            <Route path="CadastrarProjeto" element={<CadastrarProjeto />}/>
-            <Route path=":id/editar" element={<CadastrarProjeto />}/>
-            <Route path=":id/imprimir" element={<ImprimirProjeto />}/>
+    <>
+      {/* Pop-up do Bootstrap para Sessão Expirada */}
+      {isSessionExpired && (
+        <>
+          <div className="modal fade show d-block" tabIndex="-1" role="dialog" style={{ zIndex: 1055 }}>
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content shadow">
+                <div className="modal-header bg-warning text-dark">
+                  <h5 className="modal-title d-flex align-items-center gap-2">
+                    <i className="bi bi-exclamation-triangle-fill"></i> Sessão Expirada
+                  </h5>
+                </div>
+                <div className="modal-body py-4 text-center">
+                  <p className="mb-0 fs-6 text-secondary">
+                    Sua sessão foi encerrada por inatividade. Por favor, faça login novamente para continuar.
+                  </p>
+                </div>
+                <div className="modal-footer justify-content-center">
+                  <button 
+                    type="button" 
+                    className="btn btn-primary px-4" 
+                    onClick={closeSessionExpiredModal}
+                  >
+                    Fazer Login
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Fundo escuro atrás do modal */}
+          <div className="modal-backdrop fade show" style={{ zIndex: 1050 }}></div>
+        </>
+      )}
+
+      <Routes>
+        <Route element={<LayoutNotAutenticated />}>
+          <Route path="/" element={<Inicial />} />
+        </Route>
+        <Route element={<ProtectedRoute />}>
+          <Route element={<LayoutAutenticated />}>
+            <Route path="/Bemvindo" element={<Bemvindo />} />
+            <Route path="/Projetos">
+              <Route path="SeusProjetos" element={<Projetos />}/>
+              <Route path="CadastrarProjeto" element={<CadastrarProjeto />}/>
+              <Route path=":id/imprimir" element={<ImprimirProjeto />}/>
+            </Route>
           </Route>
         </Route>
-      </Route>
-    </Routes>
+      </Routes>
+    </>
   );
 }
 
