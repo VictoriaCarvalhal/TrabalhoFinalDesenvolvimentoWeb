@@ -22,6 +22,10 @@ function Projetos({isPrevia = false, limite = 5}) {
         navigate(`/Projetos/${id}/imprimir`);
     }
 
+    function redirecionaParaEdicao(id){
+        navigate(`/Projetos/${id}/editar`);
+    }
+
     async function handleExcluir(projeto) {
         if (!window.confirm(`Excluir o projeto "${projeto.titulo}"? Ele será ocultado da lista.`)) {
             return;
@@ -143,6 +147,15 @@ function Projetos({isPrevia = false, limite = 5}) {
                                             </td>
                                             <td className="text-nowrap">
                                                 <div className="d-flex gap-2">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-primary"
+                                                        title="Editar projeto"
+                                                        aria-label={`Editar projeto ${projeto.titulo}`}
+                                                        onClick={() => redirecionaParaEdicao(projeto.id)}
+                                                    >
+                                                        <i className="bi bi-pencil"></i>
+                                                    </button>
                                                     <button
                                                         type="button"
                                                         className="btn btn-sm btn-outline-secondary"
