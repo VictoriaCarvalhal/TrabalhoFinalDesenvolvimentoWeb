@@ -25,7 +25,14 @@ import { useLinhasExtensao } from '../../../hooks/useLinhasExtensao';
 
 import {
     criarProjeto,
-    criarPalavraChave
+    criarPalavraChave,
+    atualizarProjeto,
+    atualizarEndereco,
+    atualizarCaracterizacao,
+    atualizarDescricao,
+    criarPlanoDeTrabalho,
+    atualizarPlanoDeTrabalho,
+    criarContato
 } from '../../../services/projetoService';
 
 const ABAS = [
@@ -461,6 +468,46 @@ function CadastrarProjeto() {
     }
 
     async function salvarDadosIdentificacao() {
+        const enderecoDados = {
+            cep: form.cep,
+            logradouro: form.logradouro,
+            numero: form.numero,
+            complemento: form.complemento,
+            bairro: form.bairro,
+            municipio: form.municipio ? Number(form.municipio) : null,
+        };
+        const contatosDados = [
+            ...form.telefones.map((valor) => ({ tipo_contato: 'TELEFONE', valor: valor.trim() })),
+            ...form.emails.map((valor) => ({ tipo_contato: 'EMAIL', valor: valor.trim() })),
+        ].filter((c) => c.valor);
+        const caracterizacaoDados = {
+            situacao_academica: "NOVO", //no backend bem que podia ser NOVO por default
+            vinculado_programa_extensao: form.vinculado_extensao === "sim",
+            curricularizado: form.curricular === "sim",
+            natureza: form.natureza || null,
+            abrangencia: form.abrangencia,
+            publico_alvo: form.publico_alvo,
+            grande_area_cnpq: form.area_conhecimento_cnpq || null,
+            area_tematica_principal: form.area_tematica_principal || null,
+            area_tematica_secundaria: form.area_tematica_secundaria || null,
+            linha_extensao: form.linha_extensao || null,
+        };
+        const descricaoDados = {
+            resumo: form.resumo || null,
+            introducao: form.introducao || null,
+            justificativa: form.justificativa || null,
+            objetivo_geral: form.objetivo_geral || null,
+            objetivos_especificos: form.objetivos_especificos || null,
+            metodologia_avaliacao: form.metodologia_avaliacao || null,
+            relacao_ensino: form.relacao_ensino === "sim",
+            relacao_pesquisa: form.relacao_pesquisa === "sim",
+            interacao_dialogica: form.interacao_dialogica || null,
+            interdisciplinaridade: form.interdisciplinaridade || null,
+            impacto_formacao: form.impacto_formacao || null,
+            indissociabilidade: form.indissociabilidade || null,
+            impacto_social: form.impacto_social || null,
+            referencias_bibliograficas: form.referencias_bibliograficas || null,
+        };
         const payload = {
             //ABA IDENTIFICAÇÃO
             ano: new Date().getFullYear(),
@@ -468,50 +515,14 @@ function CadastrarProjeto() {
             coordenador: form.coordenador_vinculo,
             unidade_proponente: form.unidade ? Number(form.unidade) : null,
             departamento_proponente: form.departamento ? Number(form.departamento) : null,
-            endereco: {
-                cep: form.cep,
-                logradouro: form.logradouro,
-                numero: form.numero,
-                complemento: form.complemento,
-                bairro: form.bairro,
-                municipio: form.municipio ? Number(form.municipio) : null,
-            },
-            contatos: [
-                ...form.telefones.map((valor) => ({ tipo_contato: 'TELEFONE', valor: valor.trim() })),
-                ...form.emails.map((valor) => ({ tipo_contato: 'EMAIL', valor: valor.trim() })),
-            ].filter((c) => c.valor),
+            endereco: enderecoDados,
+            contatos: contatosDados,
             //ABA CARACTERIZAÇÃO
-            caracterizacao : {
-                situacao_academica: "NOVO", //no backend bem que podia ser NOVO por default
-                vinculado_programa_extensao: form.vinculado_extensao === "sim",
-                curricularizado: form.curricular === "sim",
-                natureza: form.natureza || null,
-                abrangencia: form.abrangencia,
-                publico_alvo: form.publico_alvo,
-                grande_area_cnpq: form.area_conhecimento_cnpq || null,
-                area_tematica_principal: form.area_tematica_principal || null,
-                area_tematica_secundaria: form.area_tematica_secundaria || null,
-                linha_extensao: form.linha_extensao || null,
-            },
+            caracterizacao : caracterizacaoDados,
             //ABA DESCRIÇÃO
             // O backend cria a Descrição junto com o projeto, mas o conteúdo
             // dela só entra por aqui.
-            descricao: {
-                resumo: form.resumo || null,
-                introducao: form.introducao || null,
-                justificativa: form.justificativa || null,
-                objetivo_geral: form.objetivo_geral || null,
-                objetivos_especificos: form.objetivos_especificos || null,
-                metodologia_avaliacao: form.metodologia_avaliacao || null,
-                relacao_ensino: form.relacao_ensino === "sim",
-                relacao_pesquisa: form.relacao_pesquisa === "sim",
-                interacao_dialogica: form.interacao_dialogica || null,
-                interdisciplinaridade: form.interdisciplinaridade || null,
-                impacto_formacao: form.impacto_formacao || null,
-                indissociabilidade: form.indissociabilidade || null,
-                impacto_social: form.impacto_social || null,
-                referencias_bibliograficas: form.referencias_bibliograficas || null,
-            },
+            descricao: descricaoDados,
             //ABA PLANO DE TRABALHO
             planos_trabalho: [{
                 ano: new Date().getFullYear(),
@@ -531,6 +542,63 @@ function CadastrarProjeto() {
         setErroEnvio(null);
         setConfirmando(false);
         try {
+            // Modo edição: atualiza o projeto e as seções simples via PATCH.
+            // As abas de tabela já salvam sozinhas (modo API), então não
+            // entram aqui para não duplicar linhas.
+            if (editando && idDaUrl) {
+                await atualizarProjeto(idDaUrl, {
+                    titulo: form.titulo,
+                    coordenador: form.coordenador_vinculo,
+                    unidade_proponente: form.unidade ? Number(form.unidade) : null,
+                    departamento_proponente: form.departamento ? Number(form.departamento) : null,
+                });
+                await Promise.all([
+                    atualizarEndereco(idDaUrl, enderecoDados),
+                    atualizarCaracterizacao(idDaUrl, caracterizacaoDados),
+                    atualizarDescricao(idDaUrl, descricaoDados),
+                ]);
+
+                const [palavrasResp, contatosResp, abasResp] = await Promise.all([
+                    api.get(`/projetos/${idDaUrl}/palavras_chave/`),
+                    api.get(`/projetos/${idDaUrl}/contatos/`),
+                    api.get(`/projetos/${idDaUrl}/abas/`),
+                ]);
+                const palavrasGravadas = (
+                    Array.isArray(palavrasResp.data) ? palavrasResp.data : palavrasResp.data.results ?? []
+                ).map((p) => p.palavra.trim().toLowerCase());
+                for (const palavra of form.palavras_chave.map((p) => p.trim()).filter((p) => p)) {
+                    if (!palavrasGravadas.includes(palavra.toLowerCase())) {
+                        await criarPalavraChave(idDaUrl, { palavra });
+                    }
+                }
+                const contatosGravados = new Set(
+                    (Array.isArray(contatosResp.data) ? contatosResp.data : contatosResp.data.results ?? [])
+                        .map((c) => `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`)
+                );
+                for (const contato of contatosDados) {
+                    const chave = `${contato.tipo_contato}|${contato.valor.trim().toLowerCase()}`;
+                    if (!contatosGravados.has(chave)) {
+                        await criarContato(idDaUrl, contato);
+                    }
+                }
+
+                // Plano de trabalho atualiza o primeiro ou cria se não houver.
+                const planos = abasResp.data?.planos_trabalho ?? [];
+                const planoDados = {
+                    ano: new Date().getFullYear(),
+                    resultados_esperados: form.resultados_esperados,
+                    cronograma_atividades: form.cronograma_atividades,
+                };
+                if (planos.length > 0) {
+                    await atualizarPlanoDeTrabalho(idDaUrl, planos[0].id, planoDados);
+                } else {
+                    await criarPlanoDeTrabalho(idDaUrl, planoDados);
+                }
+
+                navigate("/Projetos/SeusProjetos");
+                return;
+            }
+
             let projeto_id = projetoId;
             if (!projeto_id) {
                 projeto_id = await criarProjeto(payload);
@@ -583,14 +651,19 @@ function CadastrarProjeto() {
                 porque os botoes de etapa dizem onde a pessoa esta. */}
             <h1 className="visually-hidden">{editando ? "Edição de projeto" : "Cadastro de projeto"}</h1>
 
-            {carregandoEdicao && (
-                <p className="mt-3">Carregando projeto para edição...</p>
+            {editando && carregandoEdicao && (
+                <div className="d-flex align-items-center gap-3 mt-4" role="status" aria-live="polite">
+                    <div className="spinner-border" aria-hidden="true"></div>
+                    <p className="mb-0 fw-semibold">Carregando dados...</p>
+                </div>
             )}
 
             {erroCarregamento && (
                 <div className="alert alert-danger mt-3">{erroCarregamento}</div>
             )}
 
+            {!(editando && carregandoEdicao) && (
+            <>
             {/* A tira de abas: mostra todas as partes do formulario e deixa ir
                 direto para uma delas, em vez de so avancar de uma em uma. */}
             <ul className="nav nav-tabs" role="tablist">
@@ -760,10 +833,12 @@ function CadastrarProjeto() {
                         onClick={abrirConfirmacao}
                         disabled={enviando || carregandoEdicao}
                     >
-                        {editando ? 'Salvar alterações' : 'Enviar projeto'}
+                        {enviando ? 'Salvando...' : editando ? 'Salvar alterações' : 'Enviar projeto'}
                     </button>
                 </div>
             </div>
+            </>
+            )}
 
             {confirmando && (
                 <div
@@ -797,9 +872,9 @@ function CadastrarProjeto() {
                                     type="button"
                                     className="btn btn-primary"
                                     onClick={salvarDadosIdentificacao}
-                                    disabled={enviando}
+                                    disabled={enviando || carregandoEdicao}
                                 >
-                                    {enviando ? 'Enviando...' : 'Confirmar envio'}
+                                    {enviando ? 'Salvando...' : editando ? 'Confirmar alterações' : 'Confirmar envio'}
                                 </button>
                             </div>
                         </div>
