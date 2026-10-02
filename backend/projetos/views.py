@@ -16,10 +16,11 @@ em <id>/ para uma linha. Projeto que nao pertence ao usuario logado da 404,
 igual a projeto inexistente, para nao revelar que ele existe.
 """
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, viewsets, status
+from rest_framework import permissions, viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.pagination import PageNumberPagination
 
 from projetos.models import (
     DemandaBolsa, LocalRealizacao, MembroEquipe, ParceriaExterna,
@@ -27,6 +28,7 @@ from projetos.models import (
     ProjetoEndereco, ProjetoCaracterizacao, ProjetoDescricao,
     ProjetoPalavraChave, Projeto
 )
+from django.db.models import Q
 from projetos.permissions import projetos_visiveis_para
 from projetos.serializers import (
     DemandaBolsaSerializer, LocalRealizacaoSerializer, MembroEquipeSerializer,
@@ -160,16 +162,42 @@ class AbasDoProjetoView(ProjetoDaUrlMixin, APIView):
 
 
 
+class ProjetoPagination(PageNumberPagination):
+    page_size = 6
+
+
 class ProjetoViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated] #dev: AllowAny | prod: IsAuthenticated
+    pagination_class = ProjetoPagination
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['titulo', 'created_at']
+    ordering = ['-created_at', 'titulo']
 
     def get_queryset(self):
-        return (
+        qs = (
             projetos_visiveis_para(self.request.user) #dev: Projeto.objects.all() | prod: projetos_visiveis_para(self.request.user)
-            .select_related('coordenador__pessoa', 'unidade_proponente', 'endereco',
+            .select_related('coordenador__pessoa', 'unidade_proponente', 'departamento_proponente', 'endereco',
 'caracterizacao', 'descricao')
             .prefetch_related('contatos')
         )
+
+        search = self.request.query_params.get('search', '').strip()
+        busca_por = self.request.query_params.get('busca_por', 'nome')
+
+        if search:
+            if busca_por == 'nome':
+                qs = qs.filter(titulo__icontains=search)
+            elif busca_por == 'coordenador':
+                qs = qs.filter(coordenador__pessoa__nome_completo__icontains=search)
+            elif busca_por == 'unidade':
+                qs = qs.filter(
+                    Q(unidade_proponente__sigla__icontains=search) | 
+                    Q(unidade_proponente__nome__icontains=search)
+                )
+            elif busca_por == 'departamento':
+                qs = qs.filter(departamento_proponente__nome__icontains=search)
+
+        return qs
 
     def get_serializer_class(self):
         if self.action == 'list':
