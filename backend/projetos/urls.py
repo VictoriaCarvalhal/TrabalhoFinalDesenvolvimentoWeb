@@ -17,6 +17,8 @@ router.register(f'{PROJETO}/parcerias-externas', views.ParceriaExternaViewSet, b
 router.register(f'{PROJETO}/membros-equipe', views.MembroEquipeViewSet, basename='membro-equipe')
 router.register(f'{PROJETO}/demandas-bolsa', views.DemandaBolsaViewSet, basename='demanda-bolsa')
 router.register(f'{PROJETO}/planos-trabalho', views.PlanoTrabalhoViewSet, basename='plano-trabalho')
+router.register(f'{PROJETO}/contatos', views.ContatoViewSet, basename='contato')
+router.register(f'{PROJETO}/palavras-chave', views.PalavraChaveViewSet, basename='palavra-chave')
 
 urlpatterns = [
     path('projetos/<uuid:projeto_id>/abas/', views.AbasDoProjetoView.as_view(), name='projeto-abas'),

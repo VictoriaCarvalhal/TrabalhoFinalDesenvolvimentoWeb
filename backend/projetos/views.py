@@ -25,7 +25,7 @@ from projetos.models import (
     DemandaBolsa, LocalRealizacao, MembroEquipe, ParceriaExterna,
     ParceriaInterna, PlanoTrabalho, ProjetoUnidade,
     ProjetoEndereco, ProjetoCaracterizacao, ProjetoDescricao,
-    ProjetoPalavraChave, Projeto
+    ProjetoPalavraChave, ProjetoContato, Projeto
 )
 from projetos.permissions import projetos_visiveis_para
 from projetos.serializers import (
@@ -120,6 +120,11 @@ class PlanoTrabalhoViewSet(AbaDoProjetoViewSet):
 class PalavraChaveViewSet(AbaDoProjetoViewSet):
     queryset = ProjetoPalavraChave.objects.all()
     serializer_class = ProjetoPalavraChaveSerializer
+
+
+class ContatoViewSet(AbaDoProjetoViewSet):
+    queryset = ProjetoContato.objects.all()
+    serializer_class = ProjetoContatoSerializer
 
 
 # Aba -> (viewset, related_name no Projeto). A ordem e a das abas na tela.

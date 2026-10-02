@@ -26,13 +26,15 @@ import { useLinhasExtensao } from '../../../hooks/useLinhasExtensao';
 import {
     criarProjeto,
     criarPalavraChave,
+    excluirPalavraChave,
     atualizarProjeto,
     atualizarEndereco,
     atualizarCaracterizacao,
     atualizarDescricao,
     criarPlanoDeTrabalho,
     atualizarPlanoDeTrabalho,
-    criarContato
+    criarContato,
+    excluirContato
 } from '../../../services/projetoService';
 
 const ABAS = [
@@ -565,27 +567,67 @@ function CadastrarProjeto() {
                 ]);
                 const palavrasGravadas = (
                     Array.isArray(palavrasResp.data) ? palavrasResp.data : palavrasResp.data.results ?? []
-                ).map((p) => p.palavra.trim().toLowerCase());
-                for (const palavra of form.palavras_chave.map((p) => p.trim()).filter((p) => p)) {
-                    if (!palavrasGravadas.includes(palavra.toLowerCase())) {
+                );
+                const palavrasForm = form.palavras_chave.map((p) => p.trim()).filter((p) => p);
+                const contaPalavrasForm = {};
+                for (const p of palavrasForm) {
+                    const chave = p.toLowerCase();
+                    contaPalavrasForm[chave] = (contaPalavrasForm[chave] ?? 0) + 1;
+                }
+                const contaPalavrasGravadas = {};
+                for (const p of palavrasGravadas) {
+                    const chave = p.palavra.trim().toLowerCase();
+                    contaPalavrasGravadas[chave] = (contaPalavrasGravadas[chave] ?? 0) + 1;
+                }
+                for (const p of palavrasGravadas) {
+                    const chave = p.palavra.trim().toLowerCase();
+                    if ((contaPalavrasForm[chave] ?? 0) < contaPalavrasGravadas[chave]) {
+                        contaPalavrasGravadas[chave] -= 1;
+                        await excluirPalavraChave(idDaUrl, p.id);
+                    }
+                }
+                for (const palavra of palavrasForm) {
+                    const chave = palavra.toLowerCase();
+                    if ((contaPalavrasGravadas[chave] ?? 0) > 0) {
+                        contaPalavrasGravadas[chave] -= 1;
+                    } else {
                         await criarPalavraChave(idDaUrl, { palavra });
                     }
                 }
-                const contatosGravados = new Set(
-                    (Array.isArray(contatosResp.data) ? contatosResp.data : contatosResp.data.results ?? [])
-                        .map((c) => `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`)
+                const contatosLista = (
+                    Array.isArray(contatosResp.data) ? contatosResp.data : contatosResp.data.results ?? []
                 );
+                const contaContatosForm = {};
+                for (const c of contatosDados) {
+                    const chave = `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`;
+                    contaContatosForm[chave] = (contaContatosForm[chave] ?? 0) + 1;
+                }
+                const contaContatosGravados = {};
+                for (const c of contatosLista) {
+                    const chave = `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`;
+                    contaContatosGravados[chave] = (contaContatosGravados[chave] ?? 0) + 1;
+                }
+                for (const c of contatosLista) {
+                    const chave = `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`;
+                    if ((contaContatosForm[chave] ?? 0) < contaContatosGravados[chave]) {
+                        contaContatosGravados[chave] -= 1;
+                        await excluirContato(idDaUrl, c.id);
+                    }
+                }
                 for (const contato of contatosDados) {
                     const chave = `${contato.tipo_contato}|${contato.valor.trim().toLowerCase()}`;
-                    if (!contatosGravados.has(chave)) {
+                    if ((contaContatosGravados[chave] ?? 0) > 0) {
+                        contaContatosGravados[chave] -= 1;
+                    } else {
                         await criarContato(idDaUrl, contato);
                     }
                 }
 
-                // Plano de trabalho atualiza o primeiro ou cria se não houver.
+                // Plano de trabalho atualiza o primeiro ou cria se não houver,
+                // preservando o ano do plano existente.
                 const planos = abasResp.data?.planos_trabalho ?? [];
                 const planoDados = {
-                    ano: new Date().getFullYear(),
+                    ano: planos.length > 0 ? planos[0].ano : new Date().getFullYear(),
                     resultados_esperados: form.resultados_esperados,
                     cronograma_atividades: form.cronograma_atividades,
                 };
