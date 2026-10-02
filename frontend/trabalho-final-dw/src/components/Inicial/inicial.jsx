@@ -8,6 +8,7 @@ function Inicial() {
     const navigate = useNavigate();
     const login = useAuthStore((state) => state.login);
     const setNomeUsuario = useAuthStore((state) => state.setNomeUsuario);
+    const setAdmin = useAuthStore((state) => state.setAdmin);
 
     const [erroLogin, setErroLogin] = useState(null);
     const [enviando, setEnviando] = useState(false);
@@ -34,6 +35,7 @@ function Inicial() {
 
             const perfil = await api.get('/auth/me/');
             setNomeUsuario(perfil.data.nome_completo);
+            setAdmin(perfil.data.is_staff || perfil.data.is_superuser);
 
             navigate('/Bemvindo');
         } catch (err) {

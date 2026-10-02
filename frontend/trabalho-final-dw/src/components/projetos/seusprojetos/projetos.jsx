@@ -7,6 +7,8 @@ import DialogoDadosProjeto from '../detalhes/DialogoDadosProjeto';
 
 function Projetos({isPrevia = false, limite = 5}) {
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
+    const isAdmin = useAuthStore((state) => state.isAdmin);
+    const setAdmin = useAuthStore((state) => state.setAdmin);
 
     const [projetos, setProjetos] = useState([]);
     const [carregando, setCarregando] = useState(true);
@@ -52,6 +54,14 @@ function Projetos({isPrevia = false, limite = 5}) {
             return;
         }
 
+        // Garante a flag de admin mesmo para sessoes antigas (logadas antes
+        // de a flag existir): o perfil diz se a lixeira aparece ou nao.
+        api.get('/auth/me/')
+            .then((perfil) => {
+                setAdmin(perfil.data.is_staff || perfil.data.is_superuser);
+            })
+            .catch(() => { /* mantem o valor atual da flag */ });
+
         async function buscarProjetos() {
             try {
                 setCarregando(true);
@@ -77,7 +87,7 @@ function Projetos({isPrevia = false, limite = 5}) {
         }
 
         buscarProjetos();
-    }, [isAutenticado]);
+    }, [isAutenticado, setAdmin]);
 
     return (
         <div>
@@ -152,15 +162,6 @@ function Projetos({isPrevia = false, limite = 5}) {
                                                 <div className="d-flex gap-2">
                                                     <button
                                                         type="button"
-                                                        className="btn btn-sm btn-outline-primary"
-                                                        title="Editar projeto"
-                                                        aria-label={`Editar projeto ${projeto.titulo}`}
-                                                        onClick={() => redirecionaParaEdicao(projeto.id)}
-                                                    >
-                                                        <i className="bi bi-pencil"></i>
-                                                    </button>
-                                                    <button
-                                                        type="button"
                                                         className="btn btn-sm btn-outline-secondary"
                                                         title="Ver os dados do projeto"
                                                         aria-label={`Ver os dados do projeto ${projeto.titulo}`}
@@ -179,14 +180,25 @@ function Projetos({isPrevia = false, limite = 5}) {
                                                     </button>
                                                     <button
                                                         type="button"
-                                                        className="btn btn-sm btn-outline-danger"
-                                                        title="Excluir projeto"
-                                                        aria-label={`Excluir projeto ${projeto.titulo}`}
-                                                        disabled={excluindoId === projeto.id}
-                                                        onClick={() => handleExcluir(projeto)}
+                                                        className="btn btn-sm btn-outline-primary"
+                                                        title="Editar projeto"
+                                                        aria-label={`Editar projeto ${projeto.titulo}`}
+                                                        onClick={() => redirecionaParaEdicao(projeto.id)}
                                                     >
-                                                        <i className="bi bi-trash"></i>
+                                                        <i className="bi bi-pencil"></i>
                                                     </button>
+                                                    {(projeto.pode_excluir ?? isAdmin) && (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-sm btn-outline-danger"
+                                                            title="Excluir projeto"
+                                                            aria-label={`Excluir projeto ${projeto.titulo}`}
+                                                            disabled={excluindoId === projeto.id}
+                                                            onClick={() => handleExcluir(projeto)}
+                                                        >
+                                                            <i className="bi bi-trash"></i>
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

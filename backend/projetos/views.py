@@ -27,7 +27,7 @@ from projetos.models import (
     ProjetoEndereco, ProjetoCaracterizacao, ProjetoDescricao,
     ProjetoPalavraChave, ProjetoContato, Projeto
 )
-from projetos.permissions import projetos_visiveis_para
+from projetos.permissions import pode_excluir_projeto, projetos_visiveis_para
 from projetos.serializers import (
     DemandaBolsaSerializer, LocalRealizacaoSerializer, MembroEquipeSerializer,
     ParceriaExternaSerializer, ParceriaInternaSerializer,
@@ -185,6 +185,15 @@ class ProjetoViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        # Exclusao e exclusiva de admin; comum recebe 403 em qualquer situacao.
+        if not pode_excluir_projeto(request.user):
+            return Response(
+                {'detail': 'Apenas administradores podem excluir projetos.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().destroy(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
         instance.excluido = True

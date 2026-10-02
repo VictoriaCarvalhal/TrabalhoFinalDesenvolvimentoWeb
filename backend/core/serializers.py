@@ -59,7 +59,10 @@ class PessoaPerfilSerializer(serializers.ModelSerializer):
             'cpf',
             'email_institucional',
             'lattes_url',
+            'is_staff',
+            'is_superuser',
         ]
+        read_only_fields = ['is_staff', 'is_superuser']
         
 class MeuVinculoSerializer(serializers.ModelSerializer):
     """Vinculo que a propria pessoa logada cadastra para si.
