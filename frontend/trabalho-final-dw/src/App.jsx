@@ -7,8 +7,10 @@ import Projetos from './components/projetos/seusprojetos/projetos.jsx';
 import CadastrarProjeto from './components/projetos/cadastrar_projeto/cadastrar_projeto.jsx';
 import ImprimirProjeto from './components/projetos/imprimir/ImprimirProjeto.jsx';
 import Bemvindo from './components/bemvindo/bemvindo.jsx';
+import { useAutoRefreshOnActivity } from './hooks/useAutoRefreshOnActivity'; // Importar o hook
 
 function App() {
+  useAutoRefreshOnActivity(); // Ativar o monitoramento aqui no topo
   return (
     <Routes>
       <Route element={<LayoutNotAutenticated />}>
