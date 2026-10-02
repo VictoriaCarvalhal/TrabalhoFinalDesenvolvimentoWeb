@@ -8,6 +8,7 @@ from core.models import (
     UnidadeAcademica, VinculoInstitucional,
 )
 from core.serializers import (
+    MeuVinculoSerializer,
     AreaConhecimentoCNPqSerializer, AreaTematicaSerializer,
     DepartamentoSerializer, LinhaExtensaoSerializer,
     MunicipioIBGESerializer, NaturezaExtensaoSerializer,
@@ -43,6 +44,20 @@ class SessionCheckView(APIView):
                 "user": serializer.data
             },
             status=status.HTTP_200_OK
+        )
+
+
+class MeusVinculosView(generics.ListCreateAPIView):
+    """Vinculos da pessoa logada: lista os seus e deixa cadastrar um novo."""
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = MeuVinculoSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        return (
+            VinculoInstitucional.objects
+            .filter(pessoa=self.request.user)
+            .select_related('pessoa')
         )
 
 

@@ -16,6 +16,7 @@ router.register('dominios/vinculos', views.VinculoInstitucionalViewSet, basename
 urlpatterns = [
     path('auth/register/', views.RegisterView.as_view(), name='auth_register'),
     path('auth/me/', views.PerfilView.as_view(), name='auth_me'),
+    path('auth/me/vinculos/', views.MeusVinculosView.as_view(), name='auth_me_vinculos'),
     path('auth/session/', views.SessionCheckView.as_view(), name='auth_session_check'),
 ]
 
