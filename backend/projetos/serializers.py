@@ -244,14 +244,35 @@ class ProjetoResumoSerializer(serializers.ModelSerializer):
     unidade_sigla = serializers.CharField(source='unidade_proponente.sigla', read_only=True)
     coordenador_nome = serializers.CharField(source='coordenador.pessoa.nome_completo', read_only=True)
     situacao_display = serializers.CharField(source='get_situacao_display', read_only=True)
+    # Edicao liberada em qualquer situacao para dono e admin; exclusao so admin.
+    pode_editar = serializers.SerializerMethodField()
+    pode_excluir = serializers.SerializerMethodField()
 
     class Meta:
         model = Projeto
         fields = [
             'id', 'ano', 'numero', 'titulo', 'situacao', 'situacao_display',
-            'unidade_sigla', 'coordenador_nome', 'excluido', 'created_at', 'updated_at'
+            'unidade_sigla', 'coordenador_nome', 'excluido',
+            'pode_editar', 'pode_excluir', 'created_at', 'updated_at'
         ]
         read_only_fields = ['excluido']
+
+    def _usuario_admin(self):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        return bool(
+            user is not None
+            and getattr(user, 'is_authenticated', False)
+            and (getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False))
+        )
+
+    def get_pode_editar(self, obj):
+        # Todo projeto listado ja passou pelo filtro de visibilidade
+        # (dono ou admin), e a edicao vale em qualquer situacao por enquanto.
+        return True
+
+    def get_pode_excluir(self, obj):
+        return self._usuario_admin()
 
 
 class ProjetoCreateSerializer(serializers.ModelSerializer):
