@@ -22,6 +22,7 @@ function App() {
           <Route path="/Projetos">
             <Route path="SeusProjetos" element={<Projetos />}/>
             <Route path="CadastrarProjeto" element={<CadastrarProjeto />}/>
+            <Route path=":id/editar" element={<CadastrarProjeto />}/>
             <Route path=":id/imprimir" element={<ImprimirProjeto />}/>
           </Route>
         </Route>

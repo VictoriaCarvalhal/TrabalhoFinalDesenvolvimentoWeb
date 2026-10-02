@@ -33,6 +33,22 @@ export async function criarPalavraChave(projeto_id, dados) {
     return resposta.data.id;
 }
 
+export async function atualizarProjeto(projeto_id, dados) {
+    await api.patch(`/projetos/${projeto_id}/`, dados);
+}
+
+export async function atualizarPlanoDeTrabalho(projeto_id, plano_id, dados) {
+    await api.patch(`/projetos/${projeto_id}/planos-trabalho/${plano_id}/`, dados);
+}
+
+export async function excluirContato(projeto_id, contato_id) {
+    await api.delete(`/projetos/${projeto_id}/contatos/${contato_id}/`);
+}
+
+export async function excluirPalavraChave(projeto_id, palavra_id) {
+    await api.delete(`/projetos/${projeto_id}/palavras-chave/${palavra_id}/`);
+}
+
 export async function excluirProjeto(projeto_id) {
     await api.delete(`/projetos/${projeto_id}/`);
 }
