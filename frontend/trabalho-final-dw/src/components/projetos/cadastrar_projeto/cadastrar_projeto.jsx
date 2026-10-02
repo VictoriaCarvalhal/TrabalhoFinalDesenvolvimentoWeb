@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '../../../stores/authStore';
+import api from '../../../services/api';
 
 import LocaisRealizacao from './abas/LocaisRealizacao';
 import MembrosEquipe from './abas/MembrosEquipe';
@@ -42,6 +43,9 @@ const ABAS = [
 
 function CadastrarProjeto() {
     const navigate = useNavigate();
+    // Rota :id/editar reusa esta tela: com id na URL vira modo edição.
+    const { id: idDaUrl } = useParams();
+    const editando = Boolean(idDaUrl);
 
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
     const token = useAuthStore((state) => state.token);
@@ -154,10 +158,12 @@ function CadastrarProjeto() {
     const { dados: linhasExtensao, loading: carregandoLinhasExtensao, erro: erroLinhasExtensao } = useLinhasExtensao();
 
 
-    //projetoId é UUID vindo do POST; as abas tambem usam
+    //projetoId é UUID vindo do POST; no modo edição vem da URL
     const [projetoId, setProjetoId] = useState(null);
     const [enviando, setEnviando] = useState(false);
     const [erroEnvio, setErroEnvio] = useState(null);
+    const [carregandoEdicao, setCarregandoEdicao] = useState(false);
+    const [erroCarregamento, setErroCarregamento] = useState(null);
 
     const [form, setForm] = useState({
         //identificação
@@ -219,6 +225,107 @@ function CadastrarProjeto() {
         parceriasExternas: [],
         demandasBolsa: [],
     });
+
+    const simNao = (valor) => (valor ? "sim" : "nao");
+
+    useEffect(() => {
+        if (!idDaUrl || !isAutenticado) return;
+        let cancelado = false;
+        setCarregandoEdicao(true);
+        setErroCarregamento(null);
+        setProjetoId(idDaUrl);
+
+        Promise.all([
+            api.get(`/projetos/${idDaUrl}/`),
+            api.get(`/projetos/${idDaUrl}/palavras_chave/`),
+            api.get(`/projetos/${idDaUrl}/abas/`),
+        ])
+            .then(([detalheRes, palavrasRes, abasRes]) => {
+                if (cancelado) return;
+                const d = detalheRes.data;
+                const endereco = d.endereco ?? {};
+                const carac = d.caracterizacao ?? {};
+                const desc = d.descricao ?? {};
+                const contatos = Array.isArray(d.contatos) ? d.contatos : [];
+                const telefones = contatos
+                    .filter((c) => c.tipo_contato === 'TELEFONE')
+                    .map((c) => c.valor);
+                const emails = contatos
+                    .filter((c) => c.tipo_contato === 'EMAIL')
+                    .map((c) => c.valor);
+                const palavrasDados = palavrasRes.data;
+                const palavras = (
+                    Array.isArray(palavrasDados) ? palavrasDados : palavrasDados.results ?? []
+                ).map((p) => p.palavra);
+                const abas = abasRes.data ?? {};
+                const plano = (abas.planos_trabalho ?? [])[0] ?? {};
+
+                setForm((prev) => ({
+                    ...prev,
+                    titulo: d.titulo ?? "",
+                    coordenador_vinculo: d.coordenador ? String(d.coordenador) : "",
+                    unidade: d.unidade_proponente != null ? String(d.unidade_proponente) : "",
+                    departamento: d.departamento_proponente != null ? String(d.departamento_proponente) : "",
+                    telefones: telefones.length > 0 ? telefones : [""],
+                    emails: emails.length > 0 ? emails : [""],
+                    cep: endereco.cep ?? "",
+                    logradouro: endereco.logradouro ?? "",
+                    municipio: endereco.municipio != null ? String(endereco.municipio) : "",
+                    bairro: endereco.bairro ?? "",
+                    complemento: endereco.complemento ?? "",
+                    numero: endereco.numero ?? "",
+                    vinculado_extensao: simNao(carac.vinculado_programa_extensao),
+                    curricular: simNao(carac.curricularizado),
+                    natureza: carac.natureza != null ? String(carac.natureza) : "",
+                    abrangencia: carac.abrangencia ?? "",
+                    publico_alvo: carac.publico_alvo ?? "",
+                    area_conhecimento_cnpq: carac.grande_area_cnpq != null ? String(carac.grande_area_cnpq) : "",
+                    area_tematica_principal: carac.area_tematica_principal != null ? String(carac.area_tematica_principal) : "",
+                    area_tematica_secundaria: carac.area_tematica_secundaria != null ? String(carac.area_tematica_secundaria) : "",
+                    linha_extensao: carac.linha_extensao != null ? String(carac.linha_extensao) : "",
+                    resumo: desc.resumo ?? "",
+                    palavras_chave: palavras.length > 0 ? palavras : [""],
+                    palavra_chave_1: palavras[0] ?? "",
+                    palavra_chave_2: palavras[1] ?? "",
+                    palavra_chave_3: palavras[2] ?? "",
+                    introducao: desc.introducao ?? "",
+                    justificativa: desc.justificativa ?? "",
+                    objetivo_geral: desc.objetivo_geral ?? "",
+                    objetivos_especificos: desc.objetivos_especificos ?? "",
+                    metodologia_avaliacao: desc.metodologia_avaliacao ?? "",
+                    relacao_ensino: simNao(desc.relacao_ensino),
+                    relacao_pesquisa: simNao(desc.relacao_pesquisa),
+                    interacao_dialogica: desc.interacao_dialogica ?? "",
+                    interdisciplinaridade: desc.interdisciplinaridade ?? "",
+                    impacto_formacao: desc.impacto_formacao ?? "",
+                    indissociabilidade: desc.indissociabilidade ?? "",
+                    impacto_social: desc.impacto_social ?? "",
+                    referencias_bibliograficas: desc.referencias_bibliograficas ?? "",
+                    resultados_esperados: plano.resultados_esperados ?? "",
+                    cronograma_atividades: plano.cronograma_atividades ?? "",
+                    locaisRealizacao: abas.locais_realizacao ?? [],
+                    membrosEquipe: abas.membros_equipe ?? [],
+                    unidadesEnvolvidas: abas.unidades_envolvidas ?? [],
+                    parceriasInternas: abas.parcerias_internas ?? [],
+                    parceriasExternas: abas.parcerias_externas ?? [],
+                    demandasBolsa: abas.demandas_bolsa ?? [],
+                }));
+            })
+            .catch((e) => {
+                if (!cancelado) {
+                    setErroCarregamento(
+                        e?.response?.status === 404
+                            ? 'Projeto não encontrado ou sem acesso.'
+                            : 'Erro ao carregar o projeto para edição.'
+                    );
+                }
+            })
+            .finally(() => {
+                if (!cancelado) setCarregandoEdicao(false);
+            });
+
+        return () => { cancelado = true; };
+    }, [idDaUrl, isAutenticado]);
 
     const buscarCep = async (cep) => {
         const digits = cep.replace(/\D/g, '');
@@ -459,11 +566,30 @@ function CadastrarProjeto() {
         }
     }, [vinculosCoordenador]);
 
+    // No modo edição, completa nome/matrícula do coordenador quando os vínculos carregam, a partir do vínculo já gravado no projeto.
+    useEffect(() => {
+        if (!editando || !form.coordenador_vinculo || form.matricula_coordenador) return;
+        const vinculo = vinculosCoordenador.find(
+            (v) => String(v.id) === String(form.coordenador_vinculo));
+        if (vinculo) {
+            atualizarCampo('matricula_coordenador', vinculo.matricula ?? '');
+            atualizarCampo('coordenador', vinculo.nome_completo ?? '');
+        }
+    }, [editando, vinculosCoordenador, form.coordenador_vinculo]);
+
     return (
         <div className="container mt-4">
             {/* Mesma ideia da lista: o titulo fica so para leitor de tela,
                 porque os botoes de etapa dizem onde a pessoa esta. */}
-            <h1 className="visually-hidden">Cadastro de projeto</h1>
+            <h1 className="visually-hidden">{editando ? "Edição de projeto" : "Cadastro de projeto"}</h1>
+
+            {carregandoEdicao && (
+                <p className="mt-3">Carregando projeto para edição...</p>
+            )}
+
+            {erroCarregamento && (
+                <div className="alert alert-danger mt-3">{erroCarregamento}</div>
+            )}
 
             {/* A tira de abas: mostra todas as partes do formulario e deixa ir
                 direto para uma delas, em vez de so avancar de uma em uma. */}
@@ -540,6 +666,7 @@ function CadastrarProjeto() {
 
                 {etapaAtual === 4 && (
                     <UnidadesEnvolvidas
+                        projetoId={idDaUrl ?? projetoId}
                         unidades={unidades}
                         departamentos={departamentos}
                         valor={form.unidadesEnvolvidas}
@@ -549,6 +676,7 @@ function CadastrarProjeto() {
 
                 {etapaAtual === 5 && (
                     <Parcerias
+                        projetoId={idDaUrl ?? projetoId}
                         unidades={unidades}
                         departamentos={departamentos}
                         form={form}
@@ -558,6 +686,7 @@ function CadastrarProjeto() {
 
                 {etapaAtual === 6 && (
                     <DemandasBolsa
+                        projetoId={idDaUrl ?? projetoId}
                         valor={form.demandasBolsa}
                         onChange={(linhas) => atualizarCampo("demandasBolsa", linhas)}
                     />
@@ -567,6 +696,7 @@ function CadastrarProjeto() {
                     linhas nem recarregar o dropdown ao trocar de aba. */}
                 <div hidden={etapaAtual !== 7}>
                     <LocaisRealizacao
+                        projetoId={idDaUrl ?? projetoId}
                         valor={form.locaisRealizacao}
                         onChange={(linhas) => atualizarCampo("locaisRealizacao", linhas)}
                     />
@@ -574,6 +704,7 @@ function CadastrarProjeto() {
 
                 <div hidden={etapaAtual !== 8}>
                     <MembrosEquipe
+                        projetoId={idDaUrl ?? projetoId}
                         coordenador={form.coordenador}
                         valor={form.membrosEquipe}
                         onChange={(linhas) => atualizarCampo("membrosEquipe", linhas)}
@@ -627,9 +758,9 @@ function CadastrarProjeto() {
                         type="button"
                         className="btn btn-primary"
                         onClick={abrirConfirmacao}
-                        disabled={enviando}
+                        disabled={enviando || carregandoEdicao}
                     >
-                        Enviar projeto
+                        {editando ? 'Salvar alterações' : 'Enviar projeto'}
                     </button>
                 </div>
             </div>
@@ -646,14 +777,12 @@ function CadastrarProjeto() {
                     <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-content">
                             <div className="modal-header">
-                                <h2 className="modal-title h5" id="titulo-confirmar-envio">Enviar o projeto?</h2>
+                                <h2 className="modal-title h5" id="titulo-confirmar-envio">{editando ? 'Salvar alterações?' : 'Enviar o projeto?'}</h2>
                                 <button type="button" className="btn-close" aria-label="Fechar" onClick={() => setConfirmando(false)}></button>
                             </div>
                             <div className="modal-body">
                                 <p>
-                                    O projeto <strong>{form.titulo}</strong> será enviado para a
-                                    Pró-Reitoria de Extensão e ficará como proposta aguardando
-                                    documentação.
+                                    O projeto <strong>{form.titulo}</strong> será {editando ? 'atualizado.' : 'enviado para a Pró-Reitoria de Extensão e ficará como proposta aguardando documentação.'}
                                 </p>
                                 <p className="mb-0">
                                     Confira se está tudo preenchido antes de enviar. Depois do envio,
