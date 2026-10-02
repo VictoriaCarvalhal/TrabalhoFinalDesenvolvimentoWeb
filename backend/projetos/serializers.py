@@ -257,36 +257,131 @@ class ProjetoResumoSerializer(serializers.ModelSerializer):
 class ProjetoCreateSerializer(serializers.ModelSerializer):
     endereco = ProjetoEnderecoSerializer(required=False)
     contatos = ProjetoContatoSerializer(many=True, required=False)
+    caracterizacao = ProjetoCaracterizacaoSerializer(required=False)
+    descricao = ProjetoDescricaoSerializer(required=False)
+    # A aba guarda linhas de ProjetoUnidade (unidade + tipo de participacao),
+    # e nao o M:N de UnidadeAcademica que existe no Projeto: dai o source.
+    unidades_envolvidas = UnidadeEnvolvidaSerializer(
+        source='projeto_unidades', many=True, required=False)
+    parcerias_internas = ParceriaInternaSerializer(many=True, required=False)
+    parcerias_externas = ParceriaExternaSerializer(many=True, required=False)
+    demandas_bolsa = DemandaBolsaSerializer(many=True, required=False)
+    locais_realizacao = LocalRealizacaoSerializer(many=True, required=False)
+    # A aba e "membros_equipe" na tela e no payload, mas a relacao no Projeto
+    # se chama "membros"; o source guarda essa traducao.
+    membros_equipe = MembroEquipeSerializer(
+        source='membros', many=True, required=False)
+    planos_trabalho = PlanoTrabalhoSerializer(many=True, required=False)
+
+    # Abas que nao podem repetir linha dentro do projeto (unique_together):
+    # (campo no payload, chave em validated_data, campo que nao pode repetir,
+    #  aviso). A repeticao precisa ser barrada aqui, porque o projeto so nasce
+    # no create() e os serializers das abas nao tem o que consultar.
+    ABAS_SEM_REPETICAO = (
+        ('unidades_envolvidas', 'projeto_unidades', 'unidade',
+         'A mesma unidade foi enviada mais de uma vez.'),
+        ('membros_equipe', 'membros', 'vinculo',
+         'A mesma pessoa foi enviada mais de uma vez na equipe.'),
+        ('planos_trabalho', 'planos_trabalho', 'ano',
+         'Ja existe um plano de trabalho para este ano.'),
+        ('demandas_bolsa', 'demandas_bolsa', 'tipo_bolsa',
+         'O mesmo tipo de bolsa foi pedido mais de uma vez.'),
+    )
 
     class Meta:
         model = Projeto
         fields = [
             'id', 'ano', 'numero', 'titulo', 'situacao',
             'coordenador', 'unidade_proponente', 'departamento_proponente',
-            'endereco', 'contatos'
+            'endereco', 'contatos', 'caracterizacao', 'descricao',
+            'unidades_envolvidas', 'parcerias_internas', 'parcerias_externas',
+            'locais_realizacao', 'membros_equipe', 'planos_trabalho',
+            'demandas_bolsa',
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Os serializers das abas leem context['projeto'] para checar repeticao.
+        # Aqui o projeto ainda vai ser criado, entao vai None: a busca nao acha
+        # nada e o validate() logo abaixo e quem barra o payload repetido.
+        self._context.setdefault('projeto', None)
+
+    def validate(self, attrs):
+        for campo, chave, campo_unico, aviso in self.ABAS_SEM_REPETICAO:
+            vistos = set()
+            for linha in attrs.get(chave, []):
+                if linha[campo_unico] in vistos:
+                    # O erro sai com o nome do campo no payload, que e o que
+                    # o front conhece.
+                    raise serializers.ValidationError({campo: aviso})
+                vistos.add(linha[campo_unico])
+        return attrs
 
     @transaction.atomic
     def create(self, validated_data):
         endereco_data = validated_data.pop('endereco', None)
         contatos_data = validated_data.pop('contatos', [])
+        caracterizacao_data = validated_data.pop('caracterizacao', {})
+        descricao_data = validated_data.pop('descricao', None)
+        unidades_data = validated_data.pop('projeto_unidades', [])
+        membros_data = validated_data.pop('membros', [])
+        parcerias_data = validated_data.pop('parcerias_internas', [])
+        parcerias_externas_data = validated_data.pop('parcerias_externas', [])
+        demandas_data = validated_data.pop('demandas_bolsa', [])
+        locais_data = validated_data.pop('locais_realizacao', [])
+        planos_data = validated_data.pop('planos_trabalho', [])
 
         # 1. Cria o projeto base
         projeto = Projeto.objects.create(**validated_data)
 
         # 2. Garante a criação dos registros 1:1 auxiliares
-        ProjetoCaracterizacao.objects.get_or_create(projeto=projeto)
-        ProjetoDescricao.objects.get_or_create(projeto=projeto)
+        caracterizacao, _ = ProjetoCaracterizacao.objects.get_or_create(projeto=projeto)
+        descricao, _ = ProjetoDescricao.objects.get_or_create(projeto=projeto)
 
-        # 3. Cria/atualiza o endereço se enviado
-        if endereco_data:
-            ProjetoEndereco.objects.create(projeto=projeto, **endereco_data)
-        else:
-            ProjetoEndereco.objects.create(projeto=projeto)
+        # 3. Cria o endereço, mesmo que vazio: a tela de consulta conta com ele
+        ProjetoEndereco.objects.create(projeto=projeto, **(endereco_data or {}))
 
         # 4. Cria os contatos se enviados
         for contato_data in contatos_data:
             ProjetoContato.objects.create(projeto=projeto, **contato_data)
+
+        # 5. Cria/atualiza dados de caracterização se enviados
+        if caracterizacao_data:
+            for campo, valor in caracterizacao_data.items():
+                setattr(caracterizacao, campo, valor)
+            caracterizacao.save()
+        if descricao_data:
+            for campo, valor in descricao_data.items():
+                setattr(descricao, campo, valor)
+            descricao.save()
+
+        # 6. Cria as unidades envolvidas se enviadas
+        for unidade_data in unidades_data:
+            ProjetoUnidade.objects.create(projeto=projeto, **unidade_data)
+
+        # 7. Cria as parcerias internas se enviadas
+        for parceria_data in parcerias_data:
+            ParceriaInterna.objects.create(projeto=projeto, **parceria_data)
+
+        # 8. Cria as parcerias externas se enviadas
+        for parceria_externa_data in parcerias_externas_data:
+            ParceriaExterna.objects.create(projeto=projeto, **parceria_externa_data)
+
+        # Demandas de bolsa de extensao
+        for demanda_data in demandas_data:
+            DemandaBolsa.objects.create(projeto=projeto, **demanda_data)
+
+        # 9. Cria os locais de realizacao se enviados
+        for local_data in locais_data:
+            LocalRealizacao.objects.create(projeto=projeto, **local_data)
+
+        # 10. Cria os membros da equipe se enviados
+        for membro_data in membros_data:
+            MembroEquipe.objects.create(projeto=projeto, **membro_data)
+
+        # 11. Cria os planos de trabalho se enviados
+        for plano_data in planos_data:
+            PlanoTrabalho.objects.create(projeto=projeto, **plano_data)
 
         return projeto
 

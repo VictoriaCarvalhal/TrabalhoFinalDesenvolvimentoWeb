@@ -1,0 +1,11 @@
+/* O diálogo reaproveita o componente do relatório, que traz um rodapé com
+   "Gerado em ... por ...". Isso só faz sentido no papel, então some aqui. */
+.dialogo-dados .print-rodape {
+    display: none;
+}
+
+/* Na tela a folha não precisa da sombra nem da largura fixa da impressão. */
+.dialogo-dados #area-impressao {
+    box-shadow: none;
+    padding: 0;
+}

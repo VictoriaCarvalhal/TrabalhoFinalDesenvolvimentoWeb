@@ -3,6 +3,7 @@ import { useAuthStore } from '../../../stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
 import { excluirProjeto } from '../../../services/projetoService';
+import DialogoDadosProjeto from '../detalhes/DialogoDadosProjeto';
 
 function Projetos({isPrevia = false, limite = 5}) {
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
@@ -11,6 +12,8 @@ function Projetos({isPrevia = false, limite = 5}) {
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState(null);
     const [excluindoId, setExcluindoId] = useState(null);
+    // id do projeto aberto no diálogo de dados; null = diálogo fechado
+    const [vendoId, setVendoId] = useState(null);
     const navigate = useNavigate();
     const controlFade = isPrevia && projetos.length > limite;
 
@@ -159,6 +162,15 @@ function Projetos({isPrevia = false, limite = 5}) {
                                                     <button
                                                         type="button"
                                                         className="btn btn-sm btn-outline-secondary"
+                                                        title="Ver os dados do projeto"
+                                                        aria-label={`Ver os dados do projeto ${projeto.titulo}`}
+                                                        onClick={() => setVendoId(projeto.id)}
+                                                    >
+                                                        <i className="bi bi-eye"></i>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-secondary"
                                                         title="Imprimir projeto"
                                                         aria-label={`Imprimir projeto ${projeto.titulo}`}
                                                         onClick={() => redirecionaParaImpressao(projeto.id)}
@@ -182,7 +194,11 @@ function Projetos({isPrevia = false, limite = 5}) {
                                 </tbody>
                             </table>
                         </div>
-                        {isPrevia && (projetos.length > 0) && (
+                        {vendoId && (
+                <DialogoDadosProjeto projetoId={vendoId} aoFechar={() => setVendoId(null)} />
+            )}
+
+            {isPrevia && (projetos.length > 0) && (
                             <div className="mt-4 text-center">
                                 <button
                                     className="btn btn-outline-primary"
