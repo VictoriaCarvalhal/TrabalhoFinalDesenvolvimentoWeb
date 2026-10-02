@@ -1,4 +1,5 @@
 import re
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from core.models import (
     AreaConhecimentoCNPq, 
@@ -34,6 +35,26 @@ def validar_cpf(cpf: str) -> str:
 
 class RegisterPessoaSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
+
+    class Meta:
+        model = PessoaGlobal
+        fields = [
+            'id',
+            'nome_completo',
+            'cpf',
+            'email_institucional',
+            'lattes_url',
+            'password',
+        ]
+
+    #Garante que o CPF seja validado e limpo (somente números) no cadastro
+    def validate_cpf(self, value):
+        return validar_cpf(value)
+
+    def validate_email_institucional(self, value):
+        if value:
+            return value.strip().lower()
+        return value
 
     class Meta:
         model = PessoaGlobal
@@ -158,4 +179,27 @@ class VinculoInstitucionalSerializer(serializers.ModelSerializer):
             'tipo_vinculo', 'tipo_vinculo_display',
             'matricula', 'departamento', 'status',
         ]
-        
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Customiza a autenticação via JWT para aceitar CPF (com ou sem pontuação) 
+    ou Email, ignorando maiúsculas/minúsculas e espaços.
+    """
+    def validate(self, attrs):
+        username_field = self.username_field
+        raw_identifier = attrs.get(username_field, '')
+
+        if raw_identifier:
+            identifier = raw_identifier.strip()
+            cpf_limpo = re.sub(r"\D", "", identifier)
+            
+            from django.db.models import Q
+            user = PessoaGlobal.objects.filter(
+                Q(cpf=cpf_limpo) | Q(cpf=identifier) | Q(email_institucional__iexact=identifier)
+            ).first()
+
+            if user:
+                attrs[username_field] = getattr(user, username_field)
+
+        return super().validate(attrs)
