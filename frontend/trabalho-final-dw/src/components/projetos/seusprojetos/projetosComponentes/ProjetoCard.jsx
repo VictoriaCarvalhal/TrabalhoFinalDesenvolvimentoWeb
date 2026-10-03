@@ -1,6 +1,6 @@
 import React from 'react';
 
-function ProjetoCard({ projeto, excluindo, onVer, onImprimir, onEditar, onExcluir, onRestaurar, isAdmin }) {
+function ProjetoCard({ projeto, excluindo, baixando, onVer, onBaixar, onEditar, onExcluir, onRestaurar, isAdmin }) {
     const podeEditar = projeto.pode_editar ?? true;
     const podeExcluir = projeto.pode_excluir ?? isAdmin;
     const excluido = Boolean(projeto.excluido);
@@ -50,11 +50,20 @@ function ProjetoCard({ projeto, excluindo, onVer, onImprimir, onEditar, onExclui
                         <button
                             type="button"
                             className="btn btn-outline-secondary flex-grow-1"
-                            title="Imprimir projeto"
-                            aria-label={`Imprimir projeto ${projeto.titulo}`}
-                            onClick={() => onImprimir(projeto.id)}
+                            title="Baixar projeto em PDF"
+                            aria-label={`Baixar projeto ${projeto.titulo} em PDF`}
+                            disabled={baixando}
+                            onClick={() => onBaixar(projeto.id)}
                         >
-                            <i className="bi bi-printer d-block mb-1"></i> Imprimir
+                            {baixando ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm d-block mx-auto mb-1" role="status" aria-hidden="true"></span> Baixando...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="bi bi-download d-block mb-1"></i> Baixar
+                                </>
+                            )}
                         </button>
                         {podeEditar && (
                             <button
