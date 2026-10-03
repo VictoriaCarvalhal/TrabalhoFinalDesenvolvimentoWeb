@@ -3,6 +3,9 @@ from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from rest_framework_simplejwt.views import TokenObtainPairView
+from core.serializers import CustomTokenObtainPairSerializer
+
 from core.models import (
     AreaConhecimentoCNPq, AreaTematica, Departamento,
     LinhaExtensao, MunicipioIBGE, NaturezaExtensao,
@@ -16,6 +19,11 @@ from core.serializers import (
     PessoaPerfilSerializer, RegisterPessoaSerializer,
     UnidadeAcademicaSerializer, VinculoInstitucionalSerializer,
 )
+
+
+# VIEW CUSTOMIZADA
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class RegisterView(generics.CreateAPIView):
