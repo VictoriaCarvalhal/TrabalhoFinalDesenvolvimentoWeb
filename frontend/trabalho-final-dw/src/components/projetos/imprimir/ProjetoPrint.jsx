@@ -1,48 +1,15 @@
 import pr3Logo from '../../../assets/pr3_logo.png';
+import {
+    ABRANGENCIA_LABELS,
+    SITUACAO_ACADEMICA_LABELS,
+    formatarData,
+    municipioTexto,
+    rotuloCodigo,
+    simNao,
+} from './rotulosImpressao.js';
 
 // Documento de impressão do projeto. Componente puro: recebe o DTO e
 // renderiza. O CSS de impressão vive em imprimir.css.
-// O DTO segue os serializers do backend: choices como código + <campo>_display
-// e FKs como id + displays desnormalizados.
-
-function simNao(valor) {
-    if (valor === true) return 'Sim';
-    if (valor === false) return 'Não';
-    return '—';
-}
-
-// Labels para choices que o serializer retorna só como código.
-const ABRANGENCIA_LABELS = {
-    LOCAL: 'Local',
-    REGIONAL: 'Regional',
-    NACIONAL: 'Nacional',
-    INTERNACIONAL: 'Internacional',
-};
-
-const SITUACAO_ACADEMICA_LABELS = {
-    NOVO: 'Novo',
-    RENOVACAO: 'Renovação',
-    REESTRUTURACAO: 'Reestruturação',
-};
-
-function rotuloCodigo(valor, mapa) {
-    if (valor == null || valor === '') return '—';
-    return mapa[valor] ?? valor;
-}
-
-function formatarData(valor) {
-    if (!valor) return '—';
-    const data = new Date(valor);
-    if (Number.isNaN(data.getTime())) return valor;
-    return data.toLocaleDateString('pt-BR');
-}
-
-function municipioTexto(item, legado) {
-    if (item?.municipio_nome) {
-        return item.municipio_uf ? `${item.municipio_nome}/${item.municipio_uf}` : item.municipio_nome;
-    }
-    return legado ?? item?.municipio ?? '—';
-}
 
 function Secao({ titulo, children }) {
     return (

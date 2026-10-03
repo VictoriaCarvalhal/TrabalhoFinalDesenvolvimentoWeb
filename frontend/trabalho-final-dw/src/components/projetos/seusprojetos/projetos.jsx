@@ -3,6 +3,7 @@ import { useAuthStore } from '../../../stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
 import { excluirProjeto, restaurarProjeto } from '../../../services/projetoService';
+import { gerarPdfPorId } from '../../../services/gerarProjetoPdf.js';
 import DialogoDadosProjeto from '../detalhes/DialogoDadosProjeto';
 import BarraDeBusca from './projetosComponentes/BarraDeBusca';
 import FiltrosDeOrdenacao from './projetosComponentes/FiltrosDeOrdenacao';
@@ -19,6 +20,7 @@ function Projetos() {
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState(null);
     const [excluindoId, setExcluindoId] = useState(null);
+    const [baixandoId, setBaixandoId] = useState(null);
     // id do projeto aberto no diálogo de dados; null = diálogo fechado
     const [vendoId, setVendoId] = useState(null);
     const navigate = useNavigate();
@@ -38,8 +40,23 @@ function Projetos() {
         navigate('/Projetos/CadastrarProjeto');
     }
 
-    function redirecionaParaImpressao(id) {
-        navigate(`/Projetos/${id}/imprimir`);
+    // Baixa direto o PDF
+    async function handleBaixar(id) {
+        setBaixandoId(id);
+        setErro(null);
+        try {
+            await gerarPdfPorId(id);
+        } catch (err) {
+            if (err.response?.status === 401) {
+                setErro('Sua sessão expirou. Faça login novamente para baixar.');
+            } else if (err.response?.status === 404) {
+                setErro('Projeto não encontrado ou você não tem acesso a ele.');
+            } else {
+                setErro('Não foi possível baixar o PDF. Tente novamente.');
+            }
+        } finally {
+            setBaixandoId(null);
+        }
     }
 
     function redirecionaParaEdicao(id){
@@ -309,8 +326,9 @@ function Projetos() {
                                         key={`card-${projeto.id}`}
                                         projeto={projeto}
                                         excluindo={excluindoId === projeto.id}
+                                        baixando={baixandoId === projeto.id}
                                         onVer={setVendoId}
-                                        onImprimir={redirecionaParaImpressao}
+                                        onBaixar={handleBaixar}
                                         onEditar={redirecionaParaEdicao}
                                         onExcluir={handleExcluir}
                                         onRestaurar={handleRestaurar}

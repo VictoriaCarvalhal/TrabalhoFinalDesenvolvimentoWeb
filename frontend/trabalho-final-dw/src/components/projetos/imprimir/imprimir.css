@@ -34,7 +34,6 @@
     background: #fff;
     color: #212529;
 }
-
 #area-impressao h1,
 #area-impressao h2,
 #area-impressao h3,
@@ -63,7 +62,7 @@
 @media print {
     @page {
         size: A4;
-        margin: 16mm 12mm 25mm 12mm;
+        margin: 24mm 12mm 25mm 12mm;
 
         @bottom-right {
             content: 'Página ' counter(page) ' de ' counter(pages);
@@ -192,6 +191,9 @@
         border-bottom: 1px solid #000;
         padding-bottom: 4px;
         background: #fff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .print-rodape {
