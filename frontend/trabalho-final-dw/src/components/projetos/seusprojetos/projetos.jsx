@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
-import { excluirProjeto } from '../../../services/projetoService';
+import { excluirProjeto, restaurarProjeto } from '../../../services/projetoService';
 import DialogoDadosProjeto from '../detalhes/DialogoDadosProjeto';
 import BarraDeBusca from './projetosComponentes/BarraDeBusca';
 import FiltrosDeOrdenacao from './projetosComponentes/FiltrosDeOrdenacao';
@@ -43,16 +43,33 @@ function Projetos() {
     }
 
     async function handleExcluir(projeto) {
-        if (!window.confirm(`Excluir o projeto "${projeto.titulo}"? Ele será ocultado da lista.`)) {
+        if (!window.confirm(`Excluir o projeto "${projeto.titulo}"? Ele ficará marcado como excluído.`)) {
             return;
         }
         setExcluindoId(projeto.id);
         setErro(null);
         try {
             await excluirProjeto(projeto.id);
-            setProjetos((atuais) => atuais.filter((p) => p.id !== projeto.id));
+            // Admin continua vendo o projeto, agora com tag de excluído.
+            setProjetos((atuais) => atuais.map((p) => (p.id === projeto.id ? { ...p, excluido: true } : p)));
         } catch (err) {
             setErro(err.response?.data?.detail ?? 'Erro ao excluir projeto.');
+        } finally {
+            setExcluindoId(null);
+        }
+    }
+
+    async function handleRestaurar(projeto) {
+        if (!window.confirm(`Restaurar o projeto "${projeto.titulo}"? Ele voltará para a lista normal.`)) {
+            return;
+        }
+        setExcluindoId(projeto.id);
+        setErro(null);
+        try {
+            await restaurarProjeto(projeto.id);
+            setProjetos((atuais) => atuais.map((p) => (p.id === projeto.id ? { ...p, excluido: false } : p)));
+        } catch (err) {
+            setErro(err.response?.data?.detail ?? 'Erro ao restaurar projeto.');
         } finally {
             setExcluindoId(null);
         }
@@ -112,9 +129,9 @@ function Projetos() {
                 }
 
                 // A API pagina a resposta (PAGE_SIZE: 20), então os itens vêm em "results".
-                // Filtro defensivo: o backend já oculta excluido=True, mas garante aqui também.
+                // Admin vê inclusive excluídos (com tag); comum nunca vê excluído.
                 const lista = Array.isArray(dados) ? dados : dados.results ?? [];
-                setProjetos(lista.filter((p) => !p.excluido));
+                setProjetos(isAdmin ? lista : lista.filter((p) => !p.excluido));
             } catch (err) {
                 if (err.response?.status === 401 || err.response?.status === 403) {
                     setErro('Você precisa estar logado para ver seus projetos.');
@@ -127,7 +144,7 @@ function Projetos() {
         }
 
         buscarProjetos();
-    }, [isAutenticado, paginaAtual, buscaAplicada, tipoBusca, ordemAlfabetica, ordemCronologica]);
+    }, [isAutenticado, isAdmin, paginaAtual, buscaAplicada, tipoBusca, ordemAlfabetica, ordemCronologica]);
 
     const handleAplicarBusca = (termo) => {
         setPaginaAtual(1);
@@ -233,6 +250,7 @@ function Projetos() {
                                         onImprimir={redirecionaParaImpressao}
                                         onEditar={redirecionaParaEdicao}
                                         onExcluir={handleExcluir}
+                                        onRestaurar={handleRestaurar}
                                         isAdmin={isAdmin}
                                     />
                                 ))}

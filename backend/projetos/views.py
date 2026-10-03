@@ -227,6 +227,19 @@ class ProjetoViewSet(viewsets.ModelViewSet):
         instance.excluido = True
         instance.save(update_fields=['excluido', 'updated_at'])
 
+    @action(detail=True, methods=['post'], url_path='restaurar')
+    def restaurar(self, request, pk=None):
+        # Restaurar e exclusiva de admin, igual a excluir.
+        if not pode_excluir_projeto(request.user):
+            return Response(
+                {'detail': 'Apenas administradores podem restaurar projetos.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        projeto = self.get_object()
+        projeto.excluido = False
+        projeto.save(update_fields=['excluido', 'updated_at'])
+        return Response({'id': projeto.id, 'excluido': False})
+
     # --- endpoint para cada "Salvar" de aba simples ---
 
     @action(detail=True, methods=['get', 'put', 'patch'])

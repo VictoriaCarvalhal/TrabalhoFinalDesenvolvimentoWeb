@@ -1,21 +1,30 @@
 import React from 'react';
 
-function ProjetoCard({ projeto, excluindo, onVer, onImprimir, onEditar, onExcluir, isAdmin }) {
+function ProjetoCard({ projeto, excluindo, onVer, onImprimir, onEditar, onExcluir, onRestaurar, isAdmin }) {
     const podeEditar = projeto.pode_editar ?? true;
     const podeExcluir = projeto.pode_excluir ?? isAdmin;
+    const excluido = Boolean(projeto.excluido);
     return (
         <div className="col-12 col-lg-6">
-            <div className="card shadow h-100 border-0" style={{ backgroundColor: 'var(--cor-fundo)' }}>
+            <div
+                className={`card shadow h-100 ${excluido ? 'border-danger border-2 opacity-75' : 'border-0'}`}
+                style={{ backgroundColor: 'var(--cor-fundo)' }}
+            >
                 <div className="card-body d-flex flex-column">
-                    
+
                     {/* Parte de Cima (Título e Status) */}
                     <div className="d-flex justify-content-between align-items-start mb-2">
                         <h5 className="card-title fw-bold mb-0 text-break" style={{ color: 'var(--cor-titulo-header)' }}>
                             {projeto.titulo}
                         </h5>
                     </div>
-                    <div className="mb-3">
+                    <div className="mb-3 d-flex flex-wrap gap-2">
                         <span className="badge bg-secondary">{projeto.situacao_display}</span>
+                        {excluido && (
+                            <span className="badge bg-danger" aria-label={`Projeto ${projeto.titulo} foi excluído`}>
+                                <i className="bi bi-trash me-1" aria-hidden="true"></i>Excluído
+                            </span>
+                        )}
                     </div>
                     
                     {/* Meio (Detalhes com os rótulos) */}
@@ -58,18 +67,31 @@ function ProjetoCard({ projeto, excluindo, onVer, onImprimir, onEditar, onExclui
                                 <i className="bi bi-pencil d-block mb-1"></i> Editar
                             </button>
                         )}
-                        {podeExcluir && (
-                            <button
-                                type="button"
-                                className="btn btn-outline-danger flex-grow-1"
-                                title="Excluir projeto"
-                                aria-label={`Excluir projeto ${projeto.titulo}`}
-                                disabled={excluindo}
-                                onClick={() => onExcluir(projeto)}
-                            >
-                                <i className="bi bi-trash d-block mb-1"></i> Excluir
-                            </button>
-                        )}
+                        {excluido
+                            ? (podeExcluir && (
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-success flex-grow-1"
+                                    title="Restaurar projeto"
+                                    aria-label={`Restaurar projeto ${projeto.titulo}`}
+                                    disabled={excluindo}
+                                    onClick={() => onRestaurar(projeto)}
+                                >
+                                    <i className="bi bi-arrow-counterclockwise d-block mb-1"></i> Restaurar
+                                </button>
+                            ))
+                            : (podeExcluir && (
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-danger flex-grow-1"
+                                    title="Excluir projeto"
+                                    aria-label={`Excluir projeto ${projeto.titulo}`}
+                                    disabled={excluindo}
+                                    onClick={() => onExcluir(projeto)}
+                                >
+                                    <i className="bi bi-trash d-block mb-1"></i> Excluir
+                                </button>
+                            ))}
                     </div>
                 </div>
             </div>
