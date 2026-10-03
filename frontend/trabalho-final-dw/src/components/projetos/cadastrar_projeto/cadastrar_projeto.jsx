@@ -14,6 +14,8 @@ import Parcerias from './abas/Parcerias';
 import DemandasBolsa from './abas/DemandasBolsa';
 
 import { MUNICIPIOS_RJ } from '../../../dados/municipiosRJ';
+import { usePeriodo } from '../../../hooks/usePeriodo';
+import FeedbackIndisponivel from '../../comum/FeedbackIndisponivel';
 import { useUnidades } from '../../../hooks/useUnidades';
 import { useDepartamentos } from '../../../hooks/useDepartamentos';
 import { useVinculosCoordenador } from '../../../hooks/useVinculosCoordenador';
@@ -57,7 +59,20 @@ function CadastrarProjeto() {
     const editando = Boolean(idDaUrl);
 
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
+    const isAdmin = useAuthStore((state) => state.isAdmin);
     const token = useAuthStore((state) => state.token);
+
+    // Fora do período, comum não cria nem edita (nem pela URL direta).
+    const { dados: periodo, aberto: periodoAberto, loading: periodoLoading } = usePeriodo();
+    const bloqueadoPorPeriodo = !isAdmin && !periodoLoading && !periodoAberto;
+    const [mostrarFeedbackPeriodo, setMostrarFeedbackPeriodo] = useState(false);
+
+    // Abre o pop-up com o motivo assim que o bloqueio é confirmado.
+    useEffect(() => {
+        if (bloqueadoPorPeriodo) {
+            setMostrarFeedbackPeriodo(true);
+        }
+    }, [bloqueadoPorPeriodo]);
 
     const [etapaAtual, setEtapaAtual] = useState(0);
     const [errosValidacao, setErrosValidacao] = useState({});
@@ -262,6 +277,8 @@ function CadastrarProjeto() {
 
     useEffect(() => {
         if (!idDaUrl || !isAutenticado) return;
+        // Bloqueado: nem carrega os dados, a tela mostra só o pop-up.
+        if (periodoLoading || bloqueadoPorPeriodo) return;
         let cancelado = false;
         setCarregandoEdicao(true);
         setErroCarregamento(null);
@@ -357,7 +374,7 @@ function CadastrarProjeto() {
             });
 
         return () => { cancelado = true; };
-    }, [idDaUrl, isAutenticado]);
+    }, [idDaUrl, isAutenticado, periodoLoading, bloqueadoPorPeriodo]);
 
     const buscarCep = async (cep) => {
         const digits = cep.replace(/\D/g, '');
@@ -698,11 +715,18 @@ function CadastrarProjeto() {
 
             navigate("/Projetos/SeusProjetos");
         } catch (erro) {
-            // O corpo do erro do DRF diz o campo e o motivo do erro (futuramente fica mais elegante exibir o erro usando o padrão de outros erros)
-            const detalhe = erro.response?.data;
-            window.alert(detalhe
-                ? JSON.stringify(detalhe)
-                : 'Não foi possível salvar o projeto. Verifique a conexão e tente de novo.');
+            const dadosErro = erro.response?.data;
+            if (erro.response?.status === 403 && dadosErro && dadosErro.aberto === false) {
+                // O período fechou no meio do preenchimento: mostra o
+                // pop-up com o motivo em vez do alerta genérico.
+                setMostrarFeedbackPeriodo(true);
+            } else {
+                // O corpo do erro do DRF diz o campo e o motivo do erro (futuramente fica mais elegante exibir o erro usando o padrão de outros erros)
+                const detalhe = dadosErro;
+                window.alert(detalhe
+                    ? JSON.stringify(detalhe)
+                    : 'Não foi possível salvar o projeto. Verifique a conexão e tente de novo.');
+            }
         } finally {
             setEnviando(false);
         }
@@ -746,7 +770,29 @@ function CadastrarProjeto() {
                 <div className="alert alert-danger mt-3">{erroCarregamento}</div>
             )}
 
-            {!(editando && carregandoEdicao) && (
+            {bloqueadoPorPeriodo ? (
+                <div className="alert alert-warning mt-3 d-flex flex-wrap align-items-center gap-2" role="status">
+                    <i className="bi bi-lock-fill" aria-hidden="true"></i>
+                    <span className="flex-grow-1">
+                        O período de extensão está fechado: não é possível {editando ? 'editar' : 'criar'} projetos.
+                    </span>
+                    <button
+                        type="button"
+                        className="btn btn-sm btn-outline-secondary"
+                        onClick={() => setMostrarFeedbackPeriodo(true)}
+                    >
+                        Ver motivo
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-sm btn-secondary"
+                        onClick={() => navigate('/Projetos/SeusProjetos')}
+                    >
+                        Voltar aos projetos
+                    </button>
+                </div>
+            ) : (
+            !(editando && carregandoEdicao) && (
             <>
             {/* Resumo das pendências: fica acima das abas e do formulário para
                 ser visto sem rolar até o fim. O envio rola até aqui.
@@ -948,6 +994,16 @@ function CadastrarProjeto() {
                 </div>
             </div>
             </>
+            )
+            )}
+
+            {mostrarFeedbackPeriodo && (
+                <FeedbackIndisponivel
+                    inicio={periodo?.inicio}
+                    fim={periodo?.fim}
+                    mensagem={periodo?.mensagem_fechado}
+                    aoFechar={() => setMostrarFeedbackPeriodo(false)}
+                />
             )}
 
             {confirmando && (

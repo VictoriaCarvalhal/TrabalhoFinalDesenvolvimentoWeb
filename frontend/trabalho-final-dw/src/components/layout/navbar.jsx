@@ -9,6 +9,7 @@ function Navbar() {
     const { tema, alternarTema } = useThemeStore();
     const navigate = useNavigate();
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
+    const isAdmin = useAuthStore((state) => state.isAdmin);
     const nomeUsuario = useAuthStore((state) => state.nomeUsuario);
     const logout = useAuthStore((state) => state.logout);
 
@@ -39,6 +40,18 @@ function Navbar() {
                         <i className="bi bi-house-fill me-2"></i> Início
                     </NavLink>
                 </li>
+                {isAdmin && (
+                    <li className="nav-item">
+                        <NavLink
+                            className="nav-link"
+                            to="/Admin/Periodo"
+                            onClick={onClickAction}
+                            data-bs-dismiss={dismissOffCanvas ? "offcanvas" : undefined}
+                        >
+                            <i className="bi bi-calendar-range me-2"></i> Período
+                        </NavLink>
+                    </li>
+                )}
             </>
         )
     };

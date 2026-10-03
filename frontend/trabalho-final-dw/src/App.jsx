@@ -7,6 +7,7 @@ import Projetos from './components/projetos/seusprojetos/projetos.jsx';
 import CadastrarProjeto from './components/projetos/cadastrar_projeto/cadastrar_projeto.jsx';
 import ImprimirProjeto from './components/projetos/imprimir/ImprimirProjeto.jsx';
 import Bemvindo from './components/bemvindo/bemvindo.jsx';
+import PeriodoAdmin from './components/admin/PeriodoAdmin.jsx';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<LayoutAutenticated />}>
           <Route path="/Bemvindo" element={<Bemvindo />} />
+          <Route path="/Admin/Periodo" element={<PeriodoAdmin />} />
           <Route path="/Projetos">
             <Route path="SeusProjetos" element={<Projetos />}/>
             <Route path="CadastrarProjeto" element={<CadastrarProjeto />}/>
