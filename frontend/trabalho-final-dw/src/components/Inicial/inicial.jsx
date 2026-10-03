@@ -7,6 +7,7 @@ import api from '../../services/api';
 function Inicial() {
     const navigate = useNavigate();
     const login = useAuthStore((state) => state.login);
+    const logout = useAuthStore((state) => state.logout);
     const setNomeUsuario = useAuthStore((state) => state.setNomeUsuario);
     const setAdmin = useAuthStore((state) => state.setAdmin);
     const setPerfil = useAuthStore((state) => state.setPerfil);
@@ -17,7 +18,7 @@ function Inicial() {
     const {
         register,
         handleSubmit,
-        setValue, //Adicionado para limpar apenas a senha se der erro
+        setValue,
         formState: { errors }
     } = useForm();
 
@@ -25,25 +26,33 @@ function Inicial() {
         setErroLogin(null);
         setEnviando(true);
 
+        // Remove pontuações caso o usuário digite CPF com formato (000.000.000-00)
+        const cpfLimpo = data.cpf.replace(/\D/g, '');
+
         try {
-            // 1. Faz o login
+            // 1. Faz o login e obtém os tokens
             const resposta = await api.post('/auth/login/', {
-                cpf: data.cpf,
+                cpf: cpfLimpo,
                 password: data.senha,
             });
 
-            // 2. Salva os tokens no Zustand / localStorage
+            // 2. Guarda temporariamente os tokens
             login(resposta.data.access, resposta.data.refresh);
 
             // 3. Busca os dados do perfil logado
             const perfil = await api.get('/auth/me/');
+            
             setNomeUsuario(perfil.data.nome_completo);
             setAdmin(perfil.data.is_staff || perfil.data.is_superuser);
             setPerfil(perfil.data.perfil);
 
+            // 4. Redireciona para a tela inicial protegida
             navigate('/Bemvindo');
         } catch (err) {
-            // Limpa APENAS a senha do formulário, deixando o CPF preenchido
+            // Se falhou em qualquer etapa do login, desfaz o login para evitar estado parcial/inconsistente
+            logout();
+
+            // Limpa apenas a senha do formulário
             setValue('senha', '');
 
             if (err.response?.status === 401) {
