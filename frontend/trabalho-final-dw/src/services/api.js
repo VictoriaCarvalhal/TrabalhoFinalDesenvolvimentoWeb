@@ -5,7 +5,22 @@ const api = axios.create({
     baseURL: `${import.meta.env.VITE_API_URL ?? ''}/api/v1`,
 });
 
-// Lista de rotas onde NÃO é permitido anexar o token antigo nem interceptar erros 401
+// Controle de concorrência para o Refresh Token
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+    failedQueue.forEach((prom) => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+};
+
+// Lista de rotas públicas
 const PUBLIC_AUTH_ENDPOINTS = [
     '/auth/login/',
     '/auth/token/',
@@ -15,13 +30,13 @@ const PUBLIC_AUTH_ENDPOINTS = [
 
 // 1. Interceptor de requisição
 api.interceptors.request.use((config) => {
-    // Se for uma requisição para login/registro/refresh, não envia o cabeçalho Authorization
     const isPublicAuthRoute = PUBLIC_AUTH_ENDPOINTS.some((endpoint) =>
         config.url?.includes(endpoint)
     );
 
     if (!isPublicAuthRoute) {
-        const token = useAuthStore.getState().token || localStorage.getItem('access');
+        // Busca sempre o token mais recente disponível
+        const token = localStorage.getItem('access') || useAuthStore.getState().token;
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -36,20 +51,38 @@ api.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        // Verifica se a rota original era uma rota pública de autenticação
+        // Se não houver config ou for erro de rede sem resposta do servidor, rejeita
+        if (!originalRequest) {
+            return Promise.reject(error);
+        }
+
         const isPublicAuthRoute = PUBLIC_AUTH_ENDPOINTS.some((endpoint) =>
-            originalRequest?.url?.includes(endpoint)
+            originalRequest.url?.includes(endpoint)
         );
 
-        // Se for 401 em uma rota pública (ex: senha errada no login), ignora o interceptor
-        // Deixa a promessa ser rejeitada para o formulário tratar o erro normalmente
+        // Erros em rotas públicas são repassados ao componente
         if (isPublicAuthRoute) {
             return Promise.reject(error);
         }
 
-        // Se o erro for 401 em uma rota protegida e ainda não houve tentativa de renovar
+        // Se der 401 em rota protegida e ainda não tentou o retry nesta requisição
         if (error.response?.status === 401 && !originalRequest._retry) {
+            
+            // Se já houver um refresh em andamento, coloca a requisição na fila de espera
+            if (isRefreshing) {
+                return new Promise((resolve, reject) => {
+                    failedQueue.push({ resolve, reject });
+                })
+                    .then((token) => {
+                        originalRequest.headers.Authorization = `Bearer ${token}`;
+                        return api(originalRequest);
+                    })
+                    .catch((err) => Promise.reject(err));
+            }
+
             originalRequest._retry = true;
+            isRefreshing = true;
+
             const refreshToken = localStorage.getItem('refresh');
 
             if (refreshToken) {
@@ -61,30 +94,33 @@ api.interceptors.response.use(
 
                     const newAccessToken = data.access;
 
-                    // Atualiza a store do Zustand e o localStorage
+                    // Atualiza Zustand e localStorage
                     useAuthStore.getState().setToken?.(newAccessToken);
                     localStorage.setItem('access', newAccessToken);
 
+                    // Atualiza o header padrão do Axios para chamadas futuras
+                    api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
                     originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+                    // Libera todas as requisições que estavam aguardando na fila
+                    processQueue(null, newAccessToken);
+
                     return api(originalRequest);
                 } catch (refreshError) {
-                    // Se o refresh falhar, limpa tudo e desloga
-                    console.error('Sessão expirada. Efetuando logout...', refreshError);
+                    processQueue(refreshError, null);
+
+                    // Limpa sessão e redireciona
                     useAuthStore.getState().logout?.();
-                    localStorage.removeItem('access');
-                    localStorage.removeItem('refresh');
-                    
-                    // Redireciona apenas se não estiver na página de login/home
                     if (window.location.pathname !== '/') {
                         window.location.href = '/';
                     }
                     return Promise.reject(refreshError);
+                } finally {
+                    isRefreshing = false;
                 }
             } else {
-                // Se não há refresh token, apenas limpa a sessão
+                // Sem refresh token disponível
                 useAuthStore.getState().logout?.();
-                localStorage.removeItem('access');
-                localStorage.removeItem('refresh');
                 if (window.location.pathname !== '/') {
                     window.location.href = '/';
                 }
