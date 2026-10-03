@@ -116,10 +116,24 @@ function CadastrarProjeto() {
            return erros;
     }
 
+    function validarEtapa3(f){
+        const erros = {}
+        if(!f.resultados_esperados.trim()) erros.resultados_esperados = "Este campo é obrigatório";
+        if(!f.cronograma_atividades.trim()) erros.cronograma_atividades = "Este campo é obrigatório";
+        return erros;
+    }
+
+    function validarEtapa7(f){
+        const erros = {}
+        if(!(f.locaisRealizacao.length > 0 && f.locaisRealizacao.every(item => item.nome_local.trim() && item.municipio))) erros.locais_realizacao = "Adicione pelo menos 1 (um) Local de Realização";
+        return erros;
+    }
+
     function obterErrosEtapa(f = form, indice = etapaAtual) {
            if (indice === 0) return validarEtapa0(f);
            if (indice === 1) return validarEtapa1(f);
            if (indice === 2) return validarEtapa2(f);
+           if (indice === 3) return validarEtapa3(f);
            return {};
     }
 
@@ -403,6 +417,7 @@ function CadastrarProjeto() {
                     ...validarEtapa0(atualizado),
                     ...validarEtapa1(atualizado),
                     ...validarEtapa2(atualizado),
+                    ...validarEtapa3(atualizado),
                 }[campo];
                 if (aindaComErro) return errosAtuais;
                 const { [campo]: _corrigido, ...restantes } = errosAtuais;
@@ -487,6 +502,7 @@ function CadastrarProjeto() {
             { indice: 0, nome: ABAS[0].label, erros: validarEtapa0(form) },
             { indice: 1, nome: ABAS[1].label, erros: validarEtapa1(form) },
             { indice: 2, nome: ABAS[2].label, erros: validarEtapa2(form) },
+            { indice: 3, nome: ABAS[3].label, erros: validarEtapa3(form) },
         ].filter((etapa) => Object.keys(etapa.erros).length > 0);
 
         if (faltando.length > 0) {
@@ -506,7 +522,7 @@ function CadastrarProjeto() {
     // tanto as abas vermelhas quanto o resumo do topo. Só aparece depois da
     // primeira tentativa de envio.
     const errosPorAba = tentouEnviar
-        ? [validarEtapa0(form), validarEtapa1(form), validarEtapa2(form)]
+        ? [validarEtapa0(form), validarEtapa1(form), validarEtapa2(form), validarEtapa3(form)]
         : [{}, {}, {}];
     const totalPendencias = errosPorAba.reduce(
         (total, erros) => total + Object.keys(erros).length, 0);
