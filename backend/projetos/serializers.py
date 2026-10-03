@@ -242,6 +242,7 @@ class ProjetoDescricaoSerializer(serializers.ModelSerializer):
 
 class ProjetoResumoSerializer(serializers.ModelSerializer):
     unidade_sigla = serializers.CharField(source='unidade_proponente.sigla', read_only=True)
+    departamento_nome = serializers.CharField(source='departamento_proponente.nome', read_only=True, default=None)
     coordenador_nome = serializers.CharField(source='coordenador.pessoa.nome_completo', read_only=True)
     situacao_display = serializers.CharField(source='get_situacao_display', read_only=True)
     # Edicao liberada em qualquer situacao para dono e admin; exclusao so admin.
@@ -252,8 +253,8 @@ class ProjetoResumoSerializer(serializers.ModelSerializer):
         model = Projeto
         fields = [
             'id', 'ano', 'numero', 'titulo', 'situacao', 'situacao_display',
-            'unidade_sigla', 'coordenador_nome', 'excluido',
-            'pode_editar', 'pode_excluir', 'created_at', 'updated_at'
+            'unidade_sigla', 'departamento_nome', 'coordenador_nome', 'excluido',
+            'pode_editar', 'pode_excluir', 'created_at', 'updated_at',
         ]
         read_only_fields = ['excluido']
 

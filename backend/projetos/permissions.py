@@ -22,11 +22,12 @@ def projetos_visiveis_para(user):
     Quando a autenticacao entrar na main, se o usuario for a propria
     PessoaGlobal a comparacao e por chave; se for o User padrao do Django a
     ligacao e pelo e-mail institucional. Staff e superusuario enxergam tudo,
-    para dar para testar pelo admin.
+    inclusive excluidos (com tag no frontend), para dar para testar pelo admin.
     """
+    if is_admin(user):
+        return Projeto.objects.all()
+
     qs = Projeto.objects.filter(excluido=False)
-    if getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False):
-        return qs
 
     filtros = Q(pk__in=[])
     if isinstance(user.pk, uuid.UUID):

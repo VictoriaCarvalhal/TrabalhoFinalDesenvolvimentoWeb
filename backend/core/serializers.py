@@ -51,6 +51,8 @@ class RegisterPessoaSerializer(serializers.ModelSerializer):
 
 
 class PessoaPerfilSerializer(serializers.ModelSerializer):
+    perfil = serializers.SerializerMethodField()
+
     class Meta:
         model = PessoaGlobal
         fields = [
@@ -61,8 +63,14 @@ class PessoaPerfilSerializer(serializers.ModelSerializer):
             'lattes_url',
             'is_staff',
             'is_superuser',
+            'perfil',
         ]
         read_only_fields = ['is_staff', 'is_superuser']
+
+    def get_perfil(self, obj):
+        if obj.is_superuser or obj.is_staff:
+            return 'admin'
+        return 'usuario'
         
 class MeuVinculoSerializer(serializers.ModelSerializer):
     """Vinculo que a propria pessoa logada cadastra para si.

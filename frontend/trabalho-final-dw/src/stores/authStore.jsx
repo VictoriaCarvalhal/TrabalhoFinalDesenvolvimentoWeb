@@ -7,6 +7,7 @@ export const useAuthStore = create((set) => ({
     nomeUsuario: localStorage.getItem('nomeUsuario') || null,
     // Flag de admin (is_staff ou is_superuser no backend): so admin ve a lixeira.
     isAdmin: localStorage.getItem('isAdmin') === 'true',
+    perfil: localStorage.getItem('perfil') || null,
     // Função de Login: armazena no estado e grava no localStorage
     login: (tokenRecebido, refreshTokenRecebido = null) => {
         if (tokenRecebido) {
@@ -32,12 +33,18 @@ export const useAuthStore = create((set) => ({
         localStorage.setItem('isAdmin', String(valor));
         set({ isAdmin: valor });
     },
+    setPerfil: (perfil) => {
+        localStorage.setItem('perfil', perfil);
+        set({ perfil: perfil, isAdmin: perfil === 'admin' });
+        localStorage.setItem('isAdmin', String(perfil === 'admin'));
+    },
     // Função de Logout: limpa a memória e o localStorage
     logout: () => {
         localStorage.removeItem('access');
         localStorage.removeItem('refresh');
         localStorage.removeItem('nomeUsuario');
         localStorage.removeItem('isAdmin');
-        set({ isAutenticado: false, token: null, nomeUsuario: null, isAdmin: false });
+        localStorage.removeItem('perfil');
+        set({ isAutenticado: false, token: null, nomeUsuario: null, isAdmin: false, perfil: null });
     },
 }));
