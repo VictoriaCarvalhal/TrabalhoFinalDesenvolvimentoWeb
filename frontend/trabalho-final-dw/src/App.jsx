@@ -7,10 +7,10 @@ import Projetos from './components/projetos/seusprojetos/projetos.jsx';
 import CadastrarProjeto from './components/projetos/cadastrar_projeto/cadastrar_projeto.jsx';
 import ImprimirProjeto from './components/projetos/imprimir/ImprimirProjeto.jsx';
 import Bemvindo from './components/bemvindo/bemvindo.jsx';
-import { useAutoRefreshOnActivity } from './hooks/useAutoRefreshOnActivity';// Importar o hook de sessão
+import { useAutoRefreshOnActivity } from './hooks/useAutoRefreshOnActivity';
 
 function App() {
-  const { isSessionExpired, closeSessionExpiredModal } = useAutoRefreshOnActivity(); // Ativar o monitoramento aqui no topo
+  const { isSessionExpired, closeSessionExpiredModal } = useAutoRefreshOnActivity();
 
   return (
     <>
@@ -42,24 +42,28 @@ function App() {
               </div>
             </div>
           </div>
-          {/* Fundo escuro atrás do modal */}
           <div className="modal-backdrop fade show" style={{ zIndex: 1050 }}></div>
         </>
       )}
 
       <Routes>
+        {/* Rotas Públicas */}
         <Route element={<LayoutNotAutenticated />}>
           <Route path="/" element={<Inicial />} />
         </Route>
+
+        {/* Rotas Protegidas */}
         <Route element={<ProtectedRoute />}>
           <Route element={<LayoutAutenticated />}>
             <Route path="/Bemvindo" element={<Bemvindo />} />
             <Route path="/Projetos">
               <Route path="SeusProjetos" element={<Projetos />}/>
               <Route path="CadastrarProjeto" element={<CadastrarProjeto />}/>
-              <Route path=":id/imprimir" element={<ImprimirProjeto />}/>
             </Route>
           </Route>
+
+          {/* Se a impressão não precisar da navbar/sidebar do sistema */}
+          <Route path="/Projetos/:id/imprimir" element={<ImprimirProjeto />}/>
         </Route>
       </Routes>
     </>
