@@ -1,9 +1,11 @@
 import React from 'react';
 
-function ProjetoCard({ projeto, excluindo, baixando, onVer, onBaixar, onEditar, onExcluir, onRestaurar, isAdmin }) {
+function ProjetoCard({ projeto, excluindo, baixando, onVer, onBaixar, onEditar, onExcluir, onRestaurar, isAdmin, periodoBloqueado, onAcaoBloqueada }) {
     const podeEditar = projeto.pode_editar ?? true;
     const podeExcluir = projeto.pode_excluir ?? isAdmin;
     const excluido = Boolean(projeto.excluido);
+    // Fora do período, o lápis vira cadeado com pop-up (admin bypassa).
+    const edicaoBloqueada = Boolean(periodoBloqueado) && !isAdmin;
     return (
         <div className="col-12 col-lg-6">
             <div
@@ -65,7 +67,7 @@ function ProjetoCard({ projeto, excluindo, baixando, onVer, onBaixar, onEditar, 
                                 </>
                             )}
                         </button>
-                        {podeEditar && (
+                        {podeEditar && !edicaoBloqueada && (
                             <button
                                 type="button"
                                 className="btn btn-outline-primary flex-grow-1"
@@ -74,6 +76,17 @@ function ProjetoCard({ projeto, excluindo, baixando, onVer, onBaixar, onEditar, 
                                 onClick={() => onEditar(projeto.id)}
                             >
                                 <i className="bi bi-pencil d-block mb-1"></i> Editar
+                            </button>
+                        )}
+                        {podeEditar && edicaoBloqueada && (
+                            <button
+                                type="button"
+                                className="btn btn-outline-secondary flex-grow-1"
+                                title="Edição indisponível fora do período de extensão"
+                                aria-label={`Edição do projeto ${projeto.titulo} indisponível fora do período de extensão. Ativar para ver o motivo.`}
+                                onClick={onAcaoBloqueada}
+                            >
+                                <i className="bi bi-lock-fill d-block mb-1" aria-hidden="true"></i> Editar
                             </button>
                         )}
                         {excluido

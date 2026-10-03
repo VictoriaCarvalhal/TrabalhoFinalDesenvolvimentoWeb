@@ -5,6 +5,8 @@ import api from '../../../services/api';
 import { excluirProjeto, restaurarProjeto } from '../../../services/projetoService';
 import { gerarPdfPorId } from '../../../services/gerarProjetoPdf.js';
 import DialogoDadosProjeto from '../detalhes/DialogoDadosProjeto';
+import FeedbackIndisponivel from '../../comum/FeedbackIndisponivel';
+import { usePeriodo } from '../../../hooks/usePeriodo';
 import BarraDeBusca from './projetosComponentes/BarraDeBusca';
 import FiltrosDeOrdenacao from './projetosComponentes/FiltrosDeOrdenacao';
 import ProjetoCard from './projetosComponentes/ProjetoCard';
@@ -33,6 +35,10 @@ function Projetos() {
     const [ordemCronologica, setOrdemCronologica] = useState('recentes');
     // Aba da lixeira (só admin): false = ativos, true = excluídos.
     const [mostrandoExcluidos, setMostrandoExcluidos] = useState(false);
+    // Período de extensão: fora dele, comum não cria nem edita (admin bypassa).
+    const { dados: periodo, aberto: periodoAberto, loading: periodoLoading } = usePeriodo();
+    const [mostrarFeedbackPeriodo, setMostrarFeedbackPeriodo] = useState(false);
+    const periodoFechadoParaComum = !isAdmin && !periodoLoading && !periodoAberto;
     // Ignora respostas antigas quando o usuário troca rápido de aba/página.
     const buscaIdRef = useRef(0);
 
@@ -247,14 +253,27 @@ function Projetos() {
                         ) : (
                             <span />
                         )}
-                        <button
-                            type="button"
-                            className="btn btn-primary"
-                            onClick={redirecionaProCadastro}
-                        >
-                            <i className="bi bi-plus-lg me-2" aria-hidden="true"></i>
-                            Novo projeto
-                        </button>
+                        {periodoFechadoParaComum ? (
+                            <button
+                                type="button"
+                                className="btn btn-outline-secondary"
+                                title="Criação indisponível fora do período de extensão"
+                                aria-label="Criação de projeto indisponível fora do período de extensão. Ativar para ver o motivo."
+                                onClick={() => setMostrarFeedbackPeriodo(true)}
+                            >
+                                <i className="bi bi-lock-fill me-2" aria-hidden="true"></i>
+                                Novo projeto
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={redirecionaProCadastro}
+                            >
+                                <i className="bi bi-plus-lg me-2" aria-hidden="true"></i>
+                                Novo projeto
+                            </button>
+                        )}
                     </div>
                 )}
 
@@ -262,6 +281,29 @@ function Projetos() {
                 {!isAutenticado && (
                     <div className="alert alert-warning mt-3">
                         Você precisa estar logado para ver seus projetos.
+                    </div>
+                )}
+
+                {isAutenticado && !periodoLoading && !periodoAberto && periodoFechadoParaComum && (
+                    <div className="alert alert-warning mt-3 d-flex flex-wrap align-items-center gap-2" role="status">
+                        <i className="bi bi-lock-fill" aria-hidden="true"></i>
+                        <span className="flex-grow-1">
+                            O período de extensão está fechado: não é possível criar nem editar projetos.
+                        </span>
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => setMostrarFeedbackPeriodo(true)}
+                        >
+                            Ver motivo
+                        </button>
+                    </div>
+                )}
+
+                {isAutenticado && isAdmin && !periodoLoading && !periodoAberto && (
+                    <div className="alert alert-info mt-3" role="status">
+                        <i className="bi bi-info-circle me-2" aria-hidden="true"></i>
+                        O período de extensão está fechado, mas como admin você ainda pode criar e editar.
                     </div>
                 )}
 
@@ -333,6 +375,8 @@ function Projetos() {
                                         onExcluir={handleExcluir}
                                         onRestaurar={handleRestaurar}
                                         isAdmin={isAdmin}
+                                        periodoBloqueado={periodoFechadoParaComum}
+                                        onAcaoBloqueada={() => setMostrarFeedbackPeriodo(true)}
                                     />
                                 ))}
                             </div>
@@ -346,6 +390,15 @@ function Projetos() {
 
                         {vendoId && (
                             <DialogoDadosProjeto projetoId={vendoId} aoFechar={() => setVendoId(null)} />
+                        )}
+
+                        {mostrarFeedbackPeriodo && (
+                            <FeedbackIndisponivel
+                                inicio={periodo?.inicio}
+                                fim={periodo?.fim}
+                                mensagem={periodo?.mensagem_fechado}
+                                aoFechar={() => setMostrarFeedbackPeriodo(false)}
+                            />
                         )}
                     </div>
                 )}
