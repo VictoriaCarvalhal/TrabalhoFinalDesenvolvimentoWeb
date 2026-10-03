@@ -1,6 +1,7 @@
 import re
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
+from django.db.models import Q
 from core.models import (
     AreaConhecimentoCNPq, 
     AreaTematica, 
@@ -33,6 +34,7 @@ def validar_cpf(cpf: str) -> str:
 
     return cpf_limpo
 
+
 class RegisterPessoaSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
 
@@ -47,7 +49,6 @@ class RegisterPessoaSerializer(serializers.ModelSerializer):
             'password',
         ]
 
-    #Garante que o CPF seja validado e limpo (somente números) no cadastro
     def validate_cpf(self, value):
         return validar_cpf(value)
 
@@ -55,17 +56,6 @@ class RegisterPessoaSerializer(serializers.ModelSerializer):
         if value:
             return value.strip().lower()
         return value
-
-    class Meta:
-        model = PessoaGlobal
-        fields = [
-            'id',
-            'nome_completo',
-            'cpf',
-            'email_institucional',
-            'lattes_url',
-            'password',
-        ]
 
     def create(self, validated_data):
         return PessoaGlobal.objects.create_user(**validated_data)
@@ -92,14 +82,9 @@ class PessoaPerfilSerializer(serializers.ModelSerializer):
         if obj.is_superuser or obj.is_staff:
             return 'admin'
         return 'usuario'
-        
-class MeuVinculoSerializer(serializers.ModelSerializer):
-    """Vinculo que a propria pessoa logada cadastra para si.
 
-    Quem se cadastra no sistema nasce sem vinculo institucional, e sem ele a
-    aba de identificacao do projeto nao tem matricula para escolher. A pessoa
-    nao escolhe de quem e o vinculo: ele e sempre do usuario da requisicao.
-    """
+
+class MeuVinculoSerializer(serializers.ModelSerializer):
     tipo_vinculo_display = serializers.CharField(source='get_tipo_vinculo_display', read_only=True)
     nome_completo = serializers.CharField(source='pessoa.nome_completo', read_only=True)
 
@@ -147,7 +132,7 @@ class DepartamentoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Departamento
         fields = ['id', 'nome', 'unidade', 'unidade_sigla']   
-        
+
 
 class MunicipioIBGESerializer(serializers.ModelSerializer):
     class Meta:
@@ -196,7 +181,7 @@ class VinculoInstitucionalSerializer(serializers.ModelSerializer):
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
     Customiza a autenticação via JWT para aceitar CPF (com ou sem pontuação) 
-    ou Email, ignorando maiúsculas/minúsculas e espaços.
+    ou Email, ignorando maiúsculas/minúsculas e espaços, e injeta os dados do usuário na resposta.
     """
     def validate(self, attrs):
         username_field = self.username_field
@@ -206,7 +191,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             identifier = raw_identifier.strip()
             cpf_limpo = re.sub(r"\D", "", identifier)
             
-            from django.db.models import Q
             user = PessoaGlobal.objects.filter(
                 Q(cpf=cpf_limpo) | Q(cpf=identifier) | Q(email_institucional__iexact=identifier)
             ).first()
@@ -214,4 +198,12 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             if user:
                 attrs[username_field] = getattr(user, username_field)
 
-        return super().validate(attrs)
+        data = super().validate(attrs)
+
+        # Injeta os dados do perfil do usuário na própria resposta do login
+        perfil_data = PessoaPerfilSerializer(self.user).data
+        data.update({
+            'user': perfil_data
+        })
+
+        return data
