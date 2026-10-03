@@ -30,7 +30,6 @@ from projetos.models import (
 )
 from projetos.permissions import pode_excluir_projeto, projetos_visiveis_para
 from django.db.models import Q
-from projetos.permissions import projetos_visiveis_para
 from projetos.serializers import (
     DemandaBolsaSerializer, LocalRealizacaoSerializer, MembroEquipeSerializer,
     ParceriaExternaSerializer, ParceriaInternaSerializer,

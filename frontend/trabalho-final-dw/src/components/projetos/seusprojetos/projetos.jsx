@@ -13,8 +13,7 @@ function Projetos() {
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
     const isAdmin = useAuthStore((state) => state.isAdmin);
     const setAdmin = useAuthStore((state) => state.setAdmin);
-    const perfil = useAuthStore((state) => state.perfil);
-    const isAdmin = perfil === 'admin';
+    const setPerfil = useAuthStore((state) => state.setPerfil);
 
     const [projetos, setProjetos] = useState([]);
     const [carregando, setCarregando] = useState(true);
@@ -62,17 +61,25 @@ function Projetos() {
     useEffect(() => {
         // Sem token não tem nem por que chamar a API.
         if (!isAutenticado) {
-            setCarregando(false);
             return;
         }
 
         // Garante a flag de admin mesmo para sessoes antigas (logadas antes
         // de a flag existir): o perfil diz se a lixeira aparece ou nao.
         api.get('/auth/me/')
-            .then((perfil) => {
-                setAdmin(perfil.data.is_staff || perfil.data.is_superuser);
+            .then((resposta) => {
+                setPerfil(resposta.data.perfil);
+                setAdmin(resposta.data.is_staff || resposta.data.is_superuser);
             })
             .catch(() => { /* mantem o valor atual da flag */ });
+    }, [isAutenticado, setAdmin, setPerfil]);
+
+    useEffect(() => {
+        // Sem token não tem nem por que chamar a API.
+        if (!isAutenticado) {
+            setCarregando(false);
+            return;
+        }
 
         async function buscarProjetos() {
             try {
@@ -120,7 +127,6 @@ function Projetos() {
         }
 
         buscarProjetos();
-    }, [isAutenticado, setAdmin]);
     }, [isAutenticado, paginaAtual, buscaAplicada, tipoBusca, ordemAlfabetica, ordemCronologica]);
 
     const handleAplicarBusca = (termo) => {
@@ -151,7 +157,7 @@ function Projetos() {
                 {/* O menu ja diz em que tela a pessoa esta, entao o titulo nao
                 aparece de novo aqui. Ele continua no html, escondido, porque a
                 pagina precisa de um h1 para quem usa leitor de tela. */}
-
+                <h1 className="visually-hidden">Seus projetos</h1>
 
                 {!carregandoInicial && (
                     <div className="d-flex flex-wrap align-items-center justify-content-end gap-2">
@@ -214,83 +220,6 @@ function Projetos() {
                 )}
 
                 {isAutenticado && !carregando && !erro && projetos.length > 0 && (
-                    <>
-                        <div className={controlFade? "table-fade" : ""}>
-                            <table className="table table-striped table-hover mt-3">
-                                <thead>
-                                    <tr>
-                                        <th>Ano</th>
-                                        <th>Número</th>
-                                        <th>Título</th>
-                                        <th>Situação</th>
-                                        <th>Unidade</th>
-                                        <th>Coordenador(a)</th>
-                                        <th>Atualizado em</th>
-                                        <th className="text-nowrap">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {projetos.slice(0, isPrevia ? limite : projetos.length).map((projeto) => (
-                                        <tr key={projeto.id}>
-                                            <td>{projeto.ano}</td>
-                                            <td>{projeto.numero ?? 'S/N'}</td>
-                                            <td>{projeto.titulo}</td>
-                                            <td>{projeto.situacao_display}</td>
-                                            <td>{projeto.unidade_sigla}</td>
-                                            <td>{projeto.coordenador_nome}</td>
-                                            <td>
-                                                {projeto.updated_at
-                                                    ? new Date(projeto.updated_at).toLocaleDateString('pt-BR')
-                                                    : '-'}
-                                            </td>
-                                            <td className="text-nowrap">
-                                                <div className="d-flex gap-2">
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-sm btn-outline-secondary"
-                                                        title="Ver os dados do projeto"
-                                                        aria-label={`Ver os dados do projeto ${projeto.titulo}`}
-                                                        onClick={() => setVendoId(projeto.id)}
-                                                    >
-                                                        <i className="bi bi-eye"></i>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-sm btn-outline-secondary"
-                                                        title="Imprimir projeto"
-                                                        aria-label={`Imprimir projeto ${projeto.titulo}`}
-                                                        onClick={() => redirecionaParaImpressao(projeto.id)}
-                                                    >
-                                                        <i className="bi bi-printer"></i>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-sm btn-outline-primary"
-                                                        title="Editar projeto"
-                                                        aria-label={`Editar projeto ${projeto.titulo}`}
-                                                        onClick={() => redirecionaParaEdicao(projeto.id)}
-                                                    >
-                                                        <i className="bi bi-pencil"></i>
-                                                    </button>
-                                                    {(projeto.pode_excluir ?? isAdmin) && (
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-sm btn-outline-danger"
-                                                            title="Excluir projeto"
-                                                            aria-label={`Excluir projeto ${projeto.titulo}`}
-                                                            disabled={excluindoId === projeto.id}
-                                                            onClick={() => handleExcluir(projeto)}
-                                                        >
-                                                            <i className="bi bi-trash"></i>
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                {isAutenticado && !erro && projetos.length > 0 && (
                     <div style={{ opacity: carregando ? 0.5 : 1, transition: 'opacity 0.3s', pointerEvents: carregando ? 'none' : 'auto' }}>
                         {/* Visão de Cartões para Todos os Dispositivos */}
                         <div className="mt-3">
@@ -302,7 +231,9 @@ function Projetos() {
                                         excluindo={excluindoId === projeto.id}
                                         onVer={setVendoId}
                                         onImprimir={redirecionaParaImpressao}
+                                        onEditar={redirecionaParaEdicao}
                                         onExcluir={handleExcluir}
+                                        isAdmin={isAdmin}
                                     />
                                 ))}
                             </div>

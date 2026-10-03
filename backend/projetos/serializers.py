@@ -253,9 +253,8 @@ class ProjetoResumoSerializer(serializers.ModelSerializer):
         model = Projeto
         fields = [
             'id', 'ano', 'numero', 'titulo', 'situacao', 'situacao_display',
-            'unidade_sigla', 'coordenador_nome', 'excluido',
-            'pode_editar', 'pode_excluir', 'created_at', 'updated_at'
-            'unidade_sigla', 'departamento_nome', 'coordenador_nome', 'excluido', 'created_at', 'updated_at'
+            'unidade_sigla', 'departamento_nome', 'coordenador_nome', 'excluido',
+            'pode_editar', 'pode_excluir', 'created_at', 'updated_at',
         ]
         read_only_fields = ['excluido']
 

@@ -35,7 +35,8 @@ export const useAuthStore = create((set) => ({
     },
     setPerfil: (perfil) => {
         localStorage.setItem('perfil', perfil);
-        set({ perfil: perfil });
+        set({ perfil: perfil, isAdmin: perfil === 'admin' });
+        localStorage.setItem('isAdmin', String(perfil === 'admin'));
     },
     // Função de Logout: limpa a memória e o localStorage
     logout: () => {
@@ -43,8 +44,7 @@ export const useAuthStore = create((set) => ({
         localStorage.removeItem('refresh');
         localStorage.removeItem('nomeUsuario');
         localStorage.removeItem('isAdmin');
-        set({ isAutenticado: false, token: null, nomeUsuario: null, isAdmin: false });
         localStorage.removeItem('perfil');
-        set({ isAutenticado: false, token: null, nomeUsuario: null, perfil: null });
+        set({ isAutenticado: false, token: null, nomeUsuario: null, isAdmin: false, perfil: null });
     },
 }));

@@ -1,6 +1,8 @@
 import React from 'react';
 
-function ProjetoCard({ projeto, excluindo, onVer, onImprimir, onExcluir }) {
+function ProjetoCard({ projeto, excluindo, onVer, onImprimir, onEditar, onExcluir, isAdmin }) {
+    const podeEditar = projeto.pode_editar ?? true;
+    const podeExcluir = projeto.pode_excluir ?? isAdmin;
     return (
         <div className="col-12 col-lg-6">
             <div className="card shadow h-100 border-0" style={{ backgroundColor: 'var(--cor-fundo)' }}>
@@ -31,6 +33,7 @@ function ProjetoCard({ projeto, excluindo, onVer, onImprimir, onExcluir }) {
                             type="button"
                             className="btn btn-outline-secondary flex-grow-1"
                             title="Ver os dados do projeto"
+                            aria-label={`Ver os dados do projeto ${projeto.titulo}`}
                             onClick={() => onVer(projeto.id)}
                         >
                             <i className="bi bi-eye d-block mb-1"></i> Ver
@@ -39,19 +42,34 @@ function ProjetoCard({ projeto, excluindo, onVer, onImprimir, onExcluir }) {
                             type="button"
                             className="btn btn-outline-secondary flex-grow-1"
                             title="Imprimir projeto"
+                            aria-label={`Imprimir projeto ${projeto.titulo}`}
                             onClick={() => onImprimir(projeto.id)}
                         >
                             <i className="bi bi-printer d-block mb-1"></i> Imprimir
                         </button>
-                        <button
-                            type="button"
-                            className="btn btn-outline-danger flex-grow-1"
-                            title="Excluir projeto"
-                            disabled={excluindo}
-                            onClick={() => onExcluir(projeto)}
-                        >
-                            <i className="bi bi-trash d-block mb-1"></i> Excluir
-                        </button>
+                        {podeEditar && (
+                            <button
+                                type="button"
+                                className="btn btn-outline-primary flex-grow-1"
+                                title="Editar projeto"
+                                aria-label={`Editar projeto ${projeto.titulo}`}
+                                onClick={() => onEditar(projeto.id)}
+                            >
+                                <i className="bi bi-pencil d-block mb-1"></i> Editar
+                            </button>
+                        )}
+                        {podeExcluir && (
+                            <button
+                                type="button"
+                                className="btn btn-outline-danger flex-grow-1"
+                                title="Excluir projeto"
+                                aria-label={`Excluir projeto ${projeto.titulo}`}
+                                disabled={excluindo}
+                                onClick={() => onExcluir(projeto)}
+                            >
+                                <i className="bi bi-trash d-block mb-1"></i> Excluir
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
