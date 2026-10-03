@@ -308,7 +308,10 @@ class ProjetoViewSet(viewsets.ModelViewSet):
                 {'detail': 'Apenas administradores podem restaurar projetos.'},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        projeto = self.get_object()
+        projeto = get_object_or_404(
+            projetos_visiveis_para(request.user),
+            pk=pk,
+        )
         projeto.excluido = False
         projeto.save(update_fields=['excluido', 'updated_at'])
         return Response({'id': projeto.id, 'excluido': False})

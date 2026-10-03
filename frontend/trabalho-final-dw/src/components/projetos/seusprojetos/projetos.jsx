@@ -391,16 +391,16 @@ function Projetos() {
                         {vendoId && (
                             <DialogoDadosProjeto projetoId={vendoId} aoFechar={() => setVendoId(null)} />
                         )}
-
-                        {mostrarFeedbackPeriodo && (
-                            <FeedbackIndisponivel
-                                inicio={periodo?.inicio}
-                                fim={periodo?.fim}
-                                mensagem={periodo?.mensagem_fechado}
-                                aoFechar={() => setMostrarFeedbackPeriodo(false)}
-                            />
-                        )}
                     </div>
+                )}
+
+                {mostrarFeedbackPeriodo && (
+                    <FeedbackIndisponivel
+                        inicio={periodo?.inicio}
+                        fim={periodo?.fim}
+                        mensagem={periodo?.mensagem_fechado}
+                        aoFechar={() => setMostrarFeedbackPeriodo(false)}
+                    />
                 )}
 
             </div>
