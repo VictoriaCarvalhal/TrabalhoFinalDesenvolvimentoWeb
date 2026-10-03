@@ -125,7 +125,7 @@ function DemandasBolsa({ projetoId, valor = [], onChange, errosValidacao }) {
                 para pedir mais de um, aumente a quantidade.
             </p>
 
-            {errosValidacao.DemandasBolsa && <div className="alert alert-danger py-2">{errosValidacao.DemandasBolsa}</div>}
+            {errosValidacao.demandasBolsa && <div className="alert alert-danger py-2">{errosValidacao.demandasBolsa}</div>}
             <button type="button" className="btn btn-sm btn-primary mb-3" onClick={abrirNova}>
                 <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova demanda
             </button>
