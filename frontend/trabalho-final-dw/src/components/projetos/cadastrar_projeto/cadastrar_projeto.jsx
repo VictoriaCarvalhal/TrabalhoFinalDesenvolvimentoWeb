@@ -563,7 +563,7 @@ function CadastrarProjeto() {
     // primeira tentativa de envio.
     const errosPorAba = tentouEnviar
         ? [validarEtapa0(form), validarEtapa1(form), validarEtapa2(form), validarEtapa3(form), validarEtapa4(form), validarEtapa5(form), validarEtapa6(form), validarEtapa7(form), validarEtapa8(form)]
-        : [{}, {}, {}, {}, {}, {}, {}, {}];
+        : [{}, {}, {}, {}, {}, {}, {}, {}, {}];
     const totalPendencias = errosPorAba.reduce(
         (total, erros) => total + Object.keys(erros).length, 0);
 
