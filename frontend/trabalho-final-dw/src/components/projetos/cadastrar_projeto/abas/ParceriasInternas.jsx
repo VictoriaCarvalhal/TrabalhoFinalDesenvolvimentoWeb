@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import api from '../../../../services/api';
 import CampoTextoLongo from '../CampoTextoLongo';
 import DialogoFormulario from '../DialogoFormulario';
+import DialogoVisualizacao from '../DialogoVisualizacao';
+import CampoSomenteLeitura from '../CampoSomenteLeitura';
 
 const LINHA_VAZIA = {
     id: null, unidade: '', departamento: '', nome_instituicao: '', sigla_instituicao: '', participacao: '',
@@ -17,6 +19,9 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
 
     // Rascunho do diálogo: null = fechado. indice null = parceria nova.
     const [edicao, setEdicao] = useState(null);
+
+    // Linha aberta no modal de visualização (só leitura). null = fechado.
+    const [visualizacao, setVisualizacao] = useState(null);
 
     useEffect(() => {
         if (!projetoId) return;
@@ -42,6 +47,10 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
 
     function abrirEdicao(indice) {
         setEdicao({ indice, dados: { ...linhas[indice] } });
+    }
+
+    function abrirVisualizacao(indice) {
+        setVisualizacao(linhas[indice]);
     }
 
     function mudarCampo(mudancas) {
@@ -137,13 +146,14 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
                             <th scope="col">Instituição</th>
                             <th scope="col">Unidade</th>
                             <th scope="col">Departamento</th>
+                            <th scope="col">Participação</th>
                             <th scope="col" style={{ width: '7rem' }}>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {linhas.length === 0 && (
                             <tr>
-                                <td colSpan={5} className="text-muted text-center">
+                                <td colSpan={6} className="text-muted text-center">
                                     Nenhuma parceria interna cadastrada.
                                 </td>
                             </tr>
@@ -157,8 +167,27 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
                                 </td>
                                 <td>{nomeUnidade(linha)}</td>
                                 <td>{nomeDepartamento(linha)}</td>
+                                <td style={{ maxWidth: '220px' }}>
+                                    {/* O title mostra o texto inteiro no hover (tooltip nativo do navegador). */}
+                                    <span
+                                        className="d-inline-block text-truncate"
+                                        style={{ maxWidth: '220px' }}
+                                        title={linha.participacao || ''}
+                                    >
+                                        {linha.participacao || '—'}
+                                    </span>
+                                </td>
                                 <td className="text-nowrap">
                                     <div className="d-flex gap-2">
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-secondary"
+                                            onClick={() => abrirVisualizacao(i)}
+                                            aria-label={`Visualizar a parceria interna ${i + 1}`}
+                                            title="Visualizar"
+                                        >
+                                            <i className="bi bi-eye" aria-hidden="true"></i>
+                                        </button>
                                         <button
                                             type="button"
                                             className="btn btn-sm btn-outline-secondary"
@@ -269,6 +298,21 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
                         aoMudar={(campo, texto) => mudarCampo({ [campo]: texto })}
                     />
                 </DialogoFormulario>
+            )}
+
+            {visualizacao && (
+                <DialogoVisualizacao
+                    titulo="Detalhes da parceria interna"
+                    aoFechar={() => setVisualizacao(null)}
+                >
+                    <CampoSomenteLeitura
+                        rotulo="Instituição"
+                        valor={`${visualizacao.nome_instituicao}${visualizacao.sigla_instituicao ? ` (${visualizacao.sigla_instituicao})` : ''}`}
+                    />
+                    <CampoSomenteLeitura rotulo="Unidade" valor={nomeUnidade(visualizacao)} />
+                    <CampoSomenteLeitura rotulo="Departamento" valor={nomeDepartamento(visualizacao)} />
+                    <CampoSomenteLeitura rotulo="Participação da unidade no projeto" valor={visualizacao.participacao} />
+                </DialogoVisualizacao>
             )}
         </fieldset>
     );
