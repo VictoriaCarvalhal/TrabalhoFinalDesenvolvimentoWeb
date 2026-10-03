@@ -505,7 +505,7 @@ function CadastrarProjeto() {
             { indice: 1, nome: ABAS[1].label, erros: validarEtapa1(form) },
             { indice: 2, nome: ABAS[2].label, erros: validarEtapa2(form) },
             { indice: 3, nome: ABAS[3].label, erros: validarEtapa3(form) },
-            { indice: 7, nome: ABAS[4].label, erros: validarEtapa4(form) },
+            { indice: 7, nome: ABAS[7].label, erros: validarEtapa7(form) },
         ].filter((etapa) => Object.keys(etapa.erros).length > 0);
 
         if (faltando.length > 0) {
@@ -525,7 +525,7 @@ function CadastrarProjeto() {
     // tanto as abas vermelhas quanto o resumo do topo. Só aparece depois da
     // primeira tentativa de envio.
     const errosPorAba = tentouEnviar
-        ? [validarEtapa0(form), validarEtapa1(form), validarEtapa2(form), validarEtapa3(form), validarEtapa7[form]]
+        ? [validarEtapa0(form), validarEtapa1(form), validarEtapa2(form), validarEtapa3(form), validarEtapa7(form)]
         : [{}, {}, {}];
     const totalPendencias = errosPorAba.reduce(
         (total, erros) => total + Object.keys(erros).length, 0);
