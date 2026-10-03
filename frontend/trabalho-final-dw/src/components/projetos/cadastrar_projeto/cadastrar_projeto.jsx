@@ -134,6 +134,7 @@ function CadastrarProjeto() {
            if (indice === 1) return validarEtapa1(f);
            if (indice === 2) return validarEtapa2(f);
            if (indice === 3) return validarEtapa3(f);
+           if (indice === 7) return validarEtapa7(f);
            return {};
     }
 
@@ -418,6 +419,7 @@ function CadastrarProjeto() {
                     ...validarEtapa1(atualizado),
                     ...validarEtapa2(atualizado),
                     ...validarEtapa3(atualizado),
+                    ...validarEtapa7(atualizado),
                 }[campo];
                 if (aindaComErro) return errosAtuais;
                 const { [campo]: _corrigido, ...restantes } = errosAtuais;
@@ -503,6 +505,7 @@ function CadastrarProjeto() {
             { indice: 1, nome: ABAS[1].label, erros: validarEtapa1(form) },
             { indice: 2, nome: ABAS[2].label, erros: validarEtapa2(form) },
             { indice: 3, nome: ABAS[3].label, erros: validarEtapa3(form) },
+            { indice: 7, nome: ABAS[4].label, erros: validarEtapa4(form) },
         ].filter((etapa) => Object.keys(etapa.erros).length > 0);
 
         if (faltando.length > 0) {
@@ -522,7 +525,7 @@ function CadastrarProjeto() {
     // tanto as abas vermelhas quanto o resumo do topo. Só aparece depois da
     // primeira tentativa de envio.
     const errosPorAba = tentouEnviar
-        ? [validarEtapa0(form), validarEtapa1(form), validarEtapa2(form), validarEtapa3(form)]
+        ? [validarEtapa0(form), validarEtapa1(form), validarEtapa2(form), validarEtapa3(form), validarEtapa7[form]]
         : [{}, {}, {}];
     const totalPendencias = errosPorAba.reduce(
         (total, erros) => total + Object.keys(erros).length, 0);
