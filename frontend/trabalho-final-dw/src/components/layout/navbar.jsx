@@ -5,7 +5,6 @@ import { useThemeStore } from '../../stores/themeStore';
 import { ROTAS } from '../../utils/rotas.js';
 
 function Navbar() {
-    const [dropdownTemaOpen, setDropdownTemaOpen] = useState(false);
     const [menuMobileAtivo, setMenuMobileAtivo] = useState('principal');
     const { tema, alternarTema } = useThemeStore();
     const navigate = useNavigate();
@@ -14,13 +13,8 @@ function Navbar() {
     const nomeUsuario = useAuthStore((state) => state.nomeUsuario);
     const logout = useAuthStore((state) => state.logout);
 
-    const fecharDropdown = () => {
-        setDropdownTemaOpen(false);
-    };
-
     const selecionarTema = (novoTema) => {
         if (tema !== novoTema) alternarTema();
-        setDropdownTemaOpen(false);
     };
 
     const sair = () => {
@@ -74,41 +68,18 @@ function Navbar() {
         );
     };
 
-    const SeletorTemaDesktop = () => {
+    const BotaoTemaDesktop = () => {
+        const isClaro = tema === 'light';
         return (
-            <div className="dropdown">
-                <button
-                    type="button"
-                    className={`btn btn-sm navbar-acao dropdown-toggle d-flex align-items-center gap-2 ${dropdownTemaOpen ? 'show' : ''}`}
-                    onClick={() => setDropdownTemaOpen(!dropdownTemaOpen)}
-                    aria-expanded={dropdownTemaOpen}
-                    title="Alterar tema"
-                >
-                    <span>Tema</span>
-                </button>
-                <ul className={`dropdown-menu dropdown-menu-end ${dropdownTemaOpen ? 'show' : ''}`}>
-                    <li>
-                        <button
-                            type="button"
-                            className={`dropdown-item d-flex align-items-center justify-content-between gap-2 ${tema === 'light' ? 'active' : ''}`}
-                            onClick={() => selecionarTema('light')}
-                        >
-                            <span><i className="bi bi-sun-fill me-2"></i>Claro</span>
-                            {tema === 'light' && <i className="bi bi-check2"></i>}
-                        </button>
-                    </li>
-                    <li>
-                        <button
-                            type="button"
-                            className={`dropdown-item d-flex align-items-center justify-content-between gap-2 ${tema === 'dark' ? 'active' : ''}`}
-                            onClick={() => selecionarTema('dark')}
-                        >
-                            <span><i className="bi bi-moon-fill me-2"></i>Escuro</span>
-                            {tema === 'dark' && <i className="bi bi-check2"></i>}
-                        </button>
-                    </li>
-                </ul>
-            </div>
+            <button
+                type="button"
+                className="btn btn-sm navbar-acao d-flex align-items-center justify-content-center"
+                onClick={alternarTema}
+                title={isClaro ? 'Mudar para modo escuro' : 'Mudar para modo claro'}
+                aria-label={isClaro ? 'Mudar para modo escuro' : 'Mudar para modo claro'}
+            >
+                <i className={`bi ${isClaro ? 'bi-moon-fill' : 'bi-sun-fill'}`}></i>
+            </button>
         );
     };
 
@@ -137,7 +108,7 @@ function Navbar() {
 
                         <div className="d-none d-lg-flex w-100 align-items-center">
                             <ul className="navbar-nav w-100">
-                                <NavLinks onClickAction={fecharDropdown} dismissOffCanvas={false} />
+                                <NavLinks dismissOffCanvas={false} />
                             </ul>
 
                             <div className="navbar-acoes ms-lg-auto d-flex align-items-center gap-3">
@@ -146,7 +117,7 @@ function Navbar() {
                                 )}
 
 
-                                <SeletorTemaDesktop />
+                                <BotaoTemaDesktop />
 
                                 <BotaoSair isMobile={false} />
                             </div>
@@ -157,7 +128,7 @@ function Navbar() {
 
                             {menuMobileAtivo === 'principal' && (
                                 <ul className="navbar-nav">
-                                    <NavLinks onClickAction={fecharDropdown} dismissOffCanvas={true}/>
+                                    <NavLinks dismissOffCanvas={true}/>
                                     <li className="nav-item">
                                         <button
                                             className="nav-link text-start w-100 border-0 bg-transparent d-flex justify-content-between align-items-center"
