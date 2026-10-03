@@ -61,8 +61,11 @@ class PessoaPerfilSerializer(serializers.ModelSerializer):
             'cpf',
             'email_institucional',
             'lattes_url',
+            'is_staff',
+            'is_superuser',
             'perfil',
         ]
+        read_only_fields = ['is_staff', 'is_superuser']
 
     def get_perfil(self, obj):
         if obj.is_superuser or obj.is_staff:

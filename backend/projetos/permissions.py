@@ -5,6 +5,16 @@ from django.db.models import Q
 from projetos.models import Projeto
 
 
+def is_admin(user):
+    """True se o usuario e staff ou superuser (pode excluir projetos)."""
+    return bool(getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False))
+
+
+def pode_excluir_projeto(user):
+    """Exclusao de projeto e exclusiva de admin. O soft-delete e mantido."""
+    return is_admin(user)
+
+
 def projetos_visiveis_para(user):
     """Projetos que o usuario logado pode abrir: so os que ele coordena.
 

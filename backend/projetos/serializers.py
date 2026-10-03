@@ -245,14 +245,36 @@ class ProjetoResumoSerializer(serializers.ModelSerializer):
     departamento_nome = serializers.CharField(source='departamento_proponente.nome', read_only=True, default=None)
     coordenador_nome = serializers.CharField(source='coordenador.pessoa.nome_completo', read_only=True)
     situacao_display = serializers.CharField(source='get_situacao_display', read_only=True)
+    # Edicao liberada em qualquer situacao para dono e admin; exclusao so admin.
+    pode_editar = serializers.SerializerMethodField()
+    pode_excluir = serializers.SerializerMethodField()
 
     class Meta:
         model = Projeto
         fields = [
             'id', 'ano', 'numero', 'titulo', 'situacao', 'situacao_display',
+            'unidade_sigla', 'coordenador_nome', 'excluido',
+            'pode_editar', 'pode_excluir', 'created_at', 'updated_at'
             'unidade_sigla', 'departamento_nome', 'coordenador_nome', 'excluido', 'created_at', 'updated_at'
         ]
         read_only_fields = ['excluido']
+
+    def _usuario_admin(self):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        return bool(
+            user is not None
+            and getattr(user, 'is_authenticated', False)
+            and (getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False))
+        )
+
+    def get_pode_editar(self, obj):
+        # Todo projeto listado ja passou pelo filtro de visibilidade
+        # (dono ou admin), e a edicao vale em qualquer situacao por enquanto.
+        return True
+
+    def get_pode_excluir(self, obj):
+        return self._usuario_admin()
 
 
 class ProjetoCreateSerializer(serializers.ModelSerializer):
@@ -266,6 +288,7 @@ class ProjetoCreateSerializer(serializers.ModelSerializer):
         source='projeto_unidades', many=True, required=False)
     parcerias_internas = ParceriaInternaSerializer(many=True, required=False)
     parcerias_externas = ParceriaExternaSerializer(many=True, required=False)
+    demandas_bolsa = DemandaBolsaSerializer(many=True, required=False)
     locais_realizacao = LocalRealizacaoSerializer(many=True, required=False)
     # A aba e "membros_equipe" na tela e no payload, mas a relacao no Projeto
     # se chama "membros"; o source guarda essa traducao.
@@ -284,6 +307,8 @@ class ProjetoCreateSerializer(serializers.ModelSerializer):
          'A mesma pessoa foi enviada mais de uma vez na equipe.'),
         ('planos_trabalho', 'planos_trabalho', 'ano',
          'Ja existe um plano de trabalho para este ano.'),
+        ('demandas_bolsa', 'demandas_bolsa', 'tipo_bolsa',
+         'O mesmo tipo de bolsa foi pedido mais de uma vez.'),
     )
 
     class Meta:
@@ -294,6 +319,7 @@ class ProjetoCreateSerializer(serializers.ModelSerializer):
             'endereco', 'contatos', 'caracterizacao', 'descricao',
             'unidades_envolvidas', 'parcerias_internas', 'parcerias_externas',
             'locais_realizacao', 'membros_equipe', 'planos_trabalho',
+            'demandas_bolsa',
         ]
 
     def __init__(self, *args, **kwargs):
@@ -324,6 +350,7 @@ class ProjetoCreateSerializer(serializers.ModelSerializer):
         membros_data = validated_data.pop('membros', [])
         parcerias_data = validated_data.pop('parcerias_internas', [])
         parcerias_externas_data = validated_data.pop('parcerias_externas', [])
+        demandas_data = validated_data.pop('demandas_bolsa', [])
         locais_data = validated_data.pop('locais_realizacao', [])
         planos_data = validated_data.pop('planos_trabalho', [])
 
@@ -362,6 +389,10 @@ class ProjetoCreateSerializer(serializers.ModelSerializer):
         # 8. Cria as parcerias externas se enviadas
         for parceria_externa_data in parcerias_externas_data:
             ParceriaExterna.objects.create(projeto=projeto, **parceria_externa_data)
+
+        # Demandas de bolsa de extensao
+        for demanda_data in demandas_data:
+            DemandaBolsa.objects.create(projeto=projeto, **demanda_data)
 
         # 9. Cria os locais de realizacao se enviados
         for local_data in locais_data:

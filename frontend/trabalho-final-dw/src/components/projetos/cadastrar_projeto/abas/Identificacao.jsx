@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MUNICIPIOS_RJ } from '../../../../dados/municipiosRJ';
 import { criarMeuVinculo } from '../../../../services/dominioService';
 import CampoContato from '../CampoContato';
+import CampoSomenteLeitura from '../CampoSomenteLeitura';
 
 // Mesma lista do backend (core.VinculoInstitucional.TipoVinculo).
 const TIPOS_VINCULO = [
@@ -22,6 +23,10 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
     const [salvandoVinculo, setSalvandoVinculo] = useState(false);
     const [erroNovoVinculo, setErroNovoVinculo] = useState(null);
     const semVinculo = !carregandoVinculos && !erroVinculos && vinculosCoordenador.length === 0;
+
+    const departamentosDaUnidade = departamentos.filter(
+        (d) => String(d.unidade) === String(form.unidade));
+    const semDepartamento = Boolean(form.unidade) && departamentosDaUnidade.length === 0;
 
     async function cadastrarVinculo(e) {
         e.preventDefault();
@@ -160,15 +165,11 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
                         </div>
                     )}
                 </div>
-                <div className="mb-3">
-                    <label className="form-label">Nome</label>
-                    <input
-                        type="text"
-                        className="form-control"
-                        value={form.coordenador}
-                        readOnly
-                    />
-                </div>
+                <CampoSomenteLeitura
+                    rotulo="Nome"
+                    valor={form.coordenador}
+                    ajuda="Vem do cadastro da matrícula escolhida."
+                />
             </fieldset>
             <fieldset className="border rounded p-3 m-2">
                 <legend>Unidade</legend>
@@ -196,20 +197,29 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
                     <select
                         className={`form-select ${errosValidacao?.departamento ? 'is-invalid' : ''}`}
                         value={form.departamento}
-                        disabled={!form.unidade}
+                        // Boa parte das unidades nao tem departamento nenhum
+                        // cadastrado, entao ali nao ha o que escolher.
+                        disabled={!form.unidade || semDepartamento}
                         onChange={(e) => atualizarCampo("departamento", e.target.value)}
                     >
                         <option value="">
-                            {form.unidade ? "Selecione um departamento" : "Escolha uma unidade primeiro"}
+                            {!form.unidade
+                                ? "Escolha uma unidade primeiro"
+                                : semDepartamento
+                                    ? "Não se aplica"
+                                    : "Selecione um departamento"}
                         </option>
-                        {departamentos
-                            .filter((d) => String(d.unidade) === String(form.unidade))
-                            .map((d) => (
-                                <option key={d.id} value={d.id}>
-                                    {d.nome}
-                                </option>
-                            ))}
+                        {departamentosDaUnidade.map((d) => (
+                            <option key={d.id} value={d.id}>
+                                {d.nome}
+                            </option>
+                        ))}
                     </select>
+                    {semDepartamento && (
+                        <div className="form-text">
+                            Esta unidade não tem departamentos cadastrados, então o campo não se aplica.
+                        </div>
+                    )}
                     {errosValidacao?.departamento && <div className="invalid-feedback">{errosValidacao.departamento}</div>}
                 </div>
             </fieldset>

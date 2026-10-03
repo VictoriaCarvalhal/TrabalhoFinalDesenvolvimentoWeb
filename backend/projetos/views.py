@@ -26,8 +26,9 @@ from projetos.models import (
     DemandaBolsa, LocalRealizacao, MembroEquipe, ParceriaExterna,
     ParceriaInterna, PlanoTrabalho, ProjetoUnidade,
     ProjetoEndereco, ProjetoCaracterizacao, ProjetoDescricao,
-    ProjetoPalavraChave, Projeto
+    ProjetoPalavraChave, ProjetoContato, Projeto
 )
+from projetos.permissions import pode_excluir_projeto, projetos_visiveis_para
 from django.db.models import Q
 from projetos.permissions import projetos_visiveis_para
 from projetos.serializers import (
@@ -124,6 +125,11 @@ class PalavraChaveViewSet(AbaDoProjetoViewSet):
     serializer_class = ProjetoPalavraChaveSerializer
 
 
+class ContatoViewSet(AbaDoProjetoViewSet):
+    queryset = ProjetoContato.objects.all()
+    serializer_class = ProjetoContatoSerializer
+
+
 # Aba -> (viewset, related_name no Projeto). A ordem e a das abas na tela.
 ABAS = [
     ('unidades_envolvidas', UnidadeEnvolvidaViewSet, 'projeto_unidades'),
@@ -208,6 +214,15 @@ class ProjetoViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        # Exclusao e exclusiva de admin; comum recebe 403 em qualquer situacao.
+        if not pode_excluir_projeto(request.user):
+            return Response(
+                {'detail': 'Apenas administradores podem excluir projetos.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().destroy(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
         instance.excluido = True
