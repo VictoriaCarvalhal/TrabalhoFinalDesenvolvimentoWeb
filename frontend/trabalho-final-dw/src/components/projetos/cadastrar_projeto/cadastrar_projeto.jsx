@@ -117,15 +117,28 @@ function CadastrarProjeto() {
     }
 
     function validarEtapa3(f){
-        const erros = {}
+        const erros = {};
         if(!f.resultados_esperados.trim()) erros.resultados_esperados = "Este campo é obrigatório";
         if(!f.cronograma_atividades.trim()) erros.cronograma_atividades = "Este campo é obrigatório";
         return erros;
     }
 
+    function validarEtapa4(f){
+        const erros = {};
+        if(!(f.unidadesEnvolvidas.length > 0 && f.unidadesEnvolvidas.every(item => item.unidade))) erros.unidadesEnvolvidas = "Adicione pelo menos 1 (uma) Unidade Envolvida";
+        return erros;
+    }
+
+    function validarEtapa5(f){
+        const erros = {};
+        if(!(f.parceriasInternas.length > 0 && f.parceriasInternas.every(item => item.nome_instituicao.trim() && item.unidade && item.participacao))) erros.parceriasInternas = "Adicione pelo menos 1 (uma) Parceria Interna";
+        if(!(f.parceriasExternas.length > 0 && f.parceriasExternas.every(item => item.nome_instituicao.trim() && item.tipo_instituicao && item.participacao))) erros.parceriasExternas = "Adicione pelo menos 1 (uma) Parceria Externa";
+        return erros;
+    }
+
     function validarEtapa7(f){
         const erros = {}
-        if(!(f.locaisRealizacao.length > 0 && f.locaisRealizacao.every(item => item.nome_local.trim() && item.municipio))) erros.locais_realizacao = "Adicione pelo menos 1 (um) Local de Realização";
+        if(!(f.locaisRealizacao.length > 0 && f.locaisRealizacao.every(item => item.nome_local.trim() && item.municipio))) erros.locaisRealizacao = "Adicione pelo menos 1 (um) Local de Realização";
         return erros;
     }
 
@@ -134,6 +147,8 @@ function CadastrarProjeto() {
            if (indice === 1) return validarEtapa1(f);
            if (indice === 2) return validarEtapa2(f);
            if (indice === 3) return validarEtapa3(f);
+           if (indice === 4) return validarEtapa4(f);
+           if (indice === 5) return validarEtapa5(f);
            if (indice === 7) return validarEtapa7(f);
            return {};
     }
@@ -419,6 +434,8 @@ function CadastrarProjeto() {
                     ...validarEtapa1(atualizado),
                     ...validarEtapa2(atualizado),
                     ...validarEtapa3(atualizado),
+                    ...validarEtapa4(atualizado),
+                    ...validarEtapa5(atualizado),
                     ...validarEtapa7(atualizado),
                 }[campo];
                 if (aindaComErro) return errosAtuais;
@@ -505,6 +522,8 @@ function CadastrarProjeto() {
             { indice: 1, nome: ABAS[1].label, erros: validarEtapa1(form) },
             { indice: 2, nome: ABAS[2].label, erros: validarEtapa2(form) },
             { indice: 3, nome: ABAS[3].label, erros: validarEtapa3(form) },
+            { indice: 4, nome: ABAS[4].label, erros: validarEtapa4(form) },
+            { indice: 5, nome: ABAS[5].label, erros: validarEtapa5(form) },
             { indice: 7, nome: ABAS[7].label, erros: validarEtapa7(form) },
         ].filter((etapa) => Object.keys(etapa.erros).length > 0);
 
@@ -525,7 +544,7 @@ function CadastrarProjeto() {
     // tanto as abas vermelhas quanto o resumo do topo. Só aparece depois da
     // primeira tentativa de envio.
     const errosPorAba = tentouEnviar
-        ? [validarEtapa0(form), validarEtapa1(form), validarEtapa2(form), validarEtapa3(form), validarEtapa7(form)]
+        ? [validarEtapa0(form), validarEtapa1(form), validarEtapa2(form), validarEtapa3(form), validarEtapa4(form), validarEtapa5(form), validarEtapa7(form)]
         : [{}, {}, {}];
     const totalPendencias = errosPorAba.reduce(
         (total, erros) => total + Object.keys(erros).length, 0);
