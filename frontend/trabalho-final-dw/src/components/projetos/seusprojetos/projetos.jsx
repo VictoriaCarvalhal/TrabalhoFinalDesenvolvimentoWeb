@@ -63,7 +63,6 @@ function Projetos() {
     function redirecionaParaImpressao(id) {
         navigate(ROTAS.imprimirProjeto(id));
     }
-    }
 
     function redirecionaParaEdicao(id){
         navigate(ROTAS.editarProjeto(id));

@@ -329,8 +329,8 @@ function montarConteudo(dados, geradoEm, geradoPor, logo) {
 async function montarPdf(dados, { geradoEm, geradoPor } = {}) {
     // Import dinâmico: o bundle do pdfmake só baixa no clique.
     const [{ default: pdfMake }, helveticaMod] = await Promise.all([
-        import('pdfmake/build/pdfmake'),
-        import('pdfmake/build/standard-fonts/Helvetica'),
+        import('pdfmake/build/pdfmake.js'),
+        import('pdfmake/build/standard-fonts/Helvetica.js'),
     ]);
     // Interop CJS: o container pode vir no default ou direto no namespace.
     const container = helveticaMod?.fonts ? helveticaMod : helveticaMod?.default;
