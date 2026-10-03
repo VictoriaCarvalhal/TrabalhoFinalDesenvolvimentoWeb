@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../../services/api';
+import DialogoFormulario from '../DialogoFormulario';
 
 // Mesma lista do backend (core.VinculoInstitucional.TipoVinculo).
 const TIPOS_VINCULO = [
@@ -23,25 +24,32 @@ const FUNCOES = [
     { valor: 'DISCENTE', rotulo: 'Discente' },
 ];
 
-const LINHA_VAZIA = {
-    id: null, vinculo: null, tipo_vinculo: '', matricula: '', cpf: '',
-    nome: '', funcao: '', busca: '', filtroTipo: '',
+const MEMBRO_VAZIO = {
+    id: null, vinculo: null, nome: '', cpf: '', matricula: '',
+    tipo_vinculo: '', tipo_vinculo_display: '', funcao: '',
 };
 
-// Aplica máscara de CPF
+// Deixa o CPF no formato 000.000.000-00 (só para exibir).
 function mascaraCpf(valor) {
-    const nums = (valor || '').replace(/\D/g, '').slice(0, 11);
-    if (nums.length <= 3) return nums;
-    if (nums.length <= 6) return nums.slice(0, 3) + '.' + nums.slice(3);
-    if (nums.length <= 9) return nums.slice(0, 3) + '.' + nums.slice(3, 6) + '.' + nums.slice(6);
-    return nums.slice(0, 3) + '.' + nums.slice(3, 6) + '.' + nums.slice(6, 9) + '-' + nums.slice(9);
+    const nums = (valor || '').replace(/\D/g, '');
+    if (nums.length !== 11) return valor || '';
+    return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6, 9)}-${nums.slice(9)}`;
 }
 
+// Aba "Membros da Equipe". Segue a forma das outras abas de lista: a tabela
+// só mostra quem já está na equipe e o cadastro é feito no diálogo.
+// No diálogo a pessoa é achada pela matrícula ou CPF, ou pelo tipo de vínculo.
 function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
-    const [buscando, setBuscando] = useState({});
-    const [sugestoes, setSugestoes] = useState({});
+    const [edicao, setEdicao] = useState(null);
+
+    // Busca de pessoa dentro do diálogo
+    const [busca, setBusca] = useState('');
+    const [filtroTipo, setFiltroTipo] = useState('');
+    const [sugestoes, setSugestoes] = useState([]);
+    const [buscando, setBuscando] = useState(false);
+    const [erroDialogo, setErroDialogo] = useState(null);
 
     useEffect(() => {
         if (!projetoId) return;
@@ -54,26 +62,122 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
         onChange?.(linhas);
     }, [linhas]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    function novaLinha() {
-        setLinhas((atuais) => [...atuais, { ...LINHA_VAZIA }]);
+    function limparBusca() {
+        setBusca('');
+        setFiltroTipo('');
+        setSugestoes([]);
+        setErroDialogo(null);
     }
 
-    function editar(indice, mudancas) {
-        setLinhas((atuais) => atuais.map((l, i) => (i === indice ? { ...l, ...mudancas } : l)));
+    function abrirNovo() {
+        limparBusca();
+        setEdicao({ indice: null, dados: { ...MEMBRO_VAZIO } });
     }
 
-    async function gravar(indice, linha) {
-        if (!projetoId || !linha.vinculo || !linha.funcao) return;
+    function abrirEdicao(indice) {
+        limparBusca();
+        setEdicao({ indice, dados: { ...linhas[indice] } });
+    }
+
+    function mudarCampo(mudancas) {
+        setEdicao((atual) => ({ ...atual, dados: { ...atual.dados, ...mudancas } }));
+    }
+
+    // A filtragem é feita no backend: /dominios/vinculos/?q=...&tipo=...
+    async function buscarPessoa(tipo = filtroTipo) {
+        const termo = busca.trim();
+        setSugestoes([]);
+        setErroDialogo(null);
+        if (!termo && !tipo) return;
+
+        setBuscando(true);
         try {
-            setErro(null);
-            const corpo = { vinculo: linha.vinculo, funcao: linha.funcao };
-            const resposta = linha.id
-                ? await api.patch(`/projetos/${projetoId}/membros-equipe/${linha.id}/`, corpo)
+            const params = new URLSearchParams();
+            if (termo) params.append('q', termo);
+            if (tipo) params.append('tipo', tipo);
+
+            const resposta = await api.get(`/dominios/vinculos/?${params.toString()}`);
+            const encontrados = resposta.data;
+
+            if (encontrados.length === 0) {
+                setErroDialogo('Nenhuma pessoa encontrada.');
+            } else if (encontrados.length === 1) {
+                selecionarPessoa(encontrados[0]);
+            } else {
+                setSugestoes(encontrados);
+            }
+        } catch {
+            setErroDialogo('Erro ao buscar pessoa. Tente novamente.');
+        } finally {
+            setBuscando(false);
+        }
+    }
+
+    // Ao escolher o tipo de vínculo a busca já roda, sem precisar clicar em Buscar.
+    function trocarTipo(tipo) {
+        setFiltroTipo(tipo);
+        buscarPessoa(tipo);
+    }
+
+    function selecionarPessoa(vinculo) {
+        mudarCampo({
+            vinculo: vinculo.id,
+            nome: vinculo.nome_completo,
+            cpf: vinculo.cpf || '',
+            matricula: vinculo.matricula || '',
+            tipo_vinculo: vinculo.tipo_vinculo,
+            tipo_vinculo_display: vinculo.tipo_vinculo_display,
+        });
+        setSugestoes([]);
+    }
+
+    function trocarPessoa() {
+        mudarCampo({
+            vinculo: null, nome: '', cpf: '', matricula: '',
+            tipo_vinculo: '', tipo_vinculo_display: '',
+        });
+        limparBusca();
+    }
+
+    function completo(membro) {
+        return Boolean(membro.vinculo) && Boolean(membro.funcao);
+    }
+
+    // O backend recusa a mesma pessoa duas vezes no projeto, então a tela avisa antes.
+    function pessoaRepetida(membro, indice) {
+        return linhas.some((l, i) => i !== indice && l.vinculo === membro.vinculo);
+    }
+
+    async function salvar() {
+        const { indice, dados } = edicao;
+        if (!completo(dados)) return;
+        if (pessoaRepetida(dados, indice)) {
+            setErroDialogo('Esta pessoa já está na equipe.');
+            return;
+        }
+
+        // Sem projeto gravado ainda, o membro fica na lista e sobe junto no envio.
+        if (!projetoId) {
+            setLinhas((atuais) => (indice === null
+                ? [...atuais, dados]
+                : atuais.map((l, i) => (i === indice ? dados : l))));
+            setEdicao(null);
+            return;
+        }
+
+        try {
+            const corpo = { vinculo: dados.vinculo, funcao: dados.funcao };
+            const resposta = dados.id
+                ? await api.patch(`/projetos/${projetoId}/membros-equipe/${dados.id}/`, corpo)
                 : await api.post(`/projetos/${projetoId}/membros-equipe/`, corpo);
-            editar(indice, resposta.data);
+            const gravado = { ...dados, ...resposta.data };
+            setLinhas((atuais) => (indice === null
+                ? [...atuais, gravado]
+                : atuais.map((l, i) => (i === indice ? gravado : l))));
+            setEdicao(null);
         } catch (err) {
             const detalhe = err.response?.data;
-            setErro(detalhe ? Object.values(detalhe).flat().join(' ') : 'Erro ao gravar o membro.');
+            setErroDialogo(detalhe ? Object.values(detalhe).flat().join(' ') : 'Erro ao gravar o membro.');
         }
     }
 
@@ -88,148 +192,135 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
             }
         }
         setLinhas((atuais) => atuais.filter((_, i) => i !== indice));
-        setSugestoes((a) => { const novo = { ...a }; delete novo[indice]; return novo; });
     }
 
-    // Busca pelo tipo de vínculo e/ou texto digitado (matrícula ou CPF).
-    async function buscarPessoa(indice, novoFiltro = null) {
-        const linha = linhas[indice];
-        const termo = (linha.busca || '').trim();
-        const filtroTipo = novoFiltro !== null ? novoFiltro : (linha.filtroTipo || '');
-
-        // Precisa ter pelo menos um filtro
-        if (!termo && !filtroTipo) return;
-
-        setBuscando((estadoAtual) => ({ ...estadoAtual, [indice]: true }));
-        setErro(null);
-        setSugestoes((estadoAtual) => ({ ...estadoAtual, [indice]: [] }));
-
-        try {
-            const params = new URLSearchParams();
-            if (termo) params.append('q', termo);
-            if (filtroTipo) params.append('tipo', filtroTipo);
-
-            const resposta = await api.get(`/dominios/vinculos/?${params.toString()}`);
-            const encontrados = resposta.data;
-
-            if (encontrados.length === 0) {
-                setErro('Nenhuma pessoa encontrada. Verifique os filtros.');
-            } else if (encontrados.length === 1) {
-                selecionarPessoa(indice, encontrados[0]);
-            } else {
-                setSugestoes((estadoAtual) => ({ ...estadoAtual, [indice]: encontrados }));
-            }
-        } catch {
-            setErro('Erro ao buscar pessoa. Tente novamente.');
-        } finally {
-            setBuscando((estadoAtual) => ({ ...estadoAtual, [indice]: false }));
-        }
+    function nomeVinculo(linha) {
+        if (linha.tipo_vinculo_display) return linha.tipo_vinculo_display;
+        const t = TIPOS_VINCULO.find((x) => x.valor === linha.tipo_vinculo);
+        return t ? t.rotulo : '—';
     }
 
-    function selecionarPessoa(indice, vinculo) {
-        const jaEsta = linhas.some((linhaAtual, i) => i !== indice && linhaAtual.vinculo === vinculo.id);
-        if (jaEsta) {
-            setErro('Esta pessoa já está na equipe.');
-            return;
-        }
-
-        const dadosPreenchidos = {
-            vinculo: vinculo.id,
-            tipo_vinculo: vinculo.tipo_vinculo,
-            matricula: vinculo.matricula || '',
-            cpf: vinculo.cpf || '',
-            nome: vinculo.nome_completo,
-        };
-        editar(indice, dadosPreenchidos);
-        setSugestoes((a) => { const novo = { ...a }; delete novo[indice]; return novo; });
-
-        const linha = linhas[indice];
-        if (linha.funcao) {
-            gravar(indice, { ...linha, ...dadosPreenchidos });
-        }
+    function nomeFuncao(linha) {
+        const f = FUNCOES.find((x) => x.valor === linha.funcao);
+        return f ? f.rotulo : '—';
     }
 
-    function limparPessoa(indice) {
-        editar(indice, {
-            vinculo: null, tipo_vinculo: '', matricula: '', cpf: '',
-            nome: '', busca: '', filtroTipo: '',
-        });
-    }
-
-    function trocarFuncao(indice, funcao) {
-        editar(indice, { funcao });
-        gravar(indice, { ...linhas[indice], funcao });
-    }
-
-    function rotuloVinculo(valor) {
-        const tipo = TIPOS_VINCULO.find((t) => t.valor === valor);
-        return tipo ? tipo.rotulo : valor;
-    }
+    const dados = edicao?.dados;
 
     return (
         <fieldset>
             <legend>Membros da Equipe</legend>
 
             <p className="small text-body-secondary">
-                Clique em "Novo" para adicionar um membro. Filtre por tipo de vínculo
-                e/ou digite a matrícula, CPF ou nome da pessoa.
+                Pessoas que participam do projeto. Para incluir, procure pela matrícula
+                ou CPF, ou escolha o tipo de vínculo para ver a lista.
             </p>
-
-            <button type="button" className="btn btn-sm btn-primary mb-3" onClick={novaLinha}>
-                <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Novo
-            </button>
 
             {coordenador && (
                 <p className="mb-2"><strong>Coordenador:</strong> {coordenador}</p>
             )}
 
+            <button type="button" className="btn btn-sm btn-primary mb-3" onClick={abrirNovo}>
+                <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Novo membro
+            </button>
+
             {erro && <div className="alert alert-danger py-2">{erro}</div>}
 
-            {linhas.length === 0 && (
-                <p className="text-muted">Nenhum membro cadastrado.</p>
-            )}
+            <div className="table-responsive">
+                <table className="table table-bordered align-middle">
+                    <thead className="table-light">
+                        <tr>
+                            <th scope="col" style={{ width: '4rem' }}>Nº</th>
+                            <th scope="col">Nome</th>
+                            <th scope="col">Tipo de vínculo</th>
+                            <th scope="col">Matrícula / CPF</th>
+                            <th scope="col">Cargo/Perfil</th>
+                            <th scope="col" style={{ width: '7rem' }}>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {linhas.length === 0 && (
+                            <tr>
+                                <td colSpan={6} className="text-muted text-center">
+                                    Nenhum membro cadastrado.
+                                </td>
+                            </tr>
+                        )}
+                        {linhas.map((linha, i) => (
+                            <tr key={linha.id ?? `novo-${i}`}>
+                                <td>{i + 1}.</td>
+                                <td>{linha.nome}</td>
+                                <td>{nomeVinculo(linha)}</td>
+                                <td>{linha.matricula || mascaraCpf(linha.cpf)}</td>
+                                <td>{nomeFuncao(linha)}</td>
+                                <td className="text-nowrap">
+                                    <div className="d-flex gap-2">
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-secondary"
+                                            onClick={() => abrirEdicao(i)}
+                                            aria-label={`Editar o membro ${i + 1}`}
+                                            title="Editar"
+                                        >
+                                            <i className="bi bi-pencil" aria-hidden="true"></i>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-danger"
+                                            onClick={() => excluir(i)}
+                                            aria-label={`Excluir o membro ${i + 1}`}
+                                            title="Excluir"
+                                        >
+                                            <i className="bi bi-trash" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
 
-            {linhas.map((linha, i) => (
-                <div key={linha.id ?? `nova-${i}`} className="border rounded p-3 mb-3">
-                    <div className="d-flex justify-content-between align-items-center mb-2">
-                        <strong>Membro {i + 1}</strong>
-                        <button
-                            type="button"
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => excluir(i)}
-                        >
-                            <i className="bi bi-trash me-1" aria-hidden="true"></i>Remover
-                        </button>
-                    </div>
-
-                    {!linha.vinculo ? (
+            {edicao && (
+                <DialogoFormulario
+                    titulo={edicao.indice === null ? 'Novo membro da equipe' : 'Editar membro da equipe'}
+                    aoSalvar={salvar}
+                    aoFechar={() => setEdicao(null)}
+                    salvarDesabilitado={!completo(dados)}
+                    erro={erroDialogo}
+                >
+                    {!dados.vinculo ? (
                         <>
-                            <div className="row g-2 align-items-end">
-                                <div className="col-sm-4">
-                                    <label className="form-label">Matrícula ou CPF</label>
+                            <div className="row g-2 align-items-end mb-2">
+                                <div className="col-sm-5">
+                                    <label className="form-label" htmlFor="me-busca">Matrícula ou CPF</label>
                                     <input
+                                        id="me-busca"
                                         type="text"
                                         className="form-control"
                                         placeholder="Ex: 202520402012"
-                                        value={linha.busca || ''}
-                                        onChange={(e) => editar(i, { busca: e.target.value })}
-                                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); buscarPessoa(i); } }}
+                                        value={busca}
+                                        onChange={(e) => setBusca(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            // Enter aqui busca a pessoa em vez de salvar o diálogo
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                buscarPessoa();
+                                            }
+                                        }}
                                     />
                                 </div>
-                                <div className="col-sm-4">
-                                    <label className="form-label">Tipo de Vínculo</label>
+                                <div className="col-sm-5">
+                                    <label className="form-label" htmlFor="me-tipo">Tipo de vínculo</label>
                                     <select
+                                        id="me-tipo"
                                         className="form-select"
-                                        value={linha.filtroTipo || ''}
-                                        onChange={(e) => {
-                                            const novoValor = e.target.value;
-                                            editar(i, { filtroTipo: novoValor });
-                                            buscarPessoa(i, novoValor);
-                                        }}
+                                        value={filtroTipo}
+                                        onChange={(e) => trocarTipo(e.target.value)}
                                     >
                                         <option value="">[Todos]</option>
-                                        {TIPOS_VINCULO.map((tipoOpcao) => (
-                                            <option key={tipoOpcao.valor} value={tipoOpcao.valor}>{tipoOpcao.rotulo}</option>
+                                        {TIPOS_VINCULO.map((t) => (
+                                            <option key={t.valor} value={t.valor}>{t.rotulo}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -237,83 +328,84 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
                                     <button
                                         type="button"
                                         className="btn btn-outline-primary w-100"
-                                        disabled={(!linha.busca && !linha.filtroTipo) || buscando[i]}
-                                        onClick={() => buscarPessoa(i)}
+                                        disabled={(!busca.trim() && !filtroTipo) || buscando}
+                                        onClick={() => buscarPessoa()}
                                     >
-                                        {buscando[i] ? 'Buscando...' : 'Buscar'}
+                                        {buscando ? '...' : 'Buscar'}
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Sugestões quando acha mais de uma pessoa */}
-                            {sugestoes[i] && sugestoes[i].length > 0 && (
-                                <div className="mt-2">
-                                    <p className="small fw-bold mb-1">Selecione a pessoa:</p>
+                            {sugestoes.length > 0 && (
+                                <>
+                                    <p className="small fw-semibold mb-1">Selecione a pessoa:</p>
                                     <div className="list-group" style={{ maxHeight: '250px', overflowY: 'auto' }}>
-                                        {sugestoes[i].map((vinculoSugerido) => (
+                                        {sugestoes.map((v) => (
                                             <button
-                                                key={vinculoSugerido.id}
+                                                key={v.id}
                                                 type="button"
                                                 className="list-group-item list-group-item-action d-flex justify-content-between"
-                                                onClick={() => selecionarPessoa(i, vinculoSugerido)}
+                                                onClick={() => selecionarPessoa(v)}
                                             >
-                                                <span>{vinculoSugerido.nome_completo}</span>
+                                                <span>{v.nome_completo}</span>
                                                 <span className="text-muted">
-                                                    {vinculoSugerido.matricula || mascaraCpf(vinculoSugerido.cpf)} — {vinculoSugerido.tipo_vinculo_display}
+                                                    {v.matricula || mascaraCpf(v.cpf)} — {v.tipo_vinculo_display}
                                                 </span>
                                             </button>
                                         ))}
                                     </div>
-                                </div>
+                                </>
                             )}
                         </>
                     ) : (
                         <>
                             <div className="row g-2 mb-2">
-                                <div className="col-sm-4">
-                                    <label className="form-label">Nome</label>
-                                    <input type="text" className="form-control" value={linha.nome} readOnly />
+                                <div className="col-sm-6">
+                                    <label className="form-label" htmlFor="me-nome">Nome</label>
+                                    <input id="me-nome" type="text" className="form-control" value={dados.nome} readOnly />
                                 </div>
                                 <div className="col-sm-3">
-                                    <label className="form-label">Tipo de Vínculo</label>
-                                    <input type="text" className="form-control" value={rotuloVinculo(linha.tipo_vinculo)} readOnly />
+                                    <label className="form-label" htmlFor="me-vinculo">Tipo de vínculo</label>
+                                    <input id="me-vinculo" type="text" className="form-control" value={nomeVinculo(dados)} readOnly />
                                 </div>
-                                {linha.matricula ? (
-                                    <div className="col-sm-2">
-                                        <label className="form-label">Matrícula</label>
-                                        <input type="text" className="form-control" value={linha.matricula} readOnly />
-                                    </div>
-                                ) : (
-                                    <div className="col-sm-2">
-                                        <label className="form-label">CPF</label>
-                                        <input type="text" className="form-control" value={mascaraCpf(linha.cpf)} readOnly />
-                                    </div>
-                                )}
+                                {/* Quem tem matrícula mostra a matrícula; externo mostra o CPF */}
                                 <div className="col-sm-3">
-                                    <label className="form-label">Cargo/Perfil</label>
-                                    <select
-                                        className="form-select"
-                                        value={linha.funcao}
-                                        onChange={(e) => trocarFuncao(i, e.target.value)}
-                                    >
-                                        <option value="">[Selecione]</option>
-                                        {FUNCOES.map((funcaoOpcao) => (
-                                            <option key={funcaoOpcao.valor} value={funcaoOpcao.valor}>{funcaoOpcao.rotulo}</option>
-                                        ))}
-                                    </select>
+                                    <label className="form-label" htmlFor="me-documento">
+                                        {dados.matricula ? 'Matrícula' : 'CPF'}
+                                    </label>
+                                    <input
+                                        id="me-documento"
+                                        type="text"
+                                        className="form-control"
+                                        value={dados.matricula || mascaraCpf(dados.cpf)}
+                                        readOnly
+                                    />
                                 </div>
                             </div>
-                            <button
-                                type="button"
-                                className="btn btn-sm btn-outline-secondary"
-                                onClick={() => limparPessoa(i)}
-                            >
-                                <i className="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Trocar pessoa
+
+                            <button type="button" className="btn btn-link btn-sm px-0 mb-3" onClick={trocarPessoa}>
+                                Trocar pessoa
                             </button>
+
+                            <div className="mb-3">
+                                <label className="form-label" htmlFor="me-funcao">Cargo/Perfil *</label>
+                                <select
+                                    id="me-funcao"
+                                    className="form-select"
+                                    value={dados.funcao}
+                                    required
+                                    onChange={(e) => mudarCampo({ funcao: e.target.value })}
+                                >
+                                    <option value="">[Selecione]</option>
+                                    {FUNCOES.map((f) => (
+                                        <option key={f.valor} value={f.valor}>{f.rotulo}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </>
                     )}
-                </div>
-            ))}
+                </DialogoFormulario>
+            )}
         </fieldset>
     );
 }
