@@ -28,7 +28,7 @@ from projetos.models import (
     ProjetoEndereco, ProjetoCaracterizacao, ProjetoDescricao,
     ProjetoPalavraChave, ProjetoContato, Projeto
 )
-from projetos.permissions import pode_excluir_projeto, projetos_visiveis_para
+from projetos.permissions import is_admin, pode_excluir_projeto, projetos_visiveis_para
 from django.db.models import Q
 from projetos.serializers import (
     DemandaBolsaSerializer, LocalRealizacaoSerializer, MembroEquipeSerializer,
@@ -185,6 +185,17 @@ class ProjetoViewSet(viewsets.ModelViewSet):
 'caracterizacao', 'descricao')
             .prefetch_related('contatos')
         )
+
+        # Aba da lixeira: ?excluido=true mostra só excluídos, ?excluido=false (default) só ativos.
+        # Comum sempre vê só ativos, mesmo se pedir excluido=true.
+        excluido_param = (self.request.query_params.get('excluido') or '').strip().lower()
+        if is_admin(self.request.user):
+            if excluido_param == 'true':
+                qs = qs.filter(excluido=True)
+            else:
+                qs = qs.filter(excluido=False)
+        else:
+            qs = qs.filter(excluido=False)
 
         search = self.request.query_params.get('search', '').strip()
         busca_por = self.request.query_params.get('busca_por', 'nome')

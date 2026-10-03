@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../../../stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
@@ -29,6 +29,10 @@ function Projetos() {
     const [tipoBusca, setTipoBusca] = useState('nome');
     const [ordemAlfabetica, setOrdemAlfabetica] = useState('asc');
     const [ordemCronologica, setOrdemCronologica] = useState('recentes');
+    // Aba da lixeira (só admin): false = ativos, true = excluídos.
+    const [mostrandoExcluidos, setMostrandoExcluidos] = useState(false);
+    // Ignora respostas antigas quando o usuário troca rápido de aba/página.
+    const buscaIdRef = useRef(0);
 
     function redirecionaProCadastro() {
         navigate('/Projetos/CadastrarProjeto');
@@ -43,15 +47,15 @@ function Projetos() {
     }
 
     async function handleExcluir(projeto) {
-        if (!window.confirm(`Excluir o projeto "${projeto.titulo}"? Ele ficará marcado como excluído.`)) {
+        if (!window.confirm(`Excluir o projeto "${projeto.titulo}"? Ele irá para a lixeira.`)) {
             return;
         }
         setExcluindoId(projeto.id);
         setErro(null);
         try {
             await excluirProjeto(projeto.id);
-            // Admin continua vendo o projeto, agora com tag de excluído.
-            setProjetos((atuais) => atuais.map((p) => (p.id === projeto.id ? { ...p, excluido: true } : p)));
+            // Sai da aba de ativos; aparece na lixeira ao trocar de aba.
+            setProjetos((atuais) => atuais.filter((p) => p.id !== projeto.id));
         } catch (err) {
             setErro(err.response?.data?.detail ?? 'Erro ao excluir projeto.');
         } finally {
@@ -67,7 +71,8 @@ function Projetos() {
         setErro(null);
         try {
             await restaurarProjeto(projeto.id);
-            setProjetos((atuais) => atuais.map((p) => (p.id === projeto.id ? { ...p, excluido: false } : p)));
+            // Sai da lixeira; volta aos ativos ao trocar de aba.
+            setProjetos((atuais) => atuais.filter((p) => p.id !== projeto.id));
         } catch (err) {
             setErro(err.response?.data?.detail ?? 'Erro ao restaurar projeto.');
         } finally {
@@ -99,6 +104,7 @@ function Projetos() {
         }
 
         async function buscarProjetos() {
+            const buscaId = ++buscaIdRef.current;
             try {
                 setCarregando(true);
                 setErro(null);
@@ -113,6 +119,8 @@ function Projetos() {
                     page: paginaAtual,
                     search: buscaAplicada || undefined,
                     busca_por: tipoBusca,
+                    // Backend separa as abas; comum ignora e sempre recebe ativos.
+                    excluido: mostrandoExcluidos ? 'true' : 'false',
                 };
                 if (orderingArray.length > 0) {
                     params.ordering = orderingArray.join(',');
@@ -122,29 +130,39 @@ function Projetos() {
                 const resposta = await api.get('/projetos/', { params });
                 const dados = resposta.data;
 
+                // A API pagina a resposta, então os itens vêm em "results".
+                // O backend já separa ativos/excluídos por aba; o filtro aqui é só defesa para comum.
+                const lista = Array.isArray(dados) ? dados : dados.results ?? [];
+                // Ignora resposta antiga se outra busca já começou (troca rápida de aba/página).
+                if (buscaIdRef.current !== buscaId) {
+                    return;
+                }
                 if (dados && dados.count != undefined) {
                     setTotalPaginas(Math.ceil(dados.count / 6));
                 } else {
                     setTotalPaginas(1);
                 }
-
-                // A API pagina a resposta (PAGE_SIZE: 20), então os itens vêm em "results".
-                // Admin vê inclusive excluídos (com tag); comum nunca vê excluído.
-                const lista = Array.isArray(dados) ? dados : dados.results ?? [];
                 setProjetos(isAdmin ? lista : lista.filter((p) => !p.excluido));
             } catch (err) {
+                // Ignora erro de busca antiga também.
+                if (buscaIdRef.current !== buscaId) {
+                    return;
+                }
                 if (err.response?.status === 401 || err.response?.status === 403) {
                     setErro('Você precisa estar logado para ver seus projetos.');
                 } else {
                     setErro(err.response?.data?.detail ?? 'Erro ao buscar projetos.');
                 }
             } finally {
-                setCarregando(false);
+                // Só limpa o carregando se for a busca mais recente.
+                if (buscaIdRef.current === buscaId) {
+                    setCarregando(false);
+                }
             }
         }
 
         buscarProjetos();
-    }, [isAutenticado, isAdmin, paginaAtual, buscaAplicada, tipoBusca, ordemAlfabetica, ordemCronologica]);
+    }, [isAutenticado, isAdmin, mostrandoExcluidos, paginaAtual, buscaAplicada, tipoBusca, ordemAlfabetica, ordemCronologica]);
 
     const handleAplicarBusca = (termo) => {
         setPaginaAtual(1);
@@ -166,6 +184,19 @@ function Projetos() {
         setPaginaAtual(1);
     };
 
+    const handleTrocarAba = (excluidos) => {
+        setMostrandoExcluidos(excluidos);
+        setPaginaAtual(1);
+    };
+
+    // Comum nunca fica na lixeira: se perder o admin, volta aos ativos.
+    useEffect(() => {
+        if (!isAdmin && mostrandoExcluidos) {
+            setMostrandoExcluidos(false);
+            setPaginaAtual(1);
+        }
+    }, [isAdmin, mostrandoExcluidos]);
+
     const carregandoInicial = carregando && projetos.length === 0 && !buscaAplicada;
 
     return (
@@ -177,7 +208,28 @@ function Projetos() {
                 <h1 className="visually-hidden">Seus projetos</h1>
 
                 {!carregandoInicial && (
-                    <div className="d-flex flex-wrap align-items-center justify-content-end gap-2">
+                    <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        {isAdmin ? (
+                            <div className="btn-group" role="group" aria-label="Filtrar projetos ativos ou excluídos">
+                                <button
+                                    type="button"
+                                    className={`btn ${!mostrandoExcluidos ? 'btn-secondary' : 'btn-outline-secondary'}`}
+                                    onClick={() => handleTrocarAba(false)}
+                                >
+                                    Ativos
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`btn ${mostrandoExcluidos ? 'btn-secondary' : 'btn-outline-secondary'}`}
+                                    onClick={() => handleTrocarAba(true)}
+                                >
+                                    <i className="bi bi-trash me-1" aria-hidden="true"></i>
+                                    Excluídos
+                                </button>
+                            </div>
+                        ) : (
+                            <span />
+                        )}
                         <button
                             type="button"
                             className="btn btn-primary"
@@ -233,10 +285,21 @@ function Projetos() {
                 )}
 
                 {isAutenticado && !carregando && !erro && projetos.length === 0 && (
-                    <p className="mt-3 text-muted">Nenhum projeto encontrado.</p>
+                    <p className="mt-3 text-muted">
+                        {mostrandoExcluidos ? 'Nenhum projeto excluído.' : 'Nenhum projeto encontrado.'}
+                    </p>
                 )}
 
-                {isAutenticado && !carregando && !erro && projetos.length > 0 && (
+                {isAutenticado && carregando && projetos.length > 0 && (
+                    <div className="d-flex align-items-center mt-3 text-muted" role="status" aria-live="polite">
+                        <div className="spinner-border spinner-border-sm me-2" role="status">
+                            <span className="visually-hidden">Carregando...</span>
+                        </div>
+                        <span>Carregando projetos...</span>
+                    </div>
+                )}
+
+                {isAutenticado && !erro && projetos.length > 0 && (
                     <div style={{ opacity: carregando ? 0.5 : 1, transition: 'opacity 0.3s', pointerEvents: carregando ? 'none' : 'auto' }}>
                         {/* Visão de Cartões para Todos os Dispositivos */}
                         <div className="mt-3">
