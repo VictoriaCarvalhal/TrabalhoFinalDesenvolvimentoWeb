@@ -74,7 +74,7 @@ api.interceptors.response.use(
                     localStorage.removeItem('access');
                     localStorage.removeItem('refresh');
                     
-                    // Redireciona apenas se não estivermos na página de login/home
+                    // Redireciona apenas se não estiver na página de login/home
                     if (window.location.pathname !== '/') {
                         window.location.href = '/';
                     }
