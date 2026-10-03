@@ -9,7 +9,7 @@ import { MUNICIPIOS_RJ } from '../../../../dados/municipiosRJ';
 // Enquanto o projeto ainda não foi criado (sem projetoId) as linhas ficam só
 // na memória e sobem pelo onChange, pra página juntar tudo no salvar. Com o
 // projetoId, cada linha é gravada na hora em /projetos/<id>/locais-realizacao/.
-function LocaisRealizacao({ projetoId, valor = [], onChange }) {
+function LocaisRealizacao({ projetoId, valor = [], onChange, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
 
@@ -71,6 +71,7 @@ function LocaisRealizacao({ projetoId, valor = [], onChange }) {
             <p className="small text-body-secondary mb-1">Os campos com * são obrigatórios.</p>
             <p className="small text-body-secondary">Use o botão abaixo para acrescentar um local.</p>
 
+            {errosValidacao.LocaisRealizacao && <div className="alert alert-danger py-2">{errosValidacao.LocaisRealizacao}</div>}
             <button type="button" className="btn btn-sm btn-primary mb-3" onClick={novaLinha}>
                 <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Novo
             </button>

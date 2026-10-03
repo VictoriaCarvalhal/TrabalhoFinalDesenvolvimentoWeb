@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../../services/api';
 
-function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], onChange }) {
+function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], onChange, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
 
@@ -63,6 +63,7 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
             <p className="small text-body-secondary mb-1">Os campos com * são obrigatórios.</p>
             <p className="small text-body-secondary">Use o botão abaixo para acrescentar uma unidade.</p>
 
+            {errosValidacao.unidadesEnvolvidas && <div className="alert alert-danger py-2">{errosValidacao.unidadesEnvolvidas}</div>}
             <button type="button" className="btn btn-sm btn-primary mb-3" onClick={novaLinha}>
                 <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Novo
             </button>

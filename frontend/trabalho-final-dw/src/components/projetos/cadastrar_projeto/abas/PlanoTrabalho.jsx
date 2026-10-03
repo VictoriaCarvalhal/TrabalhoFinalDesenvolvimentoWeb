@@ -2,7 +2,7 @@ import React from 'react';
 import CampoTextoLongo from '../CampoTextoLongo';
 import CampoSomenteLeitura from '../CampoSomenteLeitura';
 
-function PlanoTrabalho({ form, atualizarCampo }) {
+function PlanoTrabalho({ form, atualizarCampo, errosValidacao }) {
     return (
         <fieldset>
             <legend>Plano de Trabalho</legend>
@@ -16,6 +16,7 @@ function PlanoTrabalho({ form, atualizarCampo }) {
                 linhas={5}
                 valor={form.resultados_esperados}
                 aoMudar={atualizarCampo}
+                errosValidacao={errosValidacao}
             />
 
             <CampoTextoLongo
@@ -25,6 +26,7 @@ function PlanoTrabalho({ form, atualizarCampo }) {
                 linhas={5}
                 valor={form.cronograma_atividades}
                 aoMudar={atualizarCampo}
+                errosValidacao={errosValidacao}
             />
 
         </fieldset>

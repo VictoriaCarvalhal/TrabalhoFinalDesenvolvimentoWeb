@@ -22,7 +22,7 @@ const LINHA_VAZIA = {
 
 // Mesma forma das parcerias internas: a aba lista o que já existe e o
 // preenchimento acontece num diálogo.
-function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = false }) {
+function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = false, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
     const [edicao, setEdicao] = useState(null);
@@ -130,6 +130,7 @@ function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = fal
                 Use o botão abaixo para acrescentar uma.
             </p>
 
+            {errosValidacao && <div className="alert alert-danger py-2">{errosValidacao}</div>}
             <button type="button" className="btn btn-sm btn-primary mb-3" onClick={abrirNova}>
                 <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova parceria externa
             </button>

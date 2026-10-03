@@ -920,6 +920,7 @@ function CadastrarProjeto() {
                     <PlanoTrabalho
                         form={form}
                         atualizarCampo={atualizarCampo}
+                        errosValidacao={errosValidacao}
                     />
                 )}
 
@@ -930,6 +931,7 @@ function CadastrarProjeto() {
                         departamentos={departamentos}
                         valor={form.unidadesEnvolvidas}
                         onChange={(linhas) => atualizarCampo("unidadesEnvolvidas", linhas)}
+                        errosValidacao={errosValidacao}
                     />
                 )}
 
@@ -940,6 +942,7 @@ function CadastrarProjeto() {
                         departamentos={departamentos}
                         form={form}
                         atualizarCampo={atualizarCampo}
+                        errosValidacao={errosValidacao}
                     />
                 )}
 
@@ -948,6 +951,7 @@ function CadastrarProjeto() {
                         projetoId={idDaUrl ?? projetoId}
                         valor={form.demandasBolsa}
                         onChange={(linhas) => atualizarCampo("demandasBolsa", linhas)}
+                        errosValidacao={errosValidacao}
                     />
                 )}
 
@@ -958,6 +962,7 @@ function CadastrarProjeto() {
                         projetoId={idDaUrl ?? projetoId}
                         valor={form.locaisRealizacao}
                         onChange={(linhas) => atualizarCampo("locaisRealizacao", linhas)}
+                        errosValidacao={errosValidacao}
                     />
                 </div>
 
@@ -967,6 +972,7 @@ function CadastrarProjeto() {
                         coordenador={form.coordenador}
                         valor={form.membrosEquipe}
                         onChange={(linhas) => atualizarCampo("membrosEquipe", linhas)}
+                        errosValidacao={errosValidacao}
                     />
                 </div>
 
