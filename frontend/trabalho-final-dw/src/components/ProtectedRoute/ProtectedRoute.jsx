@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
+import { ROTAS } from '../../utils/rotas.js';
 
 function ProtectedRoute({ apenasAdmin = false }) {
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
@@ -8,13 +9,13 @@ function ProtectedRoute({ apenasAdmin = false }) {
 
     // 1. Se não estiver autenticado, redireciona para a tela de login
     if (!isAutenticado) {
-        return <Navigate to="/" replace />;
+        return <Navigate to={ROTAS.INICIAL} replace />;
     }
 
     // 2. Se a rota exigir privilégios de Admin e o usuário não for Admin
     if (apenasAdmin && !isAdmin) {
         // Redireciona para a página inicial protegida ou exibe tela de não autorizado
-        return <Navigate to="/Bemvindo" replace />;
+        return <Navigate to={ROTAS.BEMVINDO} replace />;
     }
 
     // 3. Se passou em todas as verificações, renderiza as rotas filhas

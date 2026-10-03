@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from '../../stores/authStore';
 import { useThemeStore } from '../../stores/themeStore';
+import { ROTAS } from '../../utils/rotas.js';
 
 function Navbar() {
     const [dropdownTemaOpen, setDropdownTemaOpen] = useState(false);
     const [menuMobileAtivo, setMenuMobileAtivo] = useState('principal');
     const { tema, alternarTema } = useThemeStore();
     const navigate = useNavigate();
+    const localizacao = useLocation();
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
     const nomeUsuario = useAuthStore((state) => state.nomeUsuario);
     const logout = useAuthStore((state) => state.logout);
@@ -23,17 +25,32 @@ function Navbar() {
 
     const sair = () => {
         logout();
-        navigate('/');
+        navigate(ROTAS.INICIAL);
+    };
+
+    // Clicar em "Início" já estando em /bemvindo não trocava de rota,
+    // então nada remontava e o scroll ficava onde estava. Agora força
+    // scroll ao topo + remontagem da lista via location.state.
+    const irParaInicio = (onClickAction) => (evento) => {
+        onClickAction?.();
+        if (localizacao.pathname === ROTAS.BEMVINDO) {
+            evento.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            navigate(ROTAS.BEMVINDO, { state: { recarregarEm: Date.now() } });
+        }
     };
 
     const NavLinks = ({ onClickAction, dismissOffCanvas }) => {
+        // Navbar é usada também no layout deslogado; o link de Início
+        // só faz sentido para autenticado (antes caía no ProtectedRoute e voltava).
+        if (!isAutenticado) return null;
         return (
             <>
                 <li className="nav-item">
                     <NavLink 
                         className="nav-link" 
-                        to="/Bemvindo" 
-                        onClick={onClickAction}
+                        to={ROTAS.BEMVINDO} 
+                        onClick={irParaInicio(onClickAction)}
                         data-bs-dismiss={dismissOffCanvas ? "offcanvas" : undefined} 
                     >
                         <i className="bi bi-house-fill me-2"></i> Início

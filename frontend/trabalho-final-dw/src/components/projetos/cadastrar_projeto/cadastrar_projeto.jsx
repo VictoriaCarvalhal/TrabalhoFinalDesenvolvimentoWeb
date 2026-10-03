@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '../../../stores/authStore';
+import { ROTAS } from '../../../utils/rotas.js';
 import api from '../../../services/api';
 
 import LocaisRealizacao from './abas/LocaisRealizacao';
@@ -686,7 +687,7 @@ function CadastrarProjeto() {
                     await criarPlanoDeTrabalho(idDaUrl, planoDados);
                 }
 
-                navigate("/Projetos/SeusProjetos");
+                navigate(ROTAS.BEMVINDO);
                 return;
             }
 
@@ -703,7 +704,7 @@ function CadastrarProjeto() {
                 await criarPalavraChave(projeto_id, { palavra });
             }
 
-            navigate("/Projetos/SeusProjetos");
+            navigate(ROTAS.BEMVINDO);
         } catch (erro) {
             // O corpo do erro do DRF diz o campo e o motivo do erro (futuramente fica mais elegante exibir o erro usando o padrão de outros erros)
             const detalhe = erro.response?.data;
