@@ -7,6 +7,7 @@ from core.models import (
     LinhaExtensao,
     MunicipioIBGE, 
     NaturezaExtensao,
+    PeriodoExtensao,
     PessoaGlobal,
     UnidadeAcademica,
     VinculoInstitucional,
@@ -170,4 +171,28 @@ class VinculoInstitucionalSerializer(serializers.ModelSerializer):
             'tipo_vinculo', 'tipo_vinculo_display',
             'matricula', 'departamento', 'status',
         ]
+
+
+class PeriodoExtensaoSerializer(serializers.ModelSerializer):
+    aberto_efetivo = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PeriodoExtensao
+        fields = [
+            'id', 'inicio', 'fim', 'aberto', 'mensagem_fechado',
+            'aberto_efetivo', 'created_at', 'updated_at',
+        ]
+        read_only_fields = ['id', 'aberto_efetivo', 'created_at', 'updated_at']
+
+    def get_aberto_efetivo(self, obj):
+        return obj.aberto_efetivo()
+
+    def validate(self, attrs):
+        inicio = attrs.get('inicio', getattr(self.instance, 'inicio', None))
+        fim = attrs.get('fim', getattr(self.instance, 'fim', None))
+        if inicio and fim and inicio > fim:
+            raise serializers.ValidationError(
+                {'fim': 'A data de fim precisa ser igual ou posterior ao início.'}
+            )
+        return attrs
         

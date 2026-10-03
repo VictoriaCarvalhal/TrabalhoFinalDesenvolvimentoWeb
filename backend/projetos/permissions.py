@@ -15,6 +15,16 @@ def pode_excluir_projeto(user):
     return is_admin(user)
 
 
+def periodo_aberto():
+    from core.models import PeriodoExtensao
+    return PeriodoExtensao.atual().aberto_efetivo()
+
+
+def pode_escrever_projeto(user):
+    """Quem pode criar/editar: admin sempre, comum só com período aberto."""
+    return is_admin(user) or periodo_aberto()
+
+
 def projetos_visiveis_para(user):
     """Projetos que o usuario logado pode abrir: so os que ele coordena.
 
