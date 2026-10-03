@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '../../../stores/authStore';
 import api from '../../../services/api';
@@ -116,44 +116,67 @@ function CadastrarProjeto() {
            return erros;
     }
 
-    function obterErrosEtapa(f = form) {
-           if (etapaAtual === 0) return validarEtapa0(f);
-           if (etapaAtual === 1) return validarEtapa1(f);
-           if (etapaAtual === 2) return validarEtapa2(f);
+    function obterErrosEtapa(f = form, indice = etapaAtual) {
+           if (indice === 0) return validarEtapa0(f);
+           if (indice === 1) return validarEtapa1(f);
+           if (indice === 2) return validarEtapa2(f);
            return {};
     }
 
+    // Navegação entre abas é livre: nenhuma validação prende o usuário.
+    // A cobrança de campos obrigatórios acontece só no "Enviar projeto"
+    // (abrirConfirmacao), conforme as regras de negócio.
+    // tentouEnviar marca que já houve uma tentativa: a partir daí as abas
+    // com pendência ficam vermelhas e a aba atual mostra os erros dela,
+    // sem pular o usuário de lugar.
+    function errosParaExibirNaEtapa(indice, f = form) {
+        // Antes de qualquer tentativa de envio, não marca nada em vermelho.
+        if (!tentouEnviar) return {};
+        return obterErrosEtapa(f, indice);
+    }
+
     function proximaEtapa() {
-           const erros = obterErrosEtapa();
-           setErrosValidacao(erros);
-           if (Object.keys(erros).length === 0) {
-               setEtapaAtual((prev) => Math.min(prev + 1, ABAS.length - 1));
-           }
+        const proxima = Math.min(etapaAtual + 1, ABAS.length - 1);
+        setErrosValidacao(errosParaExibirNaEtapa(proxima));
+        setEtapaAtual(proxima);
     }
 
     function etapaAnterior() {
-        setEtapaAtual((prev) => Math.max(prev - 1, 0));
+        const anterior = Math.max(etapaAtual - 1, 0);
+        setErrosValidacao(errosParaExibirNaEtapa(anterior));
+        setEtapaAtual(anterior);
     }
 
-    // Clicar numa aba leva direto para ela. Voltar para uma aba anterior nao
-    // cobra nada, so avancar e que cobra o que falta na aba atual, igual ao
-    // botao Avancar.
+    // Clicar numa aba leva direto para ela, sem validar nada no caminho.
     function irParaEtapa(indice) {
         if (indice === etapaAtual) return;
-        if (indice < etapaAtual) {
-            setErrosValidacao({});
-            setEtapaAtual(indice);
-            return;
-        }
-        const erros = obterErrosEtapa();
-        setErrosValidacao(erros);
-        if (Object.keys(erros).length === 0) {
-            setEtapaAtual(indice);
-        }
+        setErrosValidacao(errosParaExibirNaEtapa(indice));
+        setEtapaAtual(indice);
     }
 
     const [confirmando, setConfirmando] = useState(false);
-    const [pendencias, setPendencias] = useState([]);
+    const [tentouEnviar, setTentouEnviar] = useState(false);
+    const resumoRef = useRef(null);
+    const conteudoRef = useRef(null);
+
+    // Vai para a aba com pendência e rola até o primeiro campo inválido
+    // dela. O duplo rAF espera o React trocar a aba antes de procurar o
+    // campo no DOM.
+    function irParaAbaComPendencia(indice) {
+        setEtapaAtual(indice);
+        setErrosValidacao(obterErrosEtapa(form, indice));
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const alvo = conteudoRef.current?.querySelector('.is-invalid');
+                if (alvo) {
+                    alvo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if (typeof alvo.focus === 'function') alvo.focus({ preventScroll: true });
+                } else {
+                    conteudoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    }
     const [buscandoCep, setBuscandoCep] = useState(false);
     const [avisoCep, setAvisoCep] = useState(null);
 
@@ -371,11 +394,17 @@ function CadastrarProjeto() {
     function atualizarCampo(campo, valor) {
         setForm((prev) => {
             const atualizado = { ...prev, [campo]: valor };
-            // A caixa vermelha some assim que o campo deixa de estar errado,
-            // em vez de so sumir no proximo clique em Avancar.
+            // A caixa vermelha some assim que o campo deixa de estar errado.
+            // Checa as 3 etapas validadas (não só a atual), porque a
+            // navegação é livre e o erro pode ser de outra aba.
             setErrosValidacao((errosAtuais) => {
                 if (!errosAtuais[campo]) return errosAtuais;
-                if (obterErrosEtapa(atualizado)[campo]) return errosAtuais;
+                const aindaComErro = {
+                    ...validarEtapa0(atualizado),
+                    ...validarEtapa1(atualizado),
+                    ...validarEtapa2(atualizado),
+                }[campo];
+                if (aindaComErro) return errosAtuais;
                 const { [campo]: _corrigido, ...restantes } = errosAtuais;
                 return restantes;
             });
@@ -450,7 +479,10 @@ function CadastrarProjeto() {
     // Essa função é responsável por persistir os dados de todas as abas em 1 única chamada atômica
     // Antes de enviar, confere as tres etapas que tem campo obrigatorio e
     // mostra o que falta. So abre a confirmacao se estiver tudo certo.
+    // Não pula de aba: marca as abas com pendência de vermelho, mostra os
+    // erros da aba atual e rola até o resumo no topo.
     function abrirConfirmacao() {
+        setTentouEnviar(true);
         const faltando = [
             { indice: 0, nome: ABAS[0].label, erros: validarEtapa0(form) },
             { indice: 1, nome: ABAS[1].label, erros: validarEtapa1(form) },
@@ -458,16 +490,26 @@ function CadastrarProjeto() {
         ].filter((etapa) => Object.keys(etapa.erros).length > 0);
 
         if (faltando.length > 0) {
-            setPendencias(faltando);
-            // leva para a primeira aba com problema e marca os campos dela
-            setEtapaAtual(faltando[0].indice);
-            setErrosValidacao(faltando[0].erros);
+            // mostra os erros da aba onde o usuário está, sem tirá-lo dela
+            setErrosValidacao(obterErrosEtapa(form, etapaAtual));
+            requestAnimationFrame(() => {
+                resumoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                resumoRef.current?.focus({ preventScroll: true });
+            });
             return;
         }
 
-        setPendencias([]);
         setConfirmando(true);
     }
+
+    // Contagem viva de erros por aba (recalculada a cada render): alimenta
+    // tanto as abas vermelhas quanto o resumo do topo. Só aparece depois da
+    // primeira tentativa de envio.
+    const errosPorAba = tentouEnviar
+        ? [validarEtapa0(form), validarEtapa1(form), validarEtapa2(form)]
+        : [{}, {}, {}];
+    const totalPendencias = errosPorAba.reduce(
+        (total, erros) => total + Object.keys(erros).length, 0);
 
     async function salvarDadosIdentificacao() {
         const enderecoDados = {
@@ -706,25 +748,71 @@ function CadastrarProjeto() {
 
             {!(editando && carregandoEdicao) && (
             <>
+            {/* Resumo das pendências: fica acima das abas e do formulário para
+                ser visto sem rolar até o fim. O envio rola até aqui.
+                Mostra só a contagem por aba; o detalhe está nos campos. */}
+            {tentouEnviar && totalPendencias > 0 && (
+                <div
+                    ref={resumoRef}
+                    tabIndex={-1}
+                    role="alert"
+                    aria-live="assertive"
+                    className="alert alert-danger"
+                >
+                    <p className="mb-1 fw-semibold">
+                        Faltam {totalPendencias} {totalPendencias === 1 ? 'item' : 'itens'} para enviar o projeto:
+                    </p>
+                    <ul className="mb-0">
+                        {errosPorAba.map((erros, indice) => {
+                            const qtd = Object.keys(erros).length;
+                            if (qtd === 0) return null;
+                            return (
+                                <li key={ABAS[indice].id}>
+                                    <button
+                                        type="button"
+                                        className="btn btn-link p-0 align-baseline"
+                                        onClick={() => irParaAbaComPendencia(indice)}
+                                    >
+                                        {ABAS[indice].label} ({qtd} {qtd === 1 ? 'item' : 'itens'})
+                                    </button>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </div>
+            )}
+
             {/* A tira de abas: mostra todas as partes do formulario e deixa ir
-                direto para uma delas, em vez de so avancar de uma em uma. */}
+                direto para uma delas, em vez de so avancar de uma em uma.
+                Abas com pendência ficam vermelhas com a contagem. */}
             <ul className="nav nav-tabs" role="tablist">
-                {ABAS.map((aba, indice) => (
-                    <li className="nav-item" key={aba.id} role="presentation">
-                        <button
-                            type="button"
-                            role="tab"
-                            aria-selected={indice === etapaAtual}
-                            className={`nav-link ${indice === etapaAtual ? 'active' : ''}`}
-                            onClick={() => irParaEtapa(indice)}
-                        >
-                            {aba.label}
-                        </button>
-                    </li>
-                ))}
+                {ABAS.map((aba, indice) => {
+                    const qtd = (errosPorAba[indice] && Object.keys(errosPorAba[indice]).length) || 0;
+                    const comPendencia = qtd > 0;
+                    return (
+                        <li className="nav-item" key={aba.id} role="presentation">
+                            <button
+                                type="button"
+                                role="tab"
+                                aria-selected={indice === etapaAtual}
+                                aria-label={comPendencia ? `${aba.label} (${qtd} ${qtd === 1 ? 'item pendente' : 'itens pendentes'})` : aba.label}
+                                title={comPendencia ? `${qtd} ${qtd === 1 ? 'item pendente' : 'itens pendentes'}` : undefined}
+                                className={`nav-link ${indice === etapaAtual ? 'active' : ''} ${comPendencia ? 'text-danger fw-semibold' : ''}`}
+                                onClick={() => irParaEtapa(indice)}
+                            >
+                                {aba.label}
+                                {comPendencia && (
+                                    <span className="badge text-bg-danger ms-1" aria-hidden="true">
+                                        {qtd}
+                                    </span>
+                                )}
+                            </button>
+                        </li>
+                    );
+                })}
             </ul>
 
-            <div className="p-3 border border-top-0 rounded-bottom bg-body-tertiary">
+            <div ref={conteudoRef} className="p-3 border border-top-0 rounded-bottom bg-body-tertiary">
 
                 {etapaAtual === 0 && (
                     <Identificacao
@@ -759,7 +847,7 @@ function CadastrarProjeto() {
                         linhasExtensao={linhasExtensao}
                         carregandoLinhasExtensao={carregandoLinhasExtensao}
                         erroLinhasExtensao={erroLinhasExtensao}
-
+                        errosValidacao={errosValidacao}
                     />
                 )}
 
@@ -825,26 +913,6 @@ function CadastrarProjeto() {
                         onChange={(linhas) => atualizarCampo("membrosEquipe", linhas)}
                     />
                 </div>
-
-                {pendencias.length > 0 && (
-                    <div className="alert alert-danger" role="alert">
-                        <p className="mb-1 fw-semibold">Faltam dados para enviar o projeto:</p>
-                        <ul className="mb-0">
-                            {pendencias.map((etapa) => (
-                                <li key={etapa.indice}>
-                                    <button
-                                        type="button"
-                                        className="btn btn-link p-0 align-baseline"
-                                        onClick={() => { setEtapaAtual(etapa.indice); setErrosValidacao(etapa.erros); }}
-                                    >
-                                        {etapa.nome}
-                                    </button>
-                                    : {Object.values(etapa.erros).join('; ')}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
 
                 <div className="d-flex justify-content-end gap-2">
                     {etapaAtual > 0 && (
