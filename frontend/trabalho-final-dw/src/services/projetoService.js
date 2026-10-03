@@ -52,3 +52,8 @@ export async function excluirPalavraChave(projeto_id, palavra_id) {
 export async function excluirProjeto(projeto_id) {
     await api.delete(`/projetos/${projeto_id}/`);
 }
+
+export async function restaurarProjeto(projeto_id) {
+    const resposta = await api.post(`/projetos/${projeto_id}/restaurar/`);
+    return resposta.data;
+}

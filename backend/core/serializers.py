@@ -72,6 +72,8 @@ class RegisterPessoaSerializer(serializers.ModelSerializer):
 
 
 class PessoaPerfilSerializer(serializers.ModelSerializer):
+    perfil = serializers.SerializerMethodField()
+
     class Meta:
         model = PessoaGlobal
         fields = [
@@ -80,7 +82,16 @@ class PessoaPerfilSerializer(serializers.ModelSerializer):
             'cpf',
             'email_institucional',
             'lattes_url',
+            'is_staff',
+            'is_superuser',
+            'perfil',
         ]
+        read_only_fields = ['is_staff', 'is_superuser']
+
+    def get_perfil(self, obj):
+        if obj.is_superuser or obj.is_staff:
+            return 'admin'
+        return 'usuario'
         
 class MeuVinculoSerializer(serializers.ModelSerializer):
     """Vinculo que a propria pessoa logada cadastra para si.
@@ -170,12 +181,13 @@ class AreaConhecimentoCNPqSerializer(serializers.ModelSerializer):
 
 class VinculoInstitucionalSerializer(serializers.ModelSerializer):
     nome_completo = serializers.CharField(source='pessoa.nome_completo', read_only=True)
+    cpf = serializers.CharField(source='pessoa.cpf', read_only=True)
     tipo_vinculo_display = serializers.CharField(source='get_tipo_vinculo_display', read_only=True)
 
     class Meta:
         model = VinculoInstitucional
         fields = [
-            'id', 'pessoa', 'nome_completo',
+            'id', 'pessoa', 'nome_completo', 'cpf',
             'tipo_vinculo', 'tipo_vinculo_display',
             'matricula', 'departamento', 'status',
         ]

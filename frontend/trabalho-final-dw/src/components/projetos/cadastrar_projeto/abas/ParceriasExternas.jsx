@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import api from '../../../../services/api';
 import CampoTextoLongo from '../CampoTextoLongo';
 import DialogoFormulario from '../DialogoFormulario';
+import DialogoVisualizacao from '../DialogoVisualizacao';
+import CampoSomenteLeitura from '../CampoSomenteLeitura';
 
 // Lista copiada do backend (projetos.TipoInstituicaoExterna).
 const TIPOS_INSTITUICAO = [
@@ -24,6 +26,9 @@ function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = fal
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
     const [edicao, setEdicao] = useState(null);
+
+    // Linha aberta no modal de visualização (só leitura). null = fechado.
+    const [visualizacao, setVisualizacao] = useState(null);
 
     useEffect(() => {
         if (!projetoId) return;
@@ -48,6 +53,10 @@ function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = fal
 
     function abrirEdicao(indice) {
         setEdicao({ indice, dados: { ...linhas[indice] } });
+    }
+
+    function abrirVisualizacao(indice) {
+        setVisualizacao(linhas[indice]);
     }
 
     function mudarCampo(mudancas) {
@@ -134,13 +143,14 @@ function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = fal
                             <th scope="col" style={{ width: '4rem' }}>Nº</th>
                             <th scope="col">Instituição</th>
                             <th scope="col">Tipo</th>
+                            <th scope="col">Participação</th>
                             <th scope="col" style={{ width: '7rem' }}>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {linhas.length === 0 && (
                             <tr>
-                                <td colSpan={4} className="text-muted text-center">
+                                <td colSpan={5} className="text-muted text-center">
                                     Nenhuma parceria externa cadastrada.
                                 </td>
                             </tr>
@@ -153,8 +163,27 @@ function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = fal
                                     {linha.sigla_instituicao && ` (${linha.sigla_instituicao})`}
                                 </td>
                                 <td>{nomeTipo(linha)}</td>
+                                <td style={{ maxWidth: '220px' }}>
+                                    {/* O title mostra o texto inteiro no hover (tooltip nativo do navegador). */}
+                                    <span
+                                        className="d-inline-block text-truncate"
+                                        style={{ maxWidth: '220px' }}
+                                        title={linha.participacao || ''}
+                                    >
+                                        {linha.participacao || '—'}
+                                    </span>
+                                </td>
                                 <td className="text-nowrap">
                                     <div className="d-flex gap-2">
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-secondary"
+                                            onClick={() => abrirVisualizacao(i)}
+                                            aria-label={`Visualizar a parceria externa ${i + 1}`}
+                                            title="Visualizar"
+                                        >
+                                            <i className="bi bi-eye" aria-hidden="true"></i>
+                                        </button>
                                         <button
                                             type="button"
                                             className="btn btn-sm btn-outline-secondary"
@@ -239,6 +268,20 @@ function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = fal
                         aoMudar={(campo, texto) => mudarCampo({ [campo]: texto })}
                     />
                 </DialogoFormulario>
+            )}
+
+            {visualizacao && (
+                <DialogoVisualizacao
+                    titulo="Detalhes da parceria externa"
+                    aoFechar={() => setVisualizacao(null)}
+                >
+                    <CampoSomenteLeitura
+                        rotulo="Instituição"
+                        valor={`${visualizacao.nome_instituicao}${visualizacao.sigla_instituicao ? ` (${visualizacao.sigla_instituicao})` : ''}`}
+                    />
+                    <CampoSomenteLeitura rotulo="Tipo de instituição" valor={nomeTipo(visualizacao)} />
+                    <CampoSomenteLeitura rotulo="Participação da instituição no projeto" valor={visualizacao.participacao} />
+                </DialogoVisualizacao>
             )}
         </fieldset>
     );

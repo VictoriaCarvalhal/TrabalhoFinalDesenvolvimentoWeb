@@ -4,7 +4,6 @@ import { useAuthStore } from '../../stores/authStore';
 import { useThemeStore } from '../../stores/themeStore';
 
 function Navbar() {
-    const [dropdownOpen, setDropdownOpen] = useState(false);
     const [dropdownTemaOpen, setDropdownTemaOpen] = useState(false);
     const [menuMobileAtivo, setMenuMobileAtivo] = useState('principal');
     const { tema, alternarTema } = useThemeStore();
@@ -14,7 +13,6 @@ function Navbar() {
     const logout = useAuthStore((state) => state.logout);
 
     const fecharDropdown = () => {
-        setDropdownOpen(false);
         setDropdownTemaOpen(false);
     };
 
@@ -26,6 +24,75 @@ function Navbar() {
     const sair = () => {
         logout();
         navigate('/');
+    };
+
+    const NavLinks = ({ onClickAction, dismissOffCanvas }) => {
+        return (
+            <>
+                <li className="nav-item">
+                    <NavLink 
+                        className="nav-link" 
+                        to="/Bemvindo" 
+                        onClick={onClickAction}
+                        data-bs-dismiss={dismissOffCanvas ? "offcanvas" : undefined} 
+                    >
+                        <i className="bi bi-house-fill me-2"></i> Início
+                    </NavLink>
+                </li>
+            </>
+        )
+    };
+
+    const BotaoSair = ({ isMobile }) => {
+        if (!isAutenticado) return null;
+
+        return (
+            <button
+                type="button"
+                className={`btn ${isMobile ? 'nav-link text-start w-100 border-0 bg-transparent' : 'btn-sm navbar-acao'} d-flex align-items-center`}
+                onClick={sair}
+            >
+                <i className="bi bi-box-arrow-right me-1"></i>Sair
+            </button>
+        );
+    };
+
+    const SeletorTemaDesktop = () => {
+        return (
+            <div className="dropdown">
+                <button
+                    type="button"
+                    className={`btn btn-sm navbar-acao dropdown-toggle d-flex align-items-center gap-2 ${dropdownTemaOpen ? 'show' : ''}`}
+                    onClick={() => setDropdownTemaOpen(!dropdownTemaOpen)}
+                    aria-expanded={dropdownTemaOpen}
+                    title="Alterar tema"
+                >
+                    <span>Tema</span>
+                </button>
+                <ul className={`dropdown-menu dropdown-menu-end ${dropdownTemaOpen ? 'show' : ''}`}>
+                    <li>
+                        <button
+                            type="button"
+                            className={`dropdown-item d-flex align-items-center justify-content-between gap-2 ${tema === 'light' ? 'active' : ''}`}
+                            onClick={() => selecionarTema('light')}
+                        >
+                            <span><i className="bi bi-sun-fill me-2"></i>Claro</span>
+                            {tema === 'light' && <i className="bi bi-check2"></i>}
+                        </button>
+                    </li>
+                    <li>
+                        <button
+                            type="button"
+                            className={`dropdown-item d-flex align-items-center justify-content-between gap-2 ${tema === 'dark' ? 'active' : ''}`}
+                            onClick={() => selecionarTema('dark')}
+                        >
+                            <span><i className="bi bi-moon-fill me-2"></i>Escuro</span>
+                            {tema === 'dark' && <i className="bi bi-check2"></i>}
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        );
     };
 
     return (
@@ -50,34 +117,10 @@ function Navbar() {
                     </div>
 
                     <div className="offcanvas-body">
-                        
+
                         <div className="d-none d-lg-flex w-100 align-items-center">
                             <ul className="navbar-nav w-100">
-                                <li className="nav-item">
-                                    <NavLink className="nav-link" to="/Bemvindo" onClick={fecharDropdown}>
-                                        <i className="bi bi-house-fill me-2" aria-hidden="true"></i>
-                                        Início
-                                    </NavLink>
-                                </li>
-                                <li className="nav-item dropdown">
-                                    <button
-                                        type="button"
-                                        className={`nav-link dropdown-toggle ${dropdownOpen ? 'show' : ''}`}
-                                        onClick={() => {
-                                            setDropdownOpen(!dropdownOpen);
-                                            setDropdownTemaOpen(false);
-                                        }}
-                                        aria-expanded={dropdownOpen}
-                                    >
-                                        <i className="bi bi-folder-fill me-2" aria-hidden="true"></i>
-                                        Projetos
-                                    </button>
-                                    <ul className={`dropdown-menu ${dropdownOpen ? 'show' : ''}`}>
-                                        <li><NavLink className="dropdown-item" to="/Projetos/SeusProjetos" onClick={fecharDropdown}>Seus Projetos</NavLink></li>
-                                        <li><NavLink className="dropdown-item" to="/Projetos/CadastrarProjeto" onClick={fecharDropdown}>Cadastrar Projeto</NavLink></li>
-                                        <li><NavLink className="dropdown-item" to="/Projetos/AvaliarProjetos" onClick={fecharDropdown}>Avaliar Projetos</NavLink></li>
-                                    </ul>
-                                </li>
+                                <NavLinks onClickAction={fecharDropdown} dismissOffCanvas={false} />
                             </ul>
 
                             <div className="navbar-acoes ms-lg-auto d-flex align-items-center gap-3">
@@ -86,109 +129,34 @@ function Navbar() {
                                 )}
 
 
-                                <div className="dropdown">
-                                    <button
-                                        type="button"
-                                        className={`btn btn-sm navbar-acao dropdown-toggle d-flex align-items-center gap-2 ${dropdownTemaOpen ? 'show' : ''}`}
-                                        onClick={() => {
-                                            setDropdownTemaOpen(!dropdownTemaOpen);
-                                            setDropdownOpen(false);
-                                        }}
-                                        aria-expanded={dropdownTemaOpen}
-                                        title="Alterar tema"
-                                    >
-                                        <i className={`bi ${tema === 'light' ? 'bi-sun-fill' : 'bi-moon-fill'}`} aria-hidden="true"></i>
-                                        <span>Tema</span>
-                                    </button>
-                                    <ul className={`dropdown-menu dropdown-menu-end ${dropdownTemaOpen ? 'show' : ''}`}>
-                                        <li>
-                                            <button type="button" className={`dropdown-item d-flex align-items-center justify-content-between gap-2 ${tema === 'light' ? 'active' : ''}`} onClick={() => selecionarTema('light')}>
-                                                <span><i className="bi bi-sun-fill me-2"></i>Claro</span>
-                                                {tema === 'light' && <i className="bi bi-check2"></i>}
-                                            </button>
-                                        </li>
-                                        <li>
-                                            <button type="button" className={`dropdown-item d-flex align-items-center justify-content-between gap-2 ${tema === 'dark' ? 'active' : ''}`} onClick={() => selecionarTema('dark')}>
-                                                <span><i className="bi bi-moon-fill me-2"></i>Escuro</span>
-                                                {tema === 'dark' && <i className="bi bi-check2"></i>}
-                                            </button>
-                                        </li>
-                                    </ul>
-                                </div>
+                                <SeletorTemaDesktop />
 
-                                {isAutenticado && (
-                                    <button type="button" className="btn btn-sm navbar-acao d-flex align-items-center" onClick={sair}>
-                                        <i className="bi bi-box-arrow-right me-1" aria-hidden="true"></i>
-                                        Sair
-                                    </button>
-                                )}
+                                <BotaoSair isMobile={false} />
                             </div>
                         </div>
 
-    
+
                         <div className="d-flex d-lg-none flex-column mt-3">
 
                             {menuMobileAtivo === 'principal' && (
                                 <ul className="navbar-nav">
-                                    <li className="nav-item">
-                                        <NavLink className="nav-link" to="/Bemvindo" onClick={fecharDropdown}>
-                                            <i className="bi bi-house-fill me-2"></i> Início
-                                        </NavLink>
-                                    </li>
-                                    <li className="nav-item">
-                                        <button
-                                            className="nav-link text-start w-100 border-0 bg-transparent d-flex justify-content-between align-items-center"
-                                            onClick={() => setMenuMobileAtivo('projetos')}
-                                        >
-                                            <span><i className="bi bi-folder-fill me-2"></i> Projetos</span>
-                                            <i className="bi bi-chevron-right"></i>
-                                        </button>
-                                    </li>
+                                    <NavLinks onClickAction={fecharDropdown} dismissOffCanvas={true}/>
                                     <li className="nav-item">
                                         <button
                                             className="nav-link text-start w-100 border-0 bg-transparent d-flex justify-content-between align-items-center"
                                             onClick={() => setMenuMobileAtivo('tema')}
                                         >
                                             <span>
-                                                <i className={`bi ${tema === 'light' ? 'bi-sun-fill' : 'bi-moon-fill'} me-2`}></i> Tema
+                                                 Tema
                                             </span>
                                             <i className="bi bi-chevron-right"></i>
                                         </button>
                                     </li>
-                                    {isAutenticado && (
-                                        <li className="nav-item">
-                                            <button
-                                                type="button"
-                                                className="nav-link text-start w-100 border-0 bg-transparent d-flex align-items-center"
-                                                onClick={sair}
-                                            >
-                                                <i className="bi bi-box-arrow-right me-2" aria-hidden="true"></i> Sair
-                                            </button>
-                                        </li>
-                                    )}
-                                </ul>
-                            )}
 
-                            {menuMobileAtivo === 'projetos' && (
-                                <ul className="navbar-nav ms-3">
                                     <li className="nav-item">
-                                        <button
-                                            className="nav-link text-start w-100 border-0 bg-transparent mb-3 d-flex align-items-center"
-                                            onClick={() => setMenuMobileAtivo('principal')}
-                                        >
-                                            <i className="bi bi-chevron-left me-3"></i>
-                                            Voltar
-                                        </button>
+                                        <BotaoSair isMobile={true}/>
                                     </li>
-                                    <li className="nav-item">
-                                        <NavLink className="nav-link" to="/Projetos/SeusProjetos" onClick={fecharDropdown}>Seus Projetos</NavLink>
-                                    </li>
-                                    <li className="nav-item">
-                                        <NavLink className="nav-link" to="/Projetos/CadastrarProjeto" onClick={fecharDropdown}>Cadastrar Projeto</NavLink>
-                                    </li>
-                                    <li className="nav-item">
-                                        <NavLink className="nav-link" to="/Projetos/AvaliarProjetos" onClick={fecharDropdown}>Avaliar Projetos</NavLink>
-                                    </li>
+                                    
                                 </ul>
                             )}
 
@@ -209,6 +177,7 @@ function Navbar() {
                                             type="button"
                                             className={`nav-link text-start w-100 border-0 bg-transparent d-flex justify-content-between align-items-center ${tema === 'light' ? 'active' : ''}`}
                                             onClick={() => selecionarTema('light')}
+                                            data-bs-dismiss="offcanvas"
                                         >
                                             <span><i className="bi bi-sun-fill me-2"></i> Claro</span>
                                             {tema === 'light' && <i className="bi bi-check2"></i>}
@@ -219,6 +188,7 @@ function Navbar() {
                                             type="button"
                                             className={`nav-link text-start w-100 border-0 bg-transparent d-flex justify-content-between align-items-center ${tema === 'dark' ? 'active' : ''}`}
                                             onClick={() => selecionarTema('dark')}
+                                            data-bs-dismiss="offcanvas"
                                         >
                                             <span><i className="bi bi-moon-fill me-2"></i> Escuro</span>
                                             {tema === 'dark' && <i className="bi bi-check2"></i>}

@@ -7,7 +7,7 @@ function LayoutNotAutenticated() {
     return (
         <div id="container" className="d-flex flex-column min-vh-100" style={{ backgroundColor: 'var(--cor-fundo)' }}>
             <Header />
-            <main className="flex-grow-1 d-flex justify-content-center align-items-center px-4 py-4" style={{ order: 0 }}>
+            <main className="flex-grow-1 d-flex justify-content-center align-items-center px-4 py-4" style={{ order: 0, minWidth: 0 }}>
                 <Outlet />
             </main>
             <Footer />
