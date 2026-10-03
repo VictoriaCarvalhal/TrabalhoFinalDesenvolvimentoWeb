@@ -51,6 +51,8 @@ class RegisterPessoaSerializer(serializers.ModelSerializer):
 
 
 class PessoaPerfilSerializer(serializers.ModelSerializer):
+    perfil = serializers.SerializerMethodField()
+
     class Meta:
         model = PessoaGlobal
         fields = [
@@ -59,8 +61,59 @@ class PessoaPerfilSerializer(serializers.ModelSerializer):
             'cpf',
             'email_institucional',
             'lattes_url',
+            'is_staff',
+            'is_superuser',
+            'perfil',
         ]
+        read_only_fields = ['is_staff', 'is_superuser']
+
+    def get_perfil(self, obj):
+        if obj.is_superuser or obj.is_staff:
+            return 'admin'
+        return 'usuario'
         
+class MeuVinculoSerializer(serializers.ModelSerializer):
+    """Vinculo que a propria pessoa logada cadastra para si.
+
+    Quem se cadastra no sistema nasce sem vinculo institucional, e sem ele a
+    aba de identificacao do projeto nao tem matricula para escolher. A pessoa
+    nao escolhe de quem e o vinculo: ele e sempre do usuario da requisicao.
+    """
+    tipo_vinculo_display = serializers.CharField(source='get_tipo_vinculo_display', read_only=True)
+    nome_completo = serializers.CharField(source='pessoa.nome_completo', read_only=True)
+
+    class Meta:
+        model = VinculoInstitucional
+        fields = [
+            'id', 'pessoa', 'nome_completo',
+            'tipo_vinculo', 'tipo_vinculo_display',
+            'matricula', 'departamento', 'status',
+        ]
+        read_only_fields = ['id', 'pessoa', 'status']
+
+    def validate_matricula(self, matricula):
+        matricula = (matricula or '').strip()
+        if not matricula:
+            raise serializers.ValidationError('Informe a matricula.')
+        return matricula
+
+    def validate(self, attrs):
+        pessoa = self.context['request'].user
+        repetido = VinculoInstitucional.objects.filter(
+            pessoa=pessoa,
+            tipo_vinculo=attrs.get('tipo_vinculo'),
+            matricula=attrs.get('matricula'),
+        ).exists()
+        if repetido:
+            raise serializers.ValidationError(
+                {'matricula': 'Voce ja tem um vinculo com essa matricula e esse tipo.'})
+        return attrs
+
+    def create(self, validated_data):
+        return VinculoInstitucional.objects.create(
+            pessoa=self.context['request'].user, **validated_data)
+
+
 class UnidadeAcademicaSerializer(serializers.ModelSerializer):
     class Meta:
         model = UnidadeAcademica

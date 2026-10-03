@@ -94,6 +94,7 @@ class Projeto(AuditModel):
         default=SituacaoProjeto.RASCUNHO,
         db_index=True,
     )
+    excluido = models.BooleanField(default=False, db_index=True)
     coordenador = models.ForeignKey(
         VinculoInstitucional,
         related_name='projetos_coordenados',

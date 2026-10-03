@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from projetos.serializers import (
     ProjetoCaracterizacaoSerializer, ProjetoContatoSerializer,
     ProjetoDescricaoSerializer, ProjetoEnderecoSerializer,
-    ProjetoImpressaoSerializer,
+    ProjetoImpressaoSerializer, ProjetoPalavraChaveSerializer,
 )
 from projetos.views import ABAS, ProjetoDaUrlMixin
 
@@ -30,6 +30,8 @@ class ProjetoImpressaoView(ProjetoDaUrlMixin, APIView):
                 projeto, 'endereco', ProjetoEnderecoSerializer),
             'contatos': ProjetoContatoSerializer(
                 projeto.contatos.all(), many=True).data,
+            'palavras_chave': ProjetoPalavraChaveSerializer(
+                projeto.palavras_chave.all(), many=True).data,
             'caracterizacao': self._secao_unica(
                 projeto, 'caracterizacao', ProjetoCaracterizacaoSerializer),
             'descricao': self._secao_unica(

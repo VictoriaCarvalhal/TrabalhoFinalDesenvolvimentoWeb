@@ -1,33 +1,31 @@
 import React from 'react';
+import CampoSomenteLeitura from '../CampoSomenteLeitura';
 
-function Caracterizacao({ 
-        form, 
-        atualizarCampo, 
-        naturezas, carregandoNaturezas, erroNaturezas, 
-        areasCNPQ, carregandoAreasCNPQ, erroAreasCNPQ, 
-        areasTematicas, carregandoAreasTematicas, erroAreasTematicas, 
-        linhasExtensao, carregandoLinhasExtensao, erroLinhasExtensao }) {
+function Caracterizacao({
+        form,
+        atualizarCampo,
+        naturezas, carregandoNaturezas, erroNaturezas,
+        areasCNPQ, carregandoAreasCNPQ, erroAreasCNPQ,
+        areasTematicas, carregandoAreasTematicas, erroAreasTematicas,
+        linhasExtensao, carregandoLinhasExtensao, erroLinhasExtensao,
+        errosValidacao }) {
     return (
         <fieldset>
         <legend>
             Caracterização
         </legend>
-        
-        <div className="mb-3">
-            <label className="form-label">Situação do Projeto</label>
-            <input
-            type="text"
-            className="form-control"
-            value="Novo"
-            readOnly
-            />
-        </div>
+
+        <CampoSomenteLeitura
+            rotulo="Situação do projeto"
+            valor="Novo"
+            ajuda="Todo projeto nasce como novo; a situação muda conforme a análise."
+        />
 
         <div className="mb-3">
             <label className="form-label">É vinculado a Programa de Extensão?</label>
             <div className="form-check">
                 <input
-                    className="form-check-input"
+                    className={`form-check-input ${errosValidacao?.vinculado_extensao ? 'is-invalid' : ''}`}
                     type="radio"
                     name="vinculado_extensao"
                     id="vinculado_extensao_sim"
@@ -41,7 +39,7 @@ function Caracterizacao({
             </div>
             <div className="form-check">
                 <input
-                    className="form-check-input"
+                    className={`form-check-input ${errosValidacao?.vinculado_extensao ? 'is-invalid' : ''}`}
                     type="radio"
                     name="vinculado_extensao"
                     id="vinculado_extensao_nao"
@@ -53,13 +51,14 @@ function Caracterizacao({
                     Não
                 </label>
             </div>
+            {errosValidacao?.vinculado_extensao && <div className="invalid-feedback d-block">{errosValidacao.vinculado_extensao}</div>}
         </div>
 
         <div className="mb-3">
             <label className="form-label">É curricular?</label>
             <div className="form-check">
                 <input
-                    className="form-check-input"
+                    className={`form-check-input ${errosValidacao?.curricular ? 'is-invalid' : ''}`}
                     type="radio"
                     name="curricular"
                     id="curricular_sim"
@@ -73,7 +72,7 @@ function Caracterizacao({
             </div>
             <div className="form-check">
                 <input
-                    className="form-check-input"
+                    className={`form-check-input ${errosValidacao?.curricular ? 'is-invalid' : ''}`}
                     type="radio"
                     name="curricular"
                     id="curricular_nao"
@@ -85,13 +84,14 @@ function Caracterizacao({
                     Não
                 </label>
             </div>
+            {errosValidacao?.curricular && <div className="invalid-feedback d-block">{errosValidacao.curricular}</div>}
         </div>
 
         <div className="mb-3">
             <label className="form-label">Natureza</label>
-                        
-            <select 
-                className="form-select"
+
+            <select
+                className={`form-select ${errosValidacao?.natureza ? 'is-invalid' : ''}`}
                 value={form.natureza}
                 onChange={(e) => atualizarCampo("natureza", e.target.value)}
             >
@@ -104,13 +104,14 @@ function Caracterizacao({
                     </option>
                 ))}
             </select>
+            {errosValidacao?.natureza && <div className="invalid-feedback">{errosValidacao.natureza}</div>}
         </div>
 
         <div className="mb-3">
             <label className="form-label">Abrangência</label>
-                        
-            <select 
-                className="form-select"
+
+            <select
+                className={`form-select ${errosValidacao?.abrangencia ? 'is-invalid' : ''}`}
                 value={form.abrangencia}
                 onChange={(e) => atualizarCampo("abrangencia", e.target.value)}
             >
@@ -120,21 +121,23 @@ function Caracterizacao({
                 <option value="NACIONAL">Nacional</option>
                 <option value="INTERNACIONAL">Internacional</option>
             </select>
+            {errosValidacao?.abrangencia && <div className="invalid-feedback">{errosValidacao.abrangencia}</div>}
         </div>
 
         <div className="mb-3">
             <label className="form-label">Público Alvo</label>
             <textarea
-                className="form-control"
+                className={`form-control ${errosValidacao?.publico_alvo ? 'is-invalid' : ''}`}
                 value={form.publico_alvo}
                 onChange={(e) => atualizarCampo("publico_alvo", e.target.value)}
             />
+            {errosValidacao?.publico_alvo && <div className="invalid-feedback">{errosValidacao.publico_alvo}</div>}
         </div>
 
         <div className="mb-3">
             <label className="form-label">Grande Área de Conhecimento do CNPq</label>
-            <select 
-                className="form-select"
+            <select
+                className={`form-select ${errosValidacao?.area_conhecimento_cnpq ? 'is-invalid' : ''}`}
                 value={form.area_conhecimento_cnpq}
                 onChange={(e) => atualizarCampo("area_conhecimento_cnpq", e.target.value)}
             >
@@ -147,12 +150,13 @@ function Caracterizacao({
                     </option>
                 ))}
             </select>
+            {errosValidacao?.area_conhecimento_cnpq && <div className="invalid-feedback">{errosValidacao.area_conhecimento_cnpq}</div>}
         </div>
 
         <div className="mb-3">
             <label className="form-label">Área Temática Principal</label>
-            <select 
-                className="form-select"
+            <select
+                className={`form-select ${errosValidacao?.area_tematica_principal ? 'is-invalid' : ''}`}
                 value={form.area_tematica_principal}
                 onChange={(e) => atualizarCampo("area_tematica_principal", e.target.value)}
             >
@@ -165,12 +169,13 @@ function Caracterizacao({
                     </option>
                 ))}
             </select>
+            {errosValidacao?.area_tematica_principal && <div className="invalid-feedback">{errosValidacao.area_tematica_principal}</div>}
         </div>
 
         <div className="mb-3">
             <label className="form-label">Área Temática Secundária</label>
             <select
-                className="form-select"
+                className={`form-select ${errosValidacao?.area_tematica_secundaria ? 'is-invalid' : ''}`}
                 value={form.area_tematica_secundaria}
                 onChange={(e) => atualizarCampo("area_tematica_secundaria", e.target.value)}
             >
@@ -183,12 +188,13 @@ function Caracterizacao({
                     </option>
                 ))}
             </select>
+            {errosValidacao?.area_tematica_secundaria && <div className="invalid-feedback">{errosValidacao.area_tematica_secundaria}</div>}
         </div>
 
         <div className="mb-3">
             <label className="form-label">Linha de Extensão</label>
             <select
-                className="form-select"
+                className={`form-select ${errosValidacao?.linha_extensao ? 'is-invalid' : ''}`}
                 value={form.linha_extensao}
                 onChange={(e) => atualizarCampo("linha_extensao", e.target.value)}
             >
@@ -201,6 +207,7 @@ function Caracterizacao({
                     </option>
                 ))}
             </select>
+            {errosValidacao?.linha_extensao && <div className="invalid-feedback">{errosValidacao.linha_extensao}</div>}
         </div>
 
         </fieldset>
