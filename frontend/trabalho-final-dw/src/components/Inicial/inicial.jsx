@@ -17,6 +17,7 @@ function Inicial() {
     const {
         register,
         handleSubmit,
+        setValue, //Adicionado para limpar apenas a senha se der erro
         formState: { errors }
     } = useForm();
 
@@ -25,15 +26,16 @@ function Inicial() {
         setEnviando(true);
 
         try {
-            // Agora o formulário e o backend usam "cpf".
+            // 1. Faz o login
             const resposta = await api.post('/auth/login/', {
                 cpf: data.cpf,
                 password: data.senha,
             });
 
-            //Tanto o access token quanto o refresh token são passados para a função login() atualizada do authStore.
+            // 2. Salva os tokens no Zustand / localStorage
             login(resposta.data.access, resposta.data.refresh);
 
+            // 3. Busca os dados do perfil logado
             const perfil = await api.get('/auth/me/');
             setNomeUsuario(perfil.data.nome_completo);
             setAdmin(perfil.data.is_staff || perfil.data.is_superuser);
@@ -41,15 +43,18 @@ function Inicial() {
 
             navigate('/Bemvindo');
         } catch (err) {
+            // Limpa APENAS a senha do formulário, deixando o CPF preenchido
+            setValue('senha', '');
+
             if (err.response?.status === 401) {
-                setErroLogin('Usuário ou senha incorretos.');
+                setErroLogin('CPF ou senha incorretos.');
             } else {
                 setErroLogin('Não foi possível fazer login. Tente novamente.');
             }
         } finally {
             setEnviando(false);
         }
-    }
+    };
 
     return (
         <div className="card" style={{ width: '350px' }}>
@@ -65,7 +70,7 @@ function Inicial() {
                 <form onSubmit={handleSubmit(handleLogin)}>
 
                     <div className="mb-3">
-                        <label htmlFor="cpf" name="cpf" className="form-label">CPF</label>
+                        <label htmlFor="cpf" className="form-label">CPF</label>
                         <input
                             type="text"
                             className={`form-control ${errors.cpf ? 'is-invalid' : ''}`}
@@ -76,7 +81,7 @@ function Inicial() {
                     </div>
 
                     <div className="mb-3">
-                        <label htmlFor="senha" name="senha" className="form-label">Senha</label>
+                        <label htmlFor="senha" className="form-label">Senha</label>
                         <input
                             type="password"
                             className={`form-control ${errors.senha ? 'is-invalid' : ''}`}
