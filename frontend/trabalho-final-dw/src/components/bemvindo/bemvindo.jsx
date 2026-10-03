@@ -12,8 +12,8 @@ function Bemvindo() {
             
 
             <div className ="mt-5">
-                <h3 className = "mb-3">Últimos Projetos</h3>
-                <Projetos isPrevia={true} limite={5}/>
+                <h3 className = "mb-3">Seus Projetos</h3>
+                <Projetos/>
             </div>
         </div>
     );
