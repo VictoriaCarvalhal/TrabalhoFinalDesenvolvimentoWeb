@@ -35,7 +35,7 @@ api.interceptors.request.use((config) => {
     );
 
     if (!isPublicAuthRoute) {
-        // Busca sempre o token mais recente disponível
+        // Busca o token no localStorage ou Zustand
         const token = localStorage.getItem('access') || useAuthStore.getState().token;
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -51,7 +51,6 @@ api.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        // Se não houver config ou for erro de rede sem resposta do servidor, rejeita
         if (!originalRequest) {
             return Promise.reject(error);
         }
@@ -60,15 +59,13 @@ api.interceptors.response.use(
             originalRequest.url?.includes(endpoint)
         );
 
-        // Erros em rotas públicas são repassados ao componente
         if (isPublicAuthRoute) {
             return Promise.reject(error);
         }
 
-        // Se der 401 em rota protegida e ainda não tentou o retry nesta requisição
+        // Trata erro 401 em rotas protegidas
         if (error.response?.status === 401 && !originalRequest._retry) {
             
-            // Se já houver um refresh em andamento, coloca a requisição na fila de espera
             if (isRefreshing) {
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
@@ -93,23 +90,28 @@ api.interceptors.response.use(
                     );
 
                     const newAccessToken = data.access;
+                    const newRefreshToken = data.refresh || refreshToken;
 
                     // Atualiza Zustand e localStorage
-                    useAuthStore.getState().setToken?.(newAccessToken);
-                    localStorage.setItem('access', newAccessToken);
+                    const { login, setToken } = useAuthStore.getState();
+                    if (login) {
+                        login(newAccessToken, newRefreshToken);
+                    } else if (setToken) {
+                        setToken(newAccessToken);
+                        localStorage.setItem('access', newAccessToken);
+                        localStorage.setItem('refresh', newRefreshToken);
+                    }
 
-                    // Atualiza o header padrão do Axios para chamadas futuras
+                    // Atualiza o header padrão do Axios
                     api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
                     originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
-                    // Libera todas as requisições que estavam aguardando na fila
                     processQueue(null, newAccessToken);
 
                     return api(originalRequest);
                 } catch (refreshError) {
                     processQueue(refreshError, null);
 
-                    // Limpa sessão e redireciona
                     useAuthStore.getState().logout?.();
                     if (window.location.pathname !== '/') {
                         window.location.href = '/';
@@ -119,7 +121,6 @@ api.interceptors.response.use(
                     isRefreshing = false;
                 }
             } else {
-                // Sem refresh token disponível
                 useAuthStore.getState().logout?.();
                 if (window.location.pathname !== '/') {
                     window.location.href = '/';
