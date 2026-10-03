@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'; // 1. Adicionado useEffect
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '../../stores/authStore';
+import { ROTAS } from '../../utils/rotas.js';
 import api from '../../services/api';
 
 function Inicial() {
@@ -53,7 +54,7 @@ function Inicial() {
             setAdmin(perfil.data.is_staff || perfil.data.is_superuser);
             setPerfil(perfil.data.perfil);
 
-            navigate('/Bemvindo');
+            navigate(ROTAS.BEMVINDO);
         } catch (err) {
             logout();
             setValue('senha', '');

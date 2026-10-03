@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../../../stores/authStore';
 import { useNavigate } from 'react-router-dom';
+import { ROTAS } from '../../../utils/rotas.js';
 import api from '../../../services/api';
 import { excluirProjeto, restaurarProjeto } from '../../../services/projetoService';
 import { gerarPdfPorId } from '../../../services/gerarProjetoPdf.js';
@@ -37,7 +38,7 @@ function Projetos() {
     const buscaIdRef = useRef(0);
 
     function redirecionaProCadastro() {
-        navigate('/Projetos/CadastrarProjeto');
+        navigate(ROTAS.NOVO_PROJETO);
     }
 
     // Baixa direto o PDF
@@ -59,8 +60,13 @@ function Projetos() {
         }
     }
 
+    function redirecionaParaImpressao(id) {
+        navigate(ROTAS.imprimirProjeto(id));
+    }
+    }
+
     function redirecionaParaEdicao(id){
-        navigate(`/Projetos/${id}/editar`);
+        navigate(ROTAS.editarProjeto(id));
     }
 
     async function handleExcluir(projeto) {

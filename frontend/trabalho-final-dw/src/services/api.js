@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
+import { ROTAS } from '../utils/rotas.js';
 
 const api = axios.create({
     baseURL: `${import.meta.env.VITE_API_URL ?? ''}/api/v1`,
@@ -113,8 +114,10 @@ api.interceptors.response.use(
                     processQueue(refreshError, null);
 
                     useAuthStore.getState().logout?.();
-                    if (window.location.pathname !== '/') {
-                        window.location.href = '/';
+                    localStorage.removeItem('access');
+                    localStorage.removeItem('refresh');
+                    if (window.location.pathname !== ROTAS.INICIAL) {
+                        window.location.href = ROTAS.INICIAL;
                     }
                     return Promise.reject(refreshError);
                 } finally {
@@ -122,8 +125,10 @@ api.interceptors.response.use(
                 }
             } else {
                 useAuthStore.getState().logout?.();
-                if (window.location.pathname !== '/') {
-                    window.location.href = '/';
+                localStorage.removeItem('access');
+                localStorage.removeItem('refresh');
+                if (window.location.pathname !== ROTAS.INICIAL) {
+                    window.location.href = ROTAS.INICIAL;
                 }
             }
         }
