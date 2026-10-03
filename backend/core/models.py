@@ -1,6 +1,9 @@
 import uuid
+from datetime import date
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 
 
 class AuditModel(models.Model):
@@ -217,3 +220,61 @@ class VinculoInstitucional(AuditModel):
 
     def __str__(self):
         return f'{self.pessoa.nome_completo} - {self.get_tipo_vinculo_display()}'
+
+
+class PeriodoExtensao(AuditModel):
+    """Período único/global de extensão (singleton, sempre id=1).
+
+    O período está efetivamente aberto quando a chave manual ``aberto``
+    está ligada E hoje está entre ``inicio`` e ``fim``.
+    """
+
+    inicio = models.DateField(default=date(2026, 1, 1))
+    fim = models.DateField(default=date(2026, 12, 31))
+    aberto = models.BooleanField(
+        default=True,
+        help_text='Chave manual: desligada, o período fica fechado mesmo dentro das datas.',
+    )
+    mensagem_fechado = models.TextField(
+        default='Fora do período de extensão. A criação e a edição de projetos estão indisponíveis no momento.',
+        blank=True,
+    )
+
+    class Meta:
+        verbose_name = 'Período de Extensão'
+        verbose_name_plural = 'Período de Extensão'
+
+    def clean(self):
+        super().clean()
+        if self.inicio and self.fim and self.inicio > self.fim:
+            raise ValidationError(
+                {'fim': 'A data de fim precisa ser igual ou posterior ao início.'}
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def aberto_efetivo(self):
+        """True se aceita escrita de não-admin agora (chave + janela de datas)."""
+        if not self.aberto or not self.inicio or not self.fim:
+            return False
+        hoje = timezone.localdate()
+        return self.inicio <= hoje <= self.fim
+
+    @classmethod
+    def atual(cls):
+        """Retorna o singleton (id=1), criando com defaults se não existir."""
+        obj, _ = cls.objects.get_or_create(
+            pk=1,
+            defaults={
+                'inicio': date(2026, 1, 1),
+                'fim': date(2026, 12, 31),
+                'aberto': True,
+            },
+        )
+        return obj
+
+    def __str__(self):
+        estado = 'Aberto' if self.aberto_efetivo() else 'Fechado'
+        return f'Período {self.inicio} – {self.fim} ({estado})'

@@ -97,3 +97,9 @@ class VinculoInstitucionalAdmin(admin.ModelAdmin):
         'departamento',
     )
     readonly_fields = ('id', 'created_at', 'updated_at')
+
+
+@admin.register(PeriodoExtensao)
+class PeriodoExtensaoAdmin(admin.ModelAdmin):
+    list_display = ('inicio', 'fim', 'aberto', 'updated_at')
+    list_filter = ('aberto',)
