@@ -17,11 +17,17 @@ function App() {
       {/* Pop-up do Bootstrap para Sessão Expirada */}
       {isSessionExpired && (
         <>
-          <div className="modal fade show d-block" tabIndex="-1" role="dialog" style={{ zIndex: 1055 }}>
+          <div 
+            className="modal fade show d-block" 
+            tabIndex="-1" 
+            role="dialog" 
+            aria-modal="true"
+            style={{ zIndex: 1055, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+          >
             <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content shadow">
-                <div className="modal-header bg-warning text-dark">
-                  <h5 className="modal-title d-flex align-items-center gap-2">
+              <div className="modal-content shadow-lg border-0">
+                <div className="modal-header bg-warning text-dark border-0">
+                  <h5 className="modal-title d-flex align-items-center gap-2 fw-bold">
                     <i className="bi bi-exclamation-triangle-fill"></i> Sessão Expirada
                   </h5>
                 </div>
@@ -30,10 +36,10 @@ function App() {
                     Sua sessão foi encerrada por inatividade. Por favor, faça login novamente para continuar.
                   </p>
                 </div>
-                <div className="modal-footer justify-content-center">
+                <div className="modal-footer justify-content-center border-0 pb-4">
                   <button 
                     type="button" 
-                    className="btn btn-primary px-4" 
+                    className="btn btn-primary px-4 fw-semibold" 
                     onClick={closeSessionExpiredModal}
                   >
                     Fazer Login
@@ -42,6 +48,7 @@ function App() {
               </div>
             </div>
           </div>
+          {/* Backdrop travando a interação com a tela de fundo */}
           <div className="modal-backdrop fade show" style={{ zIndex: 1050 }}></div>
         </>
       )}
@@ -62,7 +69,7 @@ function App() {
             </Route>
           </Route>
 
-          {/* Se a impressão não precisar da navbar/sidebar do sistema */}
+          {/* Rota de Impressão sem Navbars/Sidebars */}
           <Route path="/Projetos/:id/imprimir" element={<ImprimirProjeto />}/>
         </Route>
       </Routes>
