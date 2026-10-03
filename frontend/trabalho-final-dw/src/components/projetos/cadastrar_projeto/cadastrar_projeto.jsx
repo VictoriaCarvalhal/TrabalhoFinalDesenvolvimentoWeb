@@ -49,6 +49,13 @@ const ABAS = [
     { id: "membros-equipe", label: "Membros da Equipe" },
 ];
 
+// TODO(backend): ainda não existe edital/período no backend, então estas
+// variáveis estão com placeholders. Alguém precisa trocá-las pelos valores
+// vindos do backend (edital vigente) — ex.: buscar no endpoint de editais e
+// preencher inicio/fim aqui.
+const PERIODO_INSCRICAO_INICIO = 'X';
+const PERIODO_INSCRICAO_FIM = 'Y';
+
 
 function CadastrarProjeto() {
     const navigate = useNavigate();
@@ -969,10 +976,20 @@ function CadastrarProjeto() {
                                 <p>
                                     O projeto <strong>{form.titulo}</strong> será {editando ? 'atualizado.' : 'enviado para a Pró-Reitoria de Extensão e ficará como proposta aguardando documentação.'}
                                 </p>
-                                <p className="mb-0">
-                                    Confira se está tudo preenchido antes de enviar. Depois do envio,
-                                    as mudanças passam pela lista de projetos.
-                                </p>
+                                {editando ? (
+                                    <p className="mb-0">
+                                        Confira se está tudo preenchido antes de enviar. Depois do envio,
+                                        as mudanças passam pela lista de projetos.
+                                    </p>
+                                ) : (
+                                    <div className="alert alert-warning mb-0">
+                                        Você está enviando o projeto para o sistema. Ainda será possível
+                                        editá-lo, mas apenas dentro do período de inscrição, que durará
+                                        de {PERIODO_INSCRICAO_INICIO} para {PERIODO_INSCRICAO_FIM}.
+                                        Ao clicar em Concordo, você declara estar ciente disso e arca
+                                        com as consequências.
+                                    </div>
+                                )}
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-outline-secondary" onClick={() => setConfirmando(false)}>
@@ -984,7 +1001,7 @@ function CadastrarProjeto() {
                                     onClick={salvarDadosIdentificacao}
                                     disabled={enviando || carregandoEdicao}
                                 >
-                                    {enviando ? 'Salvando...' : editando ? 'Confirmar alterações' : 'Confirmar envio'}
+                                    {enviando ? 'Salvando...' : editando ? 'Confirmar alterações' : 'Concordo'}
                                 </button>
                             </div>
                         </div>
