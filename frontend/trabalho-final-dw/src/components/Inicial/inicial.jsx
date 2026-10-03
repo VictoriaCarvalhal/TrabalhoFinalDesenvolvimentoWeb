@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // 1. Adicionado useEffect
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '../../stores/authStore';
@@ -6,7 +6,12 @@ import api from '../../services/api';
 
 function Inicial() {
     const navigate = useNavigate();
+    
+    // 2. Resgata o estado de autenticação
+    const isAutenticado = useAuthStore((state) => state.isAutenticado);
+    
     const login = useAuthStore((state) => state.login);
+    const logout = useAuthStore((state) => state.logout);
     const setNomeUsuario = useAuthStore((state) => state.setNomeUsuario);
     const setAdmin = useAuthStore((state) => state.setAdmin);
     const setPerfil = useAuthStore((state) => state.setPerfil);
@@ -14,9 +19,17 @@ function Inicial() {
     const [erroLogin, setErroLogin] = useState(null);
     const [enviando, setEnviando] = useState(false);
 
+    // 3. Se o usuário já estiver logado ao entrar no "/", redireciona direto
+    useEffect(() => {
+        if (isAutenticado) {
+            navigate('/Bemvindo', { replace: true });
+        }
+    }, [isAutenticado, navigate]);
+
     const {
         register,
         handleSubmit,
+        setValue,
         formState: { errors }
     } = useForm();
 
@@ -24,32 +37,36 @@ function Inicial() {
         setErroLogin(null);
         setEnviando(true);
 
+        const cpfLimpo = data.cpf.replace(/\D/g, '');
+
         try {
-            // Agora o formulário e o backend usam "cpf".
             const resposta = await api.post('/auth/login/', {
-                cpf: data.cpf,
+                cpf: cpfLimpo,
                 password: data.senha,
             });
 
-            //Tanto o access token quanto o refresh token são passados para a função login() atualizada do authStore.
             login(resposta.data.access, resposta.data.refresh);
 
             const perfil = await api.get('/auth/me/');
+            
             setNomeUsuario(perfil.data.nome_completo);
             setAdmin(perfil.data.is_staff || perfil.data.is_superuser);
             setPerfil(perfil.data.perfil);
 
             navigate('/Bemvindo');
         } catch (err) {
+            logout();
+            setValue('senha', '');
+
             if (err.response?.status === 401) {
-                setErroLogin('Usuário ou senha incorretos.');
+                setErroLogin('CPF ou senha incorretos.');
             } else {
                 setErroLogin('Não foi possível fazer login. Tente novamente.');
             }
         } finally {
             setEnviando(false);
         }
-    }
+    };
 
     return (
         <div className="card" style={{ width: '350px' }}>
@@ -65,7 +82,7 @@ function Inicial() {
                 <form onSubmit={handleSubmit(handleLogin)}>
 
                     <div className="mb-3">
-                        <label htmlFor="cpf" name="cpf" className="form-label">CPF</label>
+                        <label htmlFor="cpf" className="form-label">CPF</label>
                         <input
                             type="text"
                             className={`form-control ${errors.cpf ? 'is-invalid' : ''}`}
@@ -76,7 +93,7 @@ function Inicial() {
                     </div>
 
                     <div className="mb-3">
-                        <label htmlFor="senha" name="senha" className="form-label">Senha</label>
+                        <label htmlFor="senha" className="form-label">Senha</label>
                         <input
                             type="password"
                             className={`form-control ${errors.senha ? 'is-invalid' : ''}`}
