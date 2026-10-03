@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // 1. Adicionado useEffect
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '../../stores/authStore';
@@ -6,6 +6,10 @@ import api from '../../services/api';
 
 function Inicial() {
     const navigate = useNavigate();
+    
+    // 2. Resgata o estado de autenticação
+    const isAutenticado = useAuthStore((state) => state.isAutenticado);
+    
     const login = useAuthStore((state) => state.login);
     const logout = useAuthStore((state) => state.logout);
     const setNomeUsuario = useAuthStore((state) => state.setNomeUsuario);
@@ -14,6 +18,13 @@ function Inicial() {
 
     const [erroLogin, setErroLogin] = useState(null);
     const [enviando, setEnviando] = useState(false);
+
+    // 3. Se o usuário já estiver logado ao entrar no "/", redireciona direto
+    useEffect(() => {
+        if (isAutenticado) {
+            navigate('/Bemvindo', { replace: true });
+        }
+    }, [isAutenticado, navigate]);
 
     const {
         register,
@@ -26,33 +37,25 @@ function Inicial() {
         setErroLogin(null);
         setEnviando(true);
 
-        // Remove pontuações caso o usuário digite CPF com formato (000.000.000-00)
         const cpfLimpo = data.cpf.replace(/\D/g, '');
 
         try {
-            // 1. Faz o login e obtém os tokens
             const resposta = await api.post('/auth/login/', {
                 cpf: cpfLimpo,
                 password: data.senha,
             });
 
-            // 2. Guarda temporariamente os tokens
             login(resposta.data.access, resposta.data.refresh);
 
-            // 3. Busca os dados do perfil logado
             const perfil = await api.get('/auth/me/');
             
             setNomeUsuario(perfil.data.nome_completo);
             setAdmin(perfil.data.is_staff || perfil.data.is_superuser);
             setPerfil(perfil.data.perfil);
 
-            // 4. Redireciona para a tela inicial protegida
             navigate('/Bemvindo');
         } catch (err) {
-            // Se falhou em qualquer etapa do login, desfaz o login para evitar estado parcial/inconsistente
             logout();
-
-            // Limpa apenas a senha do formulário
             setValue('senha', '');
 
             if (err.response?.status === 401) {
