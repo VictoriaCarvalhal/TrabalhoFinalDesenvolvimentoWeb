@@ -48,7 +48,23 @@ class RegisterPessoaSerializer(serializers.ModelSerializer):
             'lattes_url',
             'password',
         ]
+class EsqueciSenhaSerializer(serializers.Serializer):
+    email = serializers.EmailField()
 
+
+class RedefinirSenhaSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    nova_senha = serializers.CharField(write_only=True, min_length=8)
+    confirmar_senha = serializers.CharField(write_only=True, min_length=8)
+
+    def validate(self, dados):
+        if dados['nova_senha'] != dados['confirmar_senha']:
+            raise serializers.ValidationError({
+                'confirmar_senha': 'As senhas não são iguais.'
+            })
+
+        return dados
     def validate_cpf(self, value):
         return validar_cpf(value)
 
