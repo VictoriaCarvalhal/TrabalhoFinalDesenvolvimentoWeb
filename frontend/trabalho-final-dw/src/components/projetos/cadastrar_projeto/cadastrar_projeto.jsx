@@ -168,8 +168,8 @@ function CadastrarProjeto() {
 
     function validarEtapa5(f){
         const erros = {};
-        if(!(f.parceriasInternas.length > 0 && f.parceriasInternas.every(item => item.nome_instituicao.trim() && item.unidade && item.participacao))) erros.parceriasInternas = "Adicione pelo menos 1 (uma) Parceria Interna";
-        if(!(f.parceriasExternas.length > 0 && f.parceriasExternas.every(item => item.nome_instituicao.trim() && item.tipo_instituicao && item.participacao))) erros.parceriasExternas = "Adicione pelo menos 1 (uma) Parceria Externa";
+        if(!(f.parceriasInternas.length > 0 && f.parceriasInternas.every(item => (item.nome_instituicao ?? '').trim() && (item.sigla_instituicao ?? '').trim() && item.unidade))) erros.parceriasInternas = "Adicione pelo menos 1 (uma) Parceria Interna";
+        if(!(f.parceriasExternas.length > 0 && f.parceriasExternas.every(item => (item.nome_instituicao ?? '').trim() && item.tipo_instituicao))) erros.parceriasExternas = "Adicione pelo menos 1 (uma) Parceria Externa";
         return erros;
     }
 
@@ -181,13 +181,13 @@ function CadastrarProjeto() {
 
     function validarEtapa7(f){
         const erros = {}
-        if(!(f.locaisRealizacao.length > 0 && f.locaisRealizacao.every(item => item.nome_local.trim() && item.municipio))) erros.locaisRealizacao = "Adicione pelo menos 1 (um) Local de Realização";
+        if(!(f.locaisRealizacao.length > 0 && f.locaisRealizacao.every(item => (item.nome_local ?? '').trim() && item.municipio))) erros.locaisRealizacao = "Adicione pelo menos 1 (um) Local de Realização";
         return erros;
     }
 
     function validarEtapa8(f){
         const erros = {};
-        if(!(f.membrosEquipe.length > 0 && f.membrosEquipe.every(item => item.matricula && item.funcao))) erros.membrosEquipe = "Adicione pelo menos 1 (um) membro de equipe.";
+        if(!(f.membrosEquipe.length > 0 && f.membrosEquipe.every(item => item.vinculo && item.funcao))) erros.membrosEquipe = "Adicione pelo menos 1 (um) membro de equipe.";
         return erros;
     }
 
@@ -515,10 +515,10 @@ function CadastrarProjeto() {
 
     function linhasDeLocaisRealizacao() {
         return form.locaisRealizacao
-            .filter((linha) => linha.nome_local && linha.municipio)
+            .filter((linha) => (linha.nome_local ?? '').trim() && linha.municipio)
             .map((linha) => ({
-                nome_local: linha.nome_local,
-                municipio: linha.municipio,
+                nome_local: (linha.nome_local ?? '').trim(),
+                municipio: Number(linha.municipio),
             }));
     }
 
@@ -534,13 +534,13 @@ function CadastrarProjeto() {
 
     function linhasDeParceriasInternas() {
         return form.parceriasInternas
-            .filter((linha) => linha.unidade && linha.nome_instituicao && linha.sigla_instituicao)
+            .filter((linha) => linha.unidade && (linha.nome_instituicao ?? '').trim() && (linha.sigla_instituicao ?? '').trim())
             .map((linha) => ({
                 unidade: linha.unidade,
                 departamento: linha.departamento || null,
-                nome_instituicao: linha.nome_instituicao,
-                sigla_instituicao: linha.sigla_instituicao,
-                participacao: linha.participacao,
+                nome_instituicao: (linha.nome_instituicao ?? '').trim(),
+                sigla_instituicao: (linha.sigla_instituicao ?? '').trim(),
+                participacao: linha.participacao ?? '',
             }));
     }
 
@@ -556,12 +556,12 @@ function CadastrarProjeto() {
 
     function linhasDeParceriasExternas() {
         return form.parceriasExternas
-            .filter((linha) => linha.nome_instituicao && linha.tipo_instituicao)
+            .filter((linha) => (linha.nome_instituicao ?? '').trim() && linha.tipo_instituicao)
             .map((linha) => ({
-                nome_instituicao: linha.nome_instituicao,
-                sigla_instituicao: linha.sigla_instituicao,
+                nome_instituicao: (linha.nome_instituicao ?? '').trim(),
+                sigla_instituicao: linha.sigla_instituicao ?? '',
                 tipo_instituicao: linha.tipo_instituicao,
-                participacao: linha.participacao,
+                participacao: linha.participacao ?? '',
             }));
     }
 

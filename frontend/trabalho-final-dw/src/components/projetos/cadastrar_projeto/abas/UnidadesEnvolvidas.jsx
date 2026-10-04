@@ -30,12 +30,13 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
     }
 
     async function gravar(indice) {
-        // Só grava quando os dois campos obrigatórios estão preenchidos.
+        // Só a unidade é obrigatória e persistida (ProjetoUnidade só tem unidade).
+        // O departamento é visual e não vai para a API.
         const linha = linhas[indice];
-        if (!projetoId || !linha.unidade || !linha.departamento) return;
+        if (!projetoId || !linha.unidade) return;
         try {
             setErro(null);
-            const corpo = { unidade: linha.unidade, departamento: linha.departamento };
+            const corpo = { unidade: linha.unidade };
             const resposta = linha.id
                 ? await api.patch(`/projetos/${projetoId}/unidades-envolvidas/${linha.id}/`, corpo)
                 : await api.post(`/projetos/${projetoId}/unidades-envolvidas/`, corpo);
@@ -104,7 +105,7 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
                                 <select
                                     id={`ue-unidade-${i}`}
                                     className="form-select"
-                                    value={linha.unidade}
+                                    value={linha.unidade ?? ''}
                                     required
                                     onChange={(e) => {
                                         const novaUnidade = e.target.value;
@@ -123,13 +124,12 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
                                 </select>
                             </div>
                             <div>
-                                <label className="form-label" htmlFor={`ue-departamento-${i}`}>Departamento *</label>
+                                <label className="form-label" htmlFor={`ue-departamento-${i}`}>Departamento</label>
                                 <select
                                     id={`ue-departamento-${i}`}
                                     className="form-select"
-                                    value={linha.departamento}
+                                    value={linha.departamento ?? ''}
                                     disabled={!linha.unidade}
-                                    required
                                     onChange={(e) => editar(i, 'departamento', e.target.value)}
                                     onBlur={() => gravar(i)}
                                 >
