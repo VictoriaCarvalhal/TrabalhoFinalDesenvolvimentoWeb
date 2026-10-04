@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../../../services/api';
 import { MUNICIPIOS_RJ } from '../../../../dados/municipiosRJ';
 import CartaoItem from '../CartaoItem';
+import ModalAlerta from '../../../comum/ModalAlerta';
 
 // Aba "Locais de Realização" do cadastro de projeto. Funciona como no sistema
 // original: uma tabela vazia, o botão "Novo" acrescenta uma linha com
@@ -13,6 +14,7 @@ import CartaoItem from '../CartaoItem';
 function LocaisRealizacao({ projetoId, valor = [], onChange, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
+    const [exclusaoPendente, setExclusaoPendente] = useState(null);
 
     // Com projeto, as linhas gravadas vêm da API.
     useEffect(() => {
@@ -65,6 +67,12 @@ function LocaisRealizacao({ projetoId, valor = [], onChange, errosValidacao }) {
         setLinhas((atuais) => atuais.filter((_, i) => i !== indice));
     }
 
+    async function confirmarExclusao() {
+        const indice = exclusaoPendente;
+        setExclusaoPendente(null);
+        if (indice !== null) await excluir(indice);
+    }
+
     return (
         <fieldset>
             <legend>Locais de Realização</legend>
@@ -91,7 +99,7 @@ function LocaisRealizacao({ projetoId, valor = [], onChange, errosValidacao }) {
                                 <button
                                     type="button"
                                     className="btn btn-sm btn-outline-danger"
-                                    onClick={() => excluir(i)}
+                                    onClick={() => setExclusaoPendente(i)}
                                     aria-label={`Excluir local ${i + 1}`}
                                     title="Excluir"
                                 >
@@ -133,6 +141,17 @@ function LocaisRealizacao({ projetoId, valor = [], onChange, errosValidacao }) {
                         </CartaoItem>
                     ))}
                 </div>
+            )}
+
+            {exclusaoPendente !== null && linhas[exclusaoPendente] && (
+                <ModalAlerta
+                    variante="aviso"
+                    titulo="Excluir local?"
+                    mensagem={`Excluir o local "${linhas[exclusaoPendente].nome_local || `Local ${exclusaoPendente + 1}`}"? Esta ação não pode ser desfeita.`}
+                    textoConfirmar="Excluir"
+                    aoConfirmar={confirmarExclusao}
+                    aoFechar={() => setExclusaoPendente(null)}
+                />
             )}
         </fieldset>
     );

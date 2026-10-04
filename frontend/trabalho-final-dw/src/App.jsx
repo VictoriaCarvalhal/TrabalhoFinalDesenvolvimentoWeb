@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx';
 import CadastrarProjeto from './components/projetos/cadastrar_projeto/cadastrar_projeto.jsx';
 import ImprimirProjeto from './components/projetos/imprimir/ImprimirProjeto.jsx';
 import Bemvindo from './components/bemvindo/bemvindo.jsx';
+import PeriodoAdmin from './components/admin/PeriodoAdmin.jsx';
 import ScrollToTop from './components/layout/ScrollToTop.jsx';
 import { ROTAS } from './utils/rotas.js';
 import { useAuthStore } from './stores/authStore.jsx';
@@ -74,6 +75,7 @@ function App() {
           <Route element={<LayoutAutenticated />}>
             {/* Canônica da tela inicial (lista exigida pelo cliente). */}
             <Route path={ROTAS.BEMVINDO} element={<Bemvindo />} />
+            <Route path="/Admin/Periodo" element={<PeriodoAdmin />} />
             <Route path={ROTAS.PROJETOS}>
               {/* Sem rota index antes: /projetos caía em layout vazio. */}
               <Route index element={<Navigate to={ROTAS.BEMVINDO} replace />} />

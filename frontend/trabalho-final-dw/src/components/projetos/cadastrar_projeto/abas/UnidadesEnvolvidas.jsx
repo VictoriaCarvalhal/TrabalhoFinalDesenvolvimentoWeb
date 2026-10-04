@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../../services/api';
 import CartaoItem from '../CartaoItem';
+import ModalAlerta from '../../../comum/ModalAlerta';
 
 function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], onChange, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
+    const [exclusaoPendente, setExclusaoPendente] = useState(null);
 
     // Com projeto, as linhas gravadas vêm da API.
     useEffect(() => {
@@ -28,12 +30,13 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
     }
 
     async function gravar(indice) {
-        // Só grava quando os dois campos obrigatórios estão preenchidos.
+        // Só a unidade é obrigatória e persistida (ProjetoUnidade só tem unidade).
+        // O departamento é visual e não vai para a API.
         const linha = linhas[indice];
-        if (!projetoId || !linha.unidade || !linha.departamento) return;
+        if (!projetoId || !linha.unidade) return;
         try {
             setErro(null);
-            const corpo = { unidade: linha.unidade, departamento: linha.departamento };
+            const corpo = { unidade: linha.unidade };
             const resposta = linha.id
                 ? await api.patch(`/projetos/${projetoId}/unidades-envolvidas/${linha.id}/`, corpo)
                 : await api.post(`/projetos/${projetoId}/unidades-envolvidas/`, corpo);
@@ -55,6 +58,12 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
             }
         }
         setLinhas((atuais) => atuais.filter((_, i) => i !== indice));
+    }
+
+    async function confirmarExclusao() {
+        const indice = exclusaoPendente;
+        setExclusaoPendente(null);
+        if (indice !== null) await excluir(indice);
     }
 
     return (
@@ -83,7 +92,7 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
                                 <button
                                     type="button"
                                     className="btn btn-sm btn-outline-danger"
-                                    onClick={() => excluir(i)}
+                                    onClick={() => setExclusaoPendente(i)}
                                     aria-label={`Excluir unidade ${i + 1}`}
                                     title="Excluir"
                                 >
@@ -96,7 +105,7 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
                                 <select
                                     id={`ue-unidade-${i}`}
                                     className="form-select"
-                                    value={linha.unidade}
+                                    value={linha.unidade ?? ''}
                                     required
                                     onChange={(e) => {
                                         const novaUnidade = e.target.value;
@@ -115,13 +124,12 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
                                 </select>
                             </div>
                             <div>
-                                <label className="form-label" htmlFor={`ue-departamento-${i}`}>Departamento *</label>
+                                <label className="form-label" htmlFor={`ue-departamento-${i}`}>Departamento</label>
                                 <select
                                     id={`ue-departamento-${i}`}
                                     className="form-select"
-                                    value={linha.departamento}
+                                    value={linha.departamento ?? ''}
                                     disabled={!linha.unidade}
-                                    required
                                     onChange={(e) => editar(i, 'departamento', e.target.value)}
                                     onBlur={() => gravar(i)}
                                 >
@@ -140,6 +148,17 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
                         </CartaoItem>
                     ))}
                 </div>
+            )}
+
+            {exclusaoPendente !== null && linhas[exclusaoPendente] && (
+                <ModalAlerta
+                    variante="aviso"
+                    titulo="Excluir unidade?"
+                    mensagem={`Excluir a unidade ${exclusaoPendente + 1} desta lista? Esta ação não pode ser desfeita.`}
+                    textoConfirmar="Excluir"
+                    aoConfirmar={confirmarExclusao}
+                    aoFechar={() => setExclusaoPendente(null)}
+                />
             )}
         </fieldset>
     );

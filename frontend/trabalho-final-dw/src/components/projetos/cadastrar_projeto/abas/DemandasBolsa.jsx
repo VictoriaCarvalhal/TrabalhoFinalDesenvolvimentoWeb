@@ -3,6 +3,7 @@ import api from '../../../../services/api';
 import CampoTextoLongo from '../CampoTextoLongo';
 import DialogoFormulario from '../DialogoFormulario';
 import CartaoItem, { DetalheItem } from '../CartaoItem';
+import ModalAlerta from '../../../comum/ModalAlerta';
 
 // Mesma lista do backend (projetos.TipoBolsa).
 const TIPOS_BOLSA = [
@@ -23,6 +24,7 @@ function DemandasBolsa({ projetoId, valor = [], onChange, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
     const [edicao, setEdicao] = useState(null);
+    const [exclusaoPendente, setExclusaoPendente] = useState(null);
 
     useEffect(() => {
         if (!projetoId) return;
@@ -108,6 +110,12 @@ function DemandasBolsa({ projetoId, valor = [], onChange, errosValidacao }) {
         setLinhas((atuais) => atuais.filter((_, i) => i !== indice));
     }
 
+    async function confirmarExclusao() {
+        const indice = exclusaoPendente;
+        setExclusaoPendente(null);
+        if (indice !== null) await excluir(indice);
+    }
+
     function nomeTipo(linha) {
         if (linha.tipo_bolsa_display) return linha.tipo_bolsa_display;
         const t = TIPOS_BOLSA.find((x) => x.valor === linha.tipo_bolsa);
@@ -156,7 +164,7 @@ function DemandasBolsa({ projetoId, valor = [], onChange, errosValidacao }) {
                                         <button
                                             type="button"
                                             className="btn btn-sm btn-outline-danger flex-grow-1"
-                                            onClick={() => excluir(i)}
+                                            onClick={() => setExclusaoPendente(i)}
                                             aria-label={`Excluir a demanda ${i + 1}`}
                                             title="Excluir"
                                         >
@@ -221,6 +229,17 @@ function DemandasBolsa({ projetoId, valor = [], onChange, errosValidacao }) {
                         aoMudar={(campo, texto) => mudarCampo({ [campo]: texto })}
                     />
                 </DialogoFormulario>
+            )}
+
+            {exclusaoPendente !== null && linhas[exclusaoPendente] && (
+                <ModalAlerta
+                    variante="aviso"
+                    titulo="Excluir demanda?"
+                    mensagem={`Excluir a demanda "${nomeTipo(linhas[exclusaoPendente])}"? Esta ação não pode ser desfeita.`}
+                    textoConfirmar="Excluir"
+                    aoConfirmar={confirmarExclusao}
+                    aoFechar={() => setExclusaoPendente(null)}
+                />
             )}
         </fieldset>
     );

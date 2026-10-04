@@ -5,6 +5,7 @@ import DialogoFormulario from '../DialogoFormulario';
 import DialogoVisualizacao from '../DialogoVisualizacao';
 import CampoSomenteLeitura from '../CampoSomenteLeitura';
 import CartaoItem, { DetalheItem } from '../CartaoItem';
+import ModalAlerta from '../../../comum/ModalAlerta';
 
 // Lista copiada do backend (projetos.TipoInstituicaoExterna).
 const TIPOS_INSTITUICAO = [
@@ -27,6 +28,7 @@ function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = fal
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
     const [edicao, setEdicao] = useState(null);
+    const [exclusaoPendente, setExclusaoPendente] = useState(null);
 
     // Linha aberta no modal de visualização (só leitura). null = fechado.
     const [visualizacao, setVisualizacao] = useState(null);
@@ -112,6 +114,12 @@ function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = fal
         setLinhas((atuais) => atuais.filter((_, i) => i !== indice));
     }
 
+    async function confirmarExclusao() {
+        const indice = exclusaoPendente;
+        setExclusaoPendente(null);
+        if (indice !== null) await excluir(indice);
+    }
+
     // A API devolve o tipo por extenso no GET; uma parceria recém-digitada
     // só tem o código, então o nome sai da lista local.
     function nomeTipo(linha) {
@@ -169,7 +177,7 @@ function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = fal
                                     <button
                                         type="button"
                                         className="btn btn-sm btn-outline-danger flex-grow-1"
-                                        onClick={() => excluir(i)}
+                                        onClick={() => setExclusaoPendente(i)}
                                         aria-label={`Excluir a parceria externa ${i + 1}`}
                                         title="Excluir"
                                     >
@@ -257,6 +265,17 @@ function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = fal
                     <CampoSomenteLeitura rotulo="Tipo de instituição" valor={nomeTipo(visualizacao)} />
                     <CampoSomenteLeitura rotulo="Participação da instituição no projeto" valor={visualizacao.participacao} />
                 </DialogoVisualizacao>
+            )}
+
+            {exclusaoPendente !== null && linhas[exclusaoPendente] && (
+                <ModalAlerta
+                    variante="aviso"
+                    titulo="Excluir parceria?"
+                    mensagem={`Excluir a parceria com "${linhas[exclusaoPendente].nome_instituicao || `Parceria ${exclusaoPendente + 1}`}"? Esta ação não pode ser desfeita.`}
+                    textoConfirmar="Excluir"
+                    aoConfirmar={confirmarExclusao}
+                    aoFechar={() => setExclusaoPendente(null)}
+                />
             )}
         </fieldset>
     );

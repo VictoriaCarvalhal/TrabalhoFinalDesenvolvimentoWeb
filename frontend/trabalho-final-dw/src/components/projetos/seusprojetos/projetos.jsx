@@ -6,6 +6,10 @@ import api from '../../../services/api';
 import { excluirProjeto, restaurarProjeto } from '../../../services/projetoService';
 import { gerarPdfPorId } from '../../../services/gerarProjetoPdf.js';
 import DialogoDadosProjeto from '../detalhes/DialogoDadosProjeto';
+import FeedbackIndisponivel from '../../comum/FeedbackIndisponivel';
+import ModalAlerta from '../../comum/ModalAlerta';
+import ToastSucesso from '../../comum/ToastSucesso';
+import { usePeriodo } from '../../../hooks/usePeriodo';
 import BarraDeBusca from './projetosComponentes/BarraDeBusca';
 import FiltrosDeOrdenacao from './projetosComponentes/FiltrosDeOrdenacao';
 import ProjetoCard from './projetosComponentes/ProjetoCard';
@@ -22,11 +26,14 @@ function Projetos() {
     const [erro, setErro] = useState(null);
     const [excluindoId, setExcluindoId] = useState(null);
     const [baixandoId, setBaixandoId] = useState(null);
+    const [confirmacaoPendente, setConfirmacaoPendente] = useState(null);
+    const [toast, setToast] = useState(null);
     // id do projeto aberto no diálogo de dados; null = diálogo fechado
     const [vendoId, setVendoId] = useState(null);
     const navigate = useNavigate();
     const [paginaAtual, setPaginaAtual] = useState(1);
     const [totalPaginas, setTotalPaginas] = useState(1);
+    const [totalProjetos, setTotalProjetos] = useState(0);
     const [buscaAplicada, setBuscaAplicada] = useState('');
 
     const [tipoBusca, setTipoBusca] = useState('nome');
@@ -34,6 +41,10 @@ function Projetos() {
     const [ordemCronologica, setOrdemCronologica] = useState('recentes');
     // Aba da lixeira (só admin): false = ativos, true = excluídos.
     const [mostrandoExcluidos, setMostrandoExcluidos] = useState(false);
+    // Período de extensão: fora dele, comum não cria nem edita (admin bypassa).
+    const { dados: periodo, aberto: periodoAberto, loading: periodoLoading } = usePeriodo();
+    const [mostrarFeedbackPeriodo, setMostrarFeedbackPeriodo] = useState(false);
+    const periodoFechadoParaComum = !isAdmin && !periodoLoading && !periodoAberto;
     // Ignora respostas antigas quando o usuário troca rápido de aba/página.
     const buscaIdRef = useRef(0);
 
@@ -69,36 +80,44 @@ function Projetos() {
     }
 
     async function handleExcluir(projeto) {
-        if (!window.confirm(`Excluir o projeto "${projeto.titulo}"? Ele irá para a lixeira.`)) {
-            return;
-        }
         setExcluindoId(projeto.id);
         setErro(null);
         try {
             await excluirProjeto(projeto.id);
-            // Sai da aba de ativos; aparece na lixeira ao trocar de aba.
             setProjetos((atuais) => atuais.filter((p) => p.id !== projeto.id));
+            return true;
         } catch (err) {
             setErro(err.response?.data?.detail ?? 'Erro ao excluir projeto.');
+            return false;
         } finally {
             setExcluindoId(null);
         }
     }
 
     async function handleRestaurar(projeto) {
-        if (!window.confirm(`Restaurar o projeto "${projeto.titulo}"? Ele voltará para a lista normal.`)) {
-            return;
-        }
         setExcluindoId(projeto.id);
         setErro(null);
         try {
             await restaurarProjeto(projeto.id);
-            // Sai da lixeira; volta aos ativos ao trocar de aba.
             setProjetos((atuais) => atuais.filter((p) => p.id !== projeto.id));
+            return true;
         } catch (err) {
             setErro(err.response?.data?.detail ?? 'Erro ao restaurar projeto.');
+            return false;
         } finally {
             setExcluindoId(null);
+        }
+    }
+
+    async function confirmarPendente() {
+        const pendente = confirmacaoPendente;
+        if (!pendente || excluindoId !== null) return;
+        const sucesso = pendente.tipo === 'excluir'
+            ? await handleExcluir(pendente.projeto)
+            : await handleRestaurar(pendente.projeto);
+        setConfirmacaoPendente(null);
+        if (sucesso) {
+            setToast(pendente.tipo === 'excluir' ? 'Projeto excluído.' : 'Projeto restaurado.');
         }
     }
 
@@ -161,8 +180,10 @@ function Projetos() {
                 }
                 if (dados && dados.count != undefined) {
                     setTotalPaginas(Math.ceil(dados.count / 6));
+                    setTotalProjetos(dados.count);
                 } else {
                     setTotalPaginas(1);
+                    setTotalProjetos(lista.length);
                 }
                 setProjetos(isAdmin ? lista : lista.filter((p) => !p.excluido));
             } catch (err) {
@@ -209,6 +230,7 @@ function Projetos() {
     const handleTrocarAba = (excluidos) => {
         setMostrandoExcluidos(excluidos);
         setPaginaAtual(1);
+        setProjetos([]);
     };
 
     // Comum nunca fica na lixeira: se perder o admin, volta aos ativos.
@@ -219,7 +241,9 @@ function Projetos() {
         }
     }, [isAdmin, mostrandoExcluidos]);
 
-    const carregandoInicial = carregando && projetos.length === 0 && !buscaAplicada;
+    const textoContador = buscaAplicada
+        ? `${totalProjetos} ${totalProjetos === 1 ? 'resultado' : 'resultados'} para "${buscaAplicada}"`
+        : `${totalProjetos} ${totalProjetos === 1 ? 'projeto' : 'projetos'}`;
 
     return (
         <div>
@@ -229,7 +253,7 @@ function Projetos() {
                 pagina precisa de um h1 para quem usa leitor de tela. */}
                 <h1 className="visually-hidden">Seus projetos</h1>
 
-                {!carregandoInicial && (
+                {isAutenticado && (
                     <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
                         {isAdmin ? (
                             <div className="btn-group" role="group" aria-label="Filtrar projetos ativos ou excluídos">
@@ -252,15 +276,32 @@ function Projetos() {
                         ) : (
                             <span />
                         )}
-                        <button
-                            type="button"
-                            className="btn btn-primary"
-                            onClick={redirecionaProCadastro}
-                        >
-                            <i className="bi bi-plus-lg me-2" aria-hidden="true"></i>
-                            Novo projeto
-                        </button>
+                        {periodoFechadoParaComum ? (
+                            <button
+                                type="button"
+                                className="btn btn-outline-secondary"
+                                title="Criação indisponível fora do período de extensão"
+                                aria-label="Criação de projeto indisponível fora do período de extensão. Ativar para ver o motivo."
+                                onClick={() => setMostrarFeedbackPeriodo(true)}
+                            >
+                                <i className="bi bi-lock-fill me-2" aria-hidden="true"></i>
+                                Novo projeto
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={redirecionaProCadastro}
+                            >
+                                <i className="bi bi-plus-lg me-2" aria-hidden="true"></i>
+                                Novo projeto
+                            </button>
+                        )}
                     </div>
+                )}
+
+                {isAutenticado && !erro && (carregando || projetos.length > 0 || buscaAplicada) && (
+                    <p className="text-muted small mt-2 mb-0" role="status">{textoContador}</p>
                 )}
 
 
@@ -270,12 +311,26 @@ function Projetos() {
                     </div>
                 )}
 
-                {isAutenticado && carregando && projetos.length === 0 && (
-                    <div className="d-flex align-items-center mt-3 text-muted">
-                        <div className="spinner-border spinner-border-sm me-2" role="status">
-                            <span className="visually-hidden">Carregando...</span>
-                        </div>
-                        <span>Carregando projetos...</span>
+                {isAutenticado && !periodoLoading && !periodoAberto && periodoFechadoParaComum && (
+                    <div className="alert alert-warning mt-3 d-flex flex-wrap align-items-center gap-2" role="status">
+                        <i className="bi bi-lock-fill" aria-hidden="true"></i>
+                        <span className="flex-grow-1">
+                            O período de extensão está fechado: não é possível criar nem editar projetos.
+                        </span>
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => setMostrarFeedbackPeriodo(true)}
+                        >
+                            Ver motivo
+                        </button>
+                    </div>
+                )}
+
+                {isAutenticado && isAdmin && !periodoLoading && !periodoAberto && (
+                    <div className="alert alert-info mt-3" role="status">
+                        <i className="bi bi-info-circle me-2" aria-hidden="true"></i>
+                        O período de extensão está fechado, mas como admin você ainda pode criar e editar.
                     </div>
                 )}
 
@@ -283,7 +338,7 @@ function Projetos() {
                     <div className="alert alert-danger mt-3">{erro}</div>
                 )}
 
-                {isAutenticado && !erro && !carregandoInicial && (projetos.length > 0 || buscaAplicada) && (
+                {isAutenticado && !erro && (projetos.length > 0 || buscaAplicada || carregando) && (
                     <div className="container mt-4 mb-4 px-0">
                         <div className="row justify-content-center">
                             <div className="col-12 col-md-10 col-lg-8">
@@ -302,6 +357,32 @@ function Projetos() {
                                     isAdmin={isAdmin}
                                 />
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {isAutenticado && carregando && projetos.length === 0 && (
+                    <div className="mt-3" role="status">
+                        <span className="visually-hidden">Carregando projetos...</span>
+                        <div className="row g-3" aria-hidden="true">
+                            {[0, 1, 2, 3].map((indice) => (
+                                <div className="col-12 col-lg-6" key={`skeleton-${indice}`}>
+                                    <div className="card shadow border-0 h-100" style={{ backgroundColor: 'var(--cor-fundo)' }}>
+                                        <div className="card-body d-flex flex-column placeholder-wave">
+                                            <span className="placeholder col-8 mb-2"></span>
+                                            <span className="placeholder col-4 mb-3"></span>
+                                            <span className="placeholder col-11 mb-1"></span>
+                                            <span className="placeholder col-9 mb-1"></span>
+                                            <span className="placeholder col-10 mb-3"></span>
+                                            <div className="d-flex gap-2 mt-auto pt-3 border-top">
+                                                <span className="placeholder col-3 py-3"></span>
+                                                <span className="placeholder col-3 py-3"></span>
+                                                <span className="placeholder col-3 py-3"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 )}
@@ -335,9 +416,11 @@ function Projetos() {
                                         onVer={setVendoId}
                                         onBaixar={handleBaixar}
                                         onEditar={redirecionaParaEdicao}
-                                        onExcluir={handleExcluir}
-                                        onRestaurar={handleRestaurar}
+                                        onExcluir={(projeto) => setConfirmacaoPendente({ tipo: 'excluir', projeto })}
+                                        onRestaurar={(projeto) => setConfirmacaoPendente({ tipo: 'restaurar', projeto })}
                                         isAdmin={isAdmin}
+                                        periodoBloqueado={periodoFechadoParaComum}
+                                        onAcaoBloqueada={() => setMostrarFeedbackPeriodo(true)}
                                     />
                                 ))}
                             </div>
@@ -352,7 +435,35 @@ function Projetos() {
                         {vendoId && (
                             <DialogoDadosProjeto projetoId={vendoId} aoFechar={() => setVendoId(null)} />
                         )}
+
+                        {confirmacaoPendente && (
+                            <ModalAlerta
+                                variante="aviso"
+                                titulo={confirmacaoPendente.tipo === 'excluir' ? 'Excluir projeto?' : 'Restaurar projeto?'}
+                                mensagem={confirmacaoPendente.tipo === 'excluir'
+                                    ? `Excluir o projeto "${confirmacaoPendente.projeto.titulo}"? Ele irá para a lixeira.`
+                                    : `Restaurar o projeto "${confirmacaoPendente.projeto.titulo}"? Ele voltará para a lista normal.`}
+                                textoConfirmar={confirmacaoPendente.tipo === 'excluir' ? 'Excluir' : 'Restaurar'}
+                                classeBotaoConfirmar={confirmacaoPendente.tipo === 'excluir' ? 'btn-danger' : 'btn-success'}
+                                aoConfirmar={confirmarPendente}
+                                confirmando={excluindoId === confirmacaoPendente.projeto.id}
+                                aoFechar={() => setConfirmacaoPendente(null)}
+                            />
+                        )}
                     </div>
+                )}
+
+                {mostrarFeedbackPeriodo && (
+                    <FeedbackIndisponivel
+                        inicio={periodo?.inicio}
+                        fim={periodo?.fim}
+                        mensagem={periodo?.mensagem_fechado}
+                        aoFechar={() => setMostrarFeedbackPeriodo(false)}
+                    />
+                )}
+
+                {toast && (
+                    <ToastSucesso mensagem={toast} aoFechar={() => setToast(null)} />
                 )}
 
             </div>

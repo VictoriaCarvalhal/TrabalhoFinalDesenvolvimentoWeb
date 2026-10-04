@@ -15,6 +15,9 @@ import Parcerias from './abas/Parcerias';
 import DemandasBolsa from './abas/DemandasBolsa';
 
 import { MUNICIPIOS_RJ } from '../../../dados/municipiosRJ';
+import { usePeriodo } from '../../../hooks/usePeriodo';
+import FeedbackIndisponivel from '../../comum/FeedbackIndisponivel';
+import ModalAlerta from '../../comum/ModalAlerta';
 import { useUnidades } from '../../../hooks/useUnidades';
 import { useDepartamentos } from '../../../hooks/useDepartamentos';
 import { useVinculosCoordenador } from '../../../hooks/useVinculosCoordenador';
@@ -50,14 +53,6 @@ const ABAS = [
     { id: "membros-equipe", label: "Membros da Equipe" },
 ];
 
-// TODO(backend): ainda não existe edital/período no backend, então estas
-// variáveis estão com placeholders. Alguém precisa trocá-las pelos valores
-// vindos do backend (edital vigente) — ex.: buscar no endpoint de editais e
-// preencher inicio/fim aqui.
-const PERIODO_INSCRICAO_INICIO = 'X';
-const PERIODO_INSCRICAO_FIM = 'Y';
-
-
 function CadastrarProjeto() {
     const navigate = useNavigate();
     // Rota :id/editar reusa esta tela: com id na URL vira modo edição.
@@ -65,7 +60,40 @@ function CadastrarProjeto() {
     const editando = Boolean(idDaUrl);
 
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
+    const isAdmin = useAuthStore((state) => state.isAdmin);
     const token = useAuthStore((state) => state.token);
+
+    // Fora do período, comum não cria nem edita (nem pela URL direta).
+    const { dados: periodo, aberto: periodoAberto, loading: periodoLoading } = usePeriodo();
+    const bloqueadoPorPeriodo = !isAdmin && !periodoLoading && !periodoAberto;
+    const [mostrarFeedbackPeriodo, setMostrarFeedbackPeriodo] = useState(false);
+    const [erroSalvamento, setErroSalvamento] = useState(null);
+
+    function formatarDetalhesErro(dadosErro) {
+        if (!dadosErro) return [];
+        if (typeof dadosErro === 'string') return [dadosErro];
+        if (Array.isArray(dadosErro)) {
+            return dadosErro.flatMap((item) => formatarDetalhesErro(item));
+        }
+        if (typeof dadosErro === 'object') {
+            return Object.entries(dadosErro).flatMap(([campo, valor]) => {
+                const mensagens = Array.isArray(valor) ? valor : [valor];
+                return mensagens.map((mensagem) =>
+                    typeof mensagem === 'object'
+                        ? `${campo}: ${JSON.stringify(mensagem)}`
+                        : `${campo}: ${mensagem}`
+                );
+            });
+        }
+        return [String(dadosErro)];
+    }
+
+    // Abre o pop-up com o motivo assim que o bloqueio é confirmado.
+    useEffect(() => {
+        if (bloqueadoPorPeriodo) {
+            setMostrarFeedbackPeriodo(true);
+        }
+    }, [bloqueadoPorPeriodo]);
 
     const [etapaAtual, setEtapaAtual] = useState(0);
     const [errosValidacao, setErrosValidacao] = useState({});
@@ -140,8 +168,8 @@ function CadastrarProjeto() {
 
     function validarEtapa5(f){
         const erros = {};
-        if(!(f.parceriasInternas.length > 0 && f.parceriasInternas.every(item => item.nome_instituicao.trim() && item.unidade && item.participacao))) erros.parceriasInternas = "Adicione pelo menos 1 (uma) Parceria Interna";
-        if(!(f.parceriasExternas.length > 0 && f.parceriasExternas.every(item => item.nome_instituicao.trim() && item.tipo_instituicao && item.participacao))) erros.parceriasExternas = "Adicione pelo menos 1 (uma) Parceria Externa";
+        if(!(f.parceriasInternas.length > 0 && f.parceriasInternas.every(item => (item.nome_instituicao ?? '').trim() && (item.sigla_instituicao ?? '').trim() && item.unidade))) erros.parceriasInternas = "Adicione pelo menos 1 (uma) Parceria Interna";
+        if(!(f.parceriasExternas.length > 0 && f.parceriasExternas.every(item => (item.nome_instituicao ?? '').trim() && item.tipo_instituicao))) erros.parceriasExternas = "Adicione pelo menos 1 (uma) Parceria Externa";
         return erros;
     }
 
@@ -153,13 +181,13 @@ function CadastrarProjeto() {
 
     function validarEtapa7(f){
         const erros = {}
-        if(!(f.locaisRealizacao.length > 0 && f.locaisRealizacao.every(item => item.nome_local.trim() && item.municipio))) erros.locaisRealizacao = "Adicione pelo menos 1 (um) Local de Realização";
+        if(!(f.locaisRealizacao.length > 0 && f.locaisRealizacao.every(item => (item.nome_local ?? '').trim() && item.municipio))) erros.locaisRealizacao = "Adicione pelo menos 1 (um) Local de Realização";
         return erros;
     }
 
     function validarEtapa8(f){
         const erros = {};
-        if(!(f.membrosEquipe.length > 0 && f.membrosEquipe.every(item => item.matricula && item.funcao))) erros.membrosEquipe = "Adicione pelo menos 1 (um) membro de equipe.";
+        if(!(f.membrosEquipe.length > 0 && f.membrosEquipe.every(item => item.vinculo && item.funcao))) erros.membrosEquipe = "Adicione pelo menos 1 (um) membro de equipe.";
         return erros;
     }
 
@@ -315,6 +343,8 @@ function CadastrarProjeto() {
 
     useEffect(() => {
         if (!idDaUrl || !isAutenticado) return;
+        // Bloqueado: nem carrega os dados, a tela mostra só o pop-up.
+        if (periodoLoading || bloqueadoPorPeriodo) return;
         let cancelado = false;
         setCarregandoEdicao(true);
         setErroCarregamento(null);
@@ -410,7 +440,7 @@ function CadastrarProjeto() {
             });
 
         return () => { cancelado = true; };
-    }, [idDaUrl, isAutenticado]);
+    }, [idDaUrl, isAutenticado, periodoLoading, bloqueadoPorPeriodo]);
 
     const buscarCep = async (cep) => {
         const digits = cep.replace(/\D/g, '');
@@ -485,10 +515,10 @@ function CadastrarProjeto() {
 
     function linhasDeLocaisRealizacao() {
         return form.locaisRealizacao
-            .filter((linha) => linha.nome_local && linha.municipio)
+            .filter((linha) => (linha.nome_local ?? '').trim() && linha.municipio)
             .map((linha) => ({
-                nome_local: linha.nome_local,
-                municipio: linha.municipio,
+                nome_local: (linha.nome_local ?? '').trim(),
+                municipio: Number(linha.municipio),
             }));
     }
 
@@ -504,13 +534,13 @@ function CadastrarProjeto() {
 
     function linhasDeParceriasInternas() {
         return form.parceriasInternas
-            .filter((linha) => linha.unidade && linha.nome_instituicao && linha.sigla_instituicao)
+            .filter((linha) => linha.unidade && (linha.nome_instituicao ?? '').trim() && (linha.sigla_instituicao ?? '').trim())
             .map((linha) => ({
                 unidade: linha.unidade,
                 departamento: linha.departamento || null,
-                nome_instituicao: linha.nome_instituicao,
-                sigla_instituicao: linha.sigla_instituicao,
-                participacao: linha.participacao,
+                nome_instituicao: (linha.nome_instituicao ?? '').trim(),
+                sigla_instituicao: (linha.sigla_instituicao ?? '').trim(),
+                participacao: linha.participacao ?? '',
             }));
     }
 
@@ -526,12 +556,12 @@ function CadastrarProjeto() {
 
     function linhasDeParceriasExternas() {
         return form.parceriasExternas
-            .filter((linha) => linha.nome_instituicao && linha.tipo_instituicao)
+            .filter((linha) => (linha.nome_instituicao ?? '').trim() && linha.tipo_instituicao)
             .map((linha) => ({
-                nome_instituicao: linha.nome_instituicao,
-                sigla_instituicao: linha.sigla_instituicao,
+                nome_instituicao: (linha.nome_instituicao ?? '').trim(),
+                sigla_instituicao: linha.sigla_instituicao ?? '',
                 tipo_instituicao: linha.tipo_instituicao,
-                participacao: linha.participacao,
+                participacao: linha.participacao ?? '',
             }));
     }
 
@@ -763,11 +793,21 @@ function CadastrarProjeto() {
 
             navigate(ROTAS.BEMVINDO);
         } catch (erro) {
-            // O corpo do erro do DRF diz o campo e o motivo do erro (futuramente fica mais elegante exibir o erro usando o padrão de outros erros)
-            const detalhe = erro.response?.data;
-            window.alert(detalhe
-                ? JSON.stringify(detalhe)
-                : 'Não foi possível salvar o projeto. Verifique a conexão e tente de novo.');
+            const dadosErro = erro.response?.data;
+            if (erro.response?.status === 403 && dadosErro && dadosErro.aberto === false) {
+                // O período fechou no meio do preenchimento: mostra o
+                // pop-up com o motivo em vez do alerta genérico.
+                setMostrarFeedbackPeriodo(true);
+            } else {
+                const detalhes = formatarDetalhesErro(dadosErro);
+                setErroSalvamento({
+                    titulo: 'Não foi possível salvar o projeto',
+                    mensagem: detalhes.length > 0
+                        ? 'O servidor recusou o envio com os seguintes erros:'
+                        : 'Verifique a conexão e tente de novo.',
+                    detalhes,
+                });
+            }
         } finally {
             setEnviando(false);
         }
@@ -811,7 +851,29 @@ function CadastrarProjeto() {
                 <div className="alert alert-danger mt-3">{erroCarregamento}</div>
             )}
 
-            {!(editando && carregandoEdicao) && (
+            {bloqueadoPorPeriodo ? (
+                <div className="alert alert-warning mt-3 d-flex flex-wrap align-items-center gap-2" role="status">
+                    <i className="bi bi-lock-fill" aria-hidden="true"></i>
+                    <span className="flex-grow-1">
+                        O período de extensão está fechado: não é possível {editando ? 'editar' : 'criar'} projetos.
+                    </span>
+                    <button
+                        type="button"
+                        className="btn btn-sm btn-outline-secondary"
+                        onClick={() => setMostrarFeedbackPeriodo(true)}
+                    >
+                        Ver motivo
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-sm btn-secondary"
+                        onClick={() => navigate(ROTAS.BEMVINDO)}
+                    >
+                        Voltar aos projetos
+                    </button>
+                </div>
+            ) : (
+            !(editando && carregandoEdicao) && (
             <>
             {/* Resumo das pendências: fica acima das abas e do formulário para
                 ser visto sem rolar até o fim. O envio rola até aqui.
@@ -1019,6 +1081,26 @@ function CadastrarProjeto() {
                 </div>
             </div>
             </>
+            )
+            )}
+
+            {mostrarFeedbackPeriodo && (
+                <FeedbackIndisponivel
+                    inicio={periodo?.inicio}
+                    fim={periodo?.fim}
+                    mensagem={periodo?.mensagem_fechado}
+                    aoFechar={() => setMostrarFeedbackPeriodo(false)}
+                />
+            )}
+
+            {erroSalvamento && (
+                <ModalAlerta
+                    variante="erro"
+                    titulo={erroSalvamento.titulo}
+                    mensagem={erroSalvamento.mensagem}
+                    detalhes={erroSalvamento.detalhes}
+                    aoFechar={() => setErroSalvamento(null)}
+                />
             )}
 
             {confirmando && (
@@ -1048,8 +1130,10 @@ function CadastrarProjeto() {
                                 ) : (
                                     <div className="alert alert-warning mb-0">
                                         Você está enviando o projeto para o sistema. Ainda será possível
-                                        editá-lo, mas apenas dentro do período de inscrição, que durará
-                                        de {PERIODO_INSCRICAO_INICIO} para {PERIODO_INSCRICAO_FIM}.
+                                        editá-lo, mas apenas dentro do período de inscrição
+                                        {periodo?.inicio && periodo?.fim
+                                            ? <> de {periodo.inicio} até {periodo.fim}</>
+                                            : null}.
                                         Ao clicar em Concordo, você declara estar ciente disso e arca
                                         com as consequências.
                                     </div>

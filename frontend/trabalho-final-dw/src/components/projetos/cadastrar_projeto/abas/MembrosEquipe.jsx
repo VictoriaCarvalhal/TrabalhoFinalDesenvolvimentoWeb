@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../../../services/api';
 import DialogoFormulario from '../DialogoFormulario';
 import CartaoItem, { DetalheItem } from '../CartaoItem';
+import ModalAlerta from '../../../comum/ModalAlerta';
 
 // Mesma lista do backend (core.VinculoInstitucional.TipoVinculo).
 const TIPOS_VINCULO = [
@@ -44,6 +45,7 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange, errosVali
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
     const [edicao, setEdicao] = useState(null);
+    const [exclusaoPendente, setExclusaoPendente] = useState(null);
 
     // Busca de pessoa dentro do diálogo
     const [busca, setBusca] = useState('');
@@ -195,6 +197,12 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange, errosVali
         setLinhas((atuais) => atuais.filter((_, i) => i !== indice));
     }
 
+    async function confirmarExclusao() {
+        const indice = exclusaoPendente;
+        setExclusaoPendente(null);
+        if (indice !== null) await excluir(indice);
+    }
+
     function nomeVinculo(linha) {
         if (linha.tipo_vinculo_display) return linha.tipo_vinculo_display;
         const t = TIPOS_VINCULO.find((x) => x.valor === linha.tipo_vinculo);
@@ -250,7 +258,7 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange, errosVali
                                     <button
                                         type="button"
                                         className="btn btn-sm btn-outline-danger flex-grow-1"
-                                        onClick={() => excluir(i)}
+                                        onClick={() => setExclusaoPendente(i)}
                                         aria-label={`Excluir o membro ${i + 1}`}
                                         title="Excluir"
                                     >
@@ -391,6 +399,17 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange, errosVali
                         </>
                     )}
                 </DialogoFormulario>
+            )}
+
+            {exclusaoPendente !== null && linhas[exclusaoPendente] && (
+                <ModalAlerta
+                    variante="aviso"
+                    titulo="Excluir membro?"
+                    mensagem={`Excluir "${linhas[exclusaoPendente].nome || `Membro ${exclusaoPendente + 1}`}" da equipe? Esta ação não pode ser desfeita.`}
+                    textoConfirmar="Excluir"
+                    aoConfirmar={confirmarExclusao}
+                    aoFechar={() => setExclusaoPendente(null)}
+                />
             )}
         </fieldset>
     );

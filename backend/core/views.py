@@ -9,16 +9,24 @@ from core.serializers import CustomTokenObtainPairSerializer
 from core.models import (
     AreaConhecimentoCNPq, AreaTematica, Departamento,
     LinhaExtensao, MunicipioIBGE, NaturezaExtensao,
-    UnidadeAcademica, VinculoInstitucional,
+    PeriodoExtensao, UnidadeAcademica, VinculoInstitucional,
 )
 from core.serializers import (
     MeuVinculoSerializer,
+    PeriodoExtensaoSerializer,
     AreaConhecimentoCNPqSerializer, AreaTematicaSerializer,
     DepartamentoSerializer, LinhaExtensaoSerializer,
     MunicipioIBGESerializer, NaturezaExtensaoSerializer,
     PessoaPerfilSerializer, RegisterPessoaSerializer,
     UnidadeAcademicaSerializer, VinculoInstitucionalSerializer,
 )
+
+
+def _usuario_admin(user):
+    """Mesma regra de projetos.permissions.is_admin (sem importar projetos aqui)."""
+    return bool(
+        getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False)
+    )
 
 
 # VIEW CUSTOMIZADA
@@ -154,3 +162,48 @@ class VinculoInstitucionalViewSet(LookupViewSet):
             queryset_vinculos = queryset_vinculos.filter(condicoes_busca)
             
         return queryset_vinculos[:200] if termo_busca or filtro_tipo else queryset_vinculos
+
+
+class PeriodoAtualView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        periodo = PeriodoExtensao.atual()
+        return Response(PeriodoExtensaoSerializer(periodo).data)
+
+
+class PeriodoConfigView(APIView):
+    """Leitura e alteração do período (exclusivo de admin)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _get_ou_403(self, request):
+        if not _usuario_admin(request.user):
+            return None, Response(
+                {'detail': 'Apenas administradores podem alterar o período de extensão.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return PeriodoExtensao.atual(), None
+
+    def get(self, request):
+        periodo, erro = self._get_ou_403(request)
+        if erro is not None:
+            return erro
+        return Response(PeriodoExtensaoSerializer(periodo).data)
+
+    def put(self, request):
+        periodo, erro = self._get_ou_403(request)
+        if erro is not None:
+            return erro
+        serializer = PeriodoExtensaoSerializer(periodo, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def patch(self, request):
+        periodo, erro = self._get_ou_403(request)
+        if erro is not None:
+            return erro
+        serializer = PeriodoExtensaoSerializer(periodo, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)

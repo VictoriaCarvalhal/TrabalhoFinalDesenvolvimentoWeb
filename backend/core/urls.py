@@ -21,6 +21,8 @@ urlpatterns = [
     path('auth/me/', views.PerfilView.as_view(), name='auth_me'),
     path('auth/me/vinculos/', views.MeusVinculosView.as_view(), name='auth_me_vinculos'),
     path('auth/session/', views.SessionCheckView.as_view(), name='auth_session_check'),
+    path('periodo/atual/', views.PeriodoAtualView.as_view(), name='periodo_atual'),
+    path('periodo/config/', views.PeriodoConfigView.as_view(), name='periodo_config'),
 ]
 
 urlpatterns += router.urls

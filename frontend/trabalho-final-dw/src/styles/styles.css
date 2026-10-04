@@ -101,7 +101,7 @@ body {
 
 #navbar li a,
 #navbar li .nav-link {
-    color: #45718C;
+    color: #8FB6CE;
     padding: 10px 15px;
     display: flex;
     align-items: center;
@@ -127,7 +127,7 @@ body {
 
 #navbar li a i,
 #navbar li .nav-link i {
-    color: #45718C;
+    color: #8FB6CE;
     transition: color 0.2s ease-in-out;
     font-size: 20px; /* Aligns better with text */
     margin-top: -2px; /* Fine-tune vertical alignment */
@@ -143,8 +143,8 @@ body {
 
 /* Acoes da barra (tema, e depois sair): sao botoes, nao itens de menu */
 .navbar-acao {
-    color: #45718C !important;
-    --bs-btn-color: #45718C;
+    color: #8FB6CE !important;
+    --bs-btn-color: #8FB6CE;
     --bs-btn-hover-color: #FFFFFF;
     border: 1px solid transparent;
     padding: 10px 15px;
@@ -163,11 +163,11 @@ body {
 .navbar-acao:hover,
 .navbar-acao:focus-visible {
     color: #FFFFFF;
-    border-color: #45718C;
+    border-color: #8FB6CE;
 }
 
 .navbar-usuario {
-    color: #45718C;
+    color: #8FB6CE;
     font-weight: 800;
     padding: 10px 15px;
     display: flex;
@@ -353,6 +353,32 @@ strong {
 .table-fade{
     -webkit-mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
     mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
+}
+
+@keyframes modal-alerta-entrada {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+}
+
+.modal-alerta-entrada {
+    animation: modal-alerta-entrada 150ms ease-out;
+}
+
+@media (max-width: 575.98px) {
+    .acoes-card {
+        flex-wrap: wrap;
+    }
+    .acoes-card .btn {
+        flex: 1 1 45%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .modal-alerta-entrada {
+        animation: none;
+    }
 }
 
 /* Responsividade celular e tablet */

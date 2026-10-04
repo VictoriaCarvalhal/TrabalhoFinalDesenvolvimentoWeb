@@ -28,7 +28,11 @@ from projetos.models import (
     ProjetoEndereco, ProjetoCaracterizacao, ProjetoDescricao,
     ProjetoPalavraChave, ProjetoContato, Projeto
 )
-from projetos.permissions import is_admin, pode_excluir_projeto, projetos_visiveis_para
+from core.models import PeriodoExtensao
+from projetos.permissions import (
+    is_admin, pode_escrever_projeto, pode_excluir_projeto,
+    projetos_visiveis_para,
+)
 from django.db.models import Q
 from projetos.serializers import (
     DemandaBolsaSerializer, LocalRealizacaoSerializer, MembroEquipeSerializer,
@@ -57,6 +61,26 @@ class ProjetoDaUrlMixin:
         return self._projeto
 
 
+def _resposta_periodo_fechado():
+    """403 padrão quando um não-admin tenta escrever fora do período."""
+    periodo = PeriodoExtensao.atual()
+    return Response(
+        {
+            'detail': periodo.mensagem_fechado
+            or 'Fora do período de extensão.',
+            'inicio': periodo.inicio,
+            'fim': periodo.fim,
+            'aberto': False,
+        },
+        status=status.HTTP_403_FORBIDDEN,
+    )
+
+
+def _escrita_bloqueada(user):
+    """True se o usuário não pode criar/editar agora (admin bypassa)."""
+    return not pode_escrever_projeto(user)
+
+
 class AbaDoProjetoViewSet(ProjetoDaUrlMixin, viewsets.ModelViewSet):
     """CRUD das linhas de uma aba, sempre restrito ao projeto da URL."""
     # As abas tem poucas linhas; o front recebe a lista inteira, sem paginas.
@@ -78,6 +102,27 @@ class AbaDoProjetoViewSet(ProjetoDaUrlMixin, viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(projeto=self.get_projeto())
+
+    # Fora do período, não-admin não cria/edita/exclui linhas (admin bypassa).
+    def create(self, request, *args, **kwargs):
+        if _escrita_bloqueada(request.user):
+            return _resposta_periodo_fechado()
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        if _escrita_bloqueada(request.user):
+            return _resposta_periodo_fechado()
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        if _escrita_bloqueada(request.user):
+            return _resposta_periodo_fechado()
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if _escrita_bloqueada(request.user):
+            return _resposta_periodo_fechado()
+        return super().destroy(request, *args, **kwargs)
 
 
 class UnidadeEnvolvidaViewSet(AbaDoProjetoViewSet):
@@ -225,6 +270,23 @@ class ProjetoViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save()
 
+    # Fora do período, não-admin não cria nem edita (admin bypassa).
+    # O destroy/restaurar já são exclusivos de admin, então não entram aqui.
+    def create(self, request, *args, **kwargs):
+        if _escrita_bloqueada(request.user):
+            return _resposta_periodo_fechado()
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        if _escrita_bloqueada(request.user):
+            return _resposta_periodo_fechado()
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        if _escrita_bloqueada(request.user):
+            return _resposta_periodo_fechado()
+        return super().partial_update(request, *args, **kwargs)
+
     def destroy(self, request, *args, **kwargs):
         # Exclusao e exclusiva de admin; comum recebe 403 em qualquer situacao.
         if not pode_excluir_projeto(request.user):
@@ -246,7 +308,10 @@ class ProjetoViewSet(viewsets.ModelViewSet):
                 {'detail': 'Apenas administradores podem restaurar projetos.'},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        projeto = self.get_object()
+        projeto = get_object_or_404(
+            projetos_visiveis_para(request.user),
+            pk=pk,
+        )
         projeto.excluido = False
         projeto.save(update_fields=['excluido', 'updated_at'])
         return Response({'id': projeto.id, 'excluido': False})
@@ -261,6 +326,8 @@ class ProjetoViewSet(viewsets.ModelViewSet):
         if request.method == 'GET':
             return Response(ProjetoCaracterizacaoSerializer(carac).data)
 
+        if _escrita_bloqueada(request.user):
+            return _resposta_periodo_fechado()
         serializer = ProjetoCaracterizacaoSerializer(carac, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -274,6 +341,8 @@ class ProjetoViewSet(viewsets.ModelViewSet):
         if request.method == 'GET':
             return Response(ProjetoDescricaoSerializer(desc).data)
 
+        if _escrita_bloqueada(request.user):
+            return _resposta_periodo_fechado()
         serializer = ProjetoDescricaoSerializer(desc, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -287,6 +356,8 @@ class ProjetoViewSet(viewsets.ModelViewSet):
         if request.method == 'GET':
             return Response(ProjetoEnderecoSerializer(endereco).data)
 
+        if _escrita_bloqueada(request.user):
+            return _resposta_periodo_fechado()
         serializer = ProjetoEnderecoSerializer(endereco, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -297,6 +368,8 @@ class ProjetoViewSet(viewsets.ModelViewSet):
         if request.method == 'GET':
             return Response(ProjetoContatoSerializer(projeto.contatos.all(), many=True).data)
 
+        if _escrita_bloqueada(request.user):
+            return _resposta_periodo_fechado()
         serializer = ProjetoContatoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(projeto=projeto)
@@ -307,6 +380,8 @@ class ProjetoViewSet(viewsets.ModelViewSet):
         if request.method == 'GET':
             return Response(ProjetoPalavraChaveSerializer(projeto.palavras_chave.all(), many=True).data)
 
+        if _escrita_bloqueada(request.user):
+            return _resposta_periodo_fechado()
         serializer = ProjetoPalavraChaveSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(projeto=projeto)
