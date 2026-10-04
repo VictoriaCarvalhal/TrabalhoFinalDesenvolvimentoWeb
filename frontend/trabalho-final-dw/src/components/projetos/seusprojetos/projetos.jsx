@@ -224,6 +224,7 @@ function Projetos() {
     const handleTrocarAba = (excluidos) => {
         setMostrandoExcluidos(excluidos);
         setPaginaAtual(1);
+        setProjetos([]);
     };
 
     // Comum nunca fica na lixeira: se perder o admin, volta aos ativos.
@@ -234,8 +235,6 @@ function Projetos() {
         }
     }, [isAdmin, mostrandoExcluidos]);
 
-    const carregandoInicial = carregando && projetos.length === 0 && !buscaAplicada;
-
     return (
         <div>
             <div className="container mt-4 mb-5 pb-4">
@@ -244,7 +243,7 @@ function Projetos() {
                 pagina precisa de um h1 para quem usa leitor de tela. */}
                 <h1 className="visually-hidden">Seus projetos</h1>
 
-                {!carregandoInicial && (
+                {isAutenticado && (
                     <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
                         {isAdmin ? (
                             <div className="btn-group" role="group" aria-label="Filtrar projetos ativos ou excluídos">
@@ -321,20 +320,11 @@ function Projetos() {
                     </div>
                 )}
 
-                {isAutenticado && carregando && projetos.length === 0 && (
-                    <div className="d-flex align-items-center mt-3 text-muted">
-                        <div className="spinner-border spinner-border-sm me-2" role="status">
-                            <span className="visually-hidden">Carregando...</span>
-                        </div>
-                        <span>Carregando projetos...</span>
-                    </div>
-                )}
-
                 {isAutenticado && erro && (
                     <div className="alert alert-danger mt-3">{erro}</div>
                 )}
 
-                {isAutenticado && !erro && !carregandoInicial && (projetos.length > 0 || buscaAplicada) && (
+                {isAutenticado && !erro && (projetos.length > 0 || buscaAplicada || carregando) && (
                     <div className="container mt-4 mb-4 px-0">
                         <div className="row justify-content-center">
                             <div className="col-12 col-md-10 col-lg-8">
@@ -353,6 +343,32 @@ function Projetos() {
                                     isAdmin={isAdmin}
                                 />
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {isAutenticado && carregando && projetos.length === 0 && (
+                    <div className="mt-3" role="status">
+                        <span className="visually-hidden">Carregando projetos...</span>
+                        <div className="row g-3" aria-hidden="true">
+                            {[0, 1, 2, 3].map((indice) => (
+                                <div className="col-12 col-lg-6" key={`skeleton-${indice}`}>
+                                    <div className="card shadow border-0 h-100" style={{ backgroundColor: 'var(--cor-fundo)' }}>
+                                        <div className="card-body d-flex flex-column placeholder-wave">
+                                            <span className="placeholder col-8 mb-2"></span>
+                                            <span className="placeholder col-4 mb-3"></span>
+                                            <span className="placeholder col-11 mb-1"></span>
+                                            <span className="placeholder col-9 mb-1"></span>
+                                            <span className="placeholder col-10 mb-3"></span>
+                                            <div className="d-flex gap-2 mt-auto pt-3 border-top">
+                                                <span className="placeholder col-3 py-3"></span>
+                                                <span className="placeholder col-3 py-3"></span>
+                                                <span className="placeholder col-3 py-3"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 )}
