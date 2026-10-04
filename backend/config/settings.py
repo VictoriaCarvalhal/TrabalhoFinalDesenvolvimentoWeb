@@ -136,6 +136,9 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_THROTTLE_RATES": {
+        "password_reset": "5/hour",
+    },
 }
 
 SIMPLE_JWT = {
@@ -184,3 +187,40 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 #    REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] = [
 #        'rest_framework.permissions.AllowAny',
 #    ]
+
+# Recuperacao de senha
+FRONTEND_URL = os.environ.get(
+    'FRONTEND_URL',
+    'http://localhost:5173'
+)
+
+PASSWORD_RESET_TIMEOUT = 1800
+
+EMAIL_BACKEND = os.environ.get(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.console.EmailBackend'
+)
+
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+
+
+def _email_port():
+    try:
+        return int(os.environ.get('EMAIL_PORT', '') or 587)
+    except (TypeError, ValueError):
+        return 587
+
+
+EMAIL_PORT = _email_port()
+EMAIL_USE_TLS = os.environ.get(
+    'EMAIL_USE_TLS',
+    'True'
+).lower() in ('true', '1', 'yes')
+
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+DEFAULT_FROM_EMAIL = os.environ.get(
+    'DEFAULT_FROM_EMAIL',
+    EMAIL_HOST_USER or 'no-reply@localhost'
+)

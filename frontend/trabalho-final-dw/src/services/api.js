@@ -27,6 +27,8 @@ const PUBLIC_AUTH_ENDPOINTS = [
     '/auth/token/',
     '/auth/register/',
     '/auth/refresh/',
+    '/auth/password-reset/',
+    '/auth/password-reset/confirm/',
 ];
 
 // 1. Interceptor de requisição

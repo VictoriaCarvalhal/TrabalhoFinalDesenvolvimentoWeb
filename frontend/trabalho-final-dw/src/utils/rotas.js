@@ -12,6 +12,8 @@ export const ROTAS = {
   NOVO_PROJETO: '/projetos/novo',
   // Legado: antes era /Projetos/CadastrarProjeto.
   CADASTRAR_PROJETO_LEGADO: '/projetos/cadastrar-projeto',
+  ESQUECI_SENHA: '/esqueci-senha',
+  REDEFINIR_SENHA: '/redefinir-senha',
   editarProjeto: (id) => `/projetos/${id}/editar`,
   imprimirProjeto: (id) => `/projetos/${id}/imprimir`,
 };
