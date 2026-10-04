@@ -8,6 +8,7 @@ import { gerarPdfPorId } from '../../../services/gerarProjetoPdf.js';
 import DialogoDadosProjeto from '../detalhes/DialogoDadosProjeto';
 import FeedbackIndisponivel from '../../comum/FeedbackIndisponivel';
 import ModalAlerta from '../../comum/ModalAlerta';
+import ToastSucesso from '../../comum/ToastSucesso';
 import { usePeriodo } from '../../../hooks/usePeriodo';
 import BarraDeBusca from './projetosComponentes/BarraDeBusca';
 import FiltrosDeOrdenacao from './projetosComponentes/FiltrosDeOrdenacao';
@@ -26,6 +27,7 @@ function Projetos() {
     const [excluindoId, setExcluindoId] = useState(null);
     const [baixandoId, setBaixandoId] = useState(null);
     const [confirmacaoPendente, setConfirmacaoPendente] = useState(null);
+    const [toast, setToast] = useState(null);
     // id do projeto aberto no diálogo de dados; null = diálogo fechado
     const [vendoId, setVendoId] = useState(null);
     const navigate = useNavigate();
@@ -110,12 +112,13 @@ function Projetos() {
     async function confirmarPendente() {
         const pendente = confirmacaoPendente;
         if (!pendente || excluindoId !== null) return;
-        if (pendente.tipo === 'excluir') {
-            await handleExcluir(pendente.projeto);
-        } else {
-            await handleRestaurar(pendente.projeto);
-        }
+        const sucesso = pendente.tipo === 'excluir'
+            ? await handleExcluir(pendente.projeto)
+            : await handleRestaurar(pendente.projeto);
         setConfirmacaoPendente(null);
+        if (sucesso) {
+            setToast(pendente.tipo === 'excluir' ? 'Projeto excluído.' : 'Projeto restaurado.');
+        }
     }
 
     useEffect(() => {
@@ -457,6 +460,10 @@ function Projetos() {
                         mensagem={periodo?.mensagem_fechado}
                         aoFechar={() => setMostrarFeedbackPeriodo(false)}
                     />
+                )}
+
+                {toast && (
+                    <ToastSucesso mensagem={toast} aoFechar={() => setToast(null)} />
                 )}
 
             </div>
