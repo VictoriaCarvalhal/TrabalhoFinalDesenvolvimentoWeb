@@ -9,12 +9,13 @@ from core.serializers import CustomTokenObtainPairSerializer
 from core.models import (
     AreaConhecimentoCNPq, AreaTematica, Departamento,
     LinhaExtensao, MunicipioIBGE, NaturezaExtensao,
-    UnidadeAcademica, VinculoInstitucional,
+    PessoaGlobal, UnidadeAcademica, VinculoInstitucional,
 )
 from core.serializers import (
     MeuVinculoSerializer,
     AreaConhecimentoCNPqSerializer, AreaTematicaSerializer,
     DepartamentoSerializer, LinhaExtensaoSerializer,
+    EsqueciSenhaSerializer, RedefinirSenhaSerializer,
     MunicipioIBGESerializer, NaturezaExtensaoSerializer,
     PessoaPerfilSerializer, RegisterPessoaSerializer,
     UnidadeAcademicaSerializer, VinculoInstitucionalSerializer,
@@ -30,6 +31,89 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterPessoaSerializer
 
+class EsqueciSenhaView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = EsqueciSenhaSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data['email']
+
+        usuario = PessoaGlobal.objects.filter(
+            email_institucional__iexact=email,
+            is_active=True
+        ).first()
+
+        if usuario:
+            uid = urlsafe_base64_encode(force_bytes(usuario.pk))
+            token = default_token_generator.make_token(usuario)
+
+            link = (
+                f'{settings.FRONTEND_URL}/RedefinirSenha'
+                f'?uid={uid}&token={token}'
+            )
+
+            mensagem = (
+                f'Olá, {usuario.nome_completo}.\n\n'
+                'Foi solicitada uma redefinição de senha para sua conta.\n\n'
+                f'Para cadastrar uma nova senha, acesse o link abaixo:\n{link}\n\n'
+                'Se você não solicitou a alteração, ignore este e-mail.'
+            )
+
+            send_mail(
+                'Redefinição de senha',
+                mensagem,
+                settings.DEFAULT_FROM_EMAIL,
+                [usuario.email_institucional],
+                fail_silently=False,
+            )
+
+        return Response({
+            'mensagem': 'Se o e-mail estiver cadastrado, enviaremos as instruções para redefinir a senha.'
+        })
+
+
+class RedefinirSenhaView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = RedefinirSenhaSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        uid = serializer.validated_data['uid']
+        token = serializer.validated_data['token']
+        nova_senha = serializer.validated_data['nova_senha']
+
+        try:
+            usuario_id = force_str(urlsafe_base64_decode(uid))
+            usuario = PessoaGlobal.objects.get(pk=usuario_id)
+        except (PessoaGlobal.DoesNotExist, ValueError, TypeError):
+            return Response(
+                {'erro': 'Link de recuperação inválido.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not default_token_generator.check_token(usuario, token):
+            return Response(
+                {'erro': 'O link de recuperação é inválido ou expirou.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            validate_password(nova_senha, user=usuario)
+        except ValidationError as erro:
+            return Response(
+                {'nova_senha': erro.messages},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        usuario.set_password(nova_senha)
+        usuario.save()
+
+        return Response({
+            'mensagem': 'Senha alterada com sucesso.'
+        })
 
 class PerfilView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
