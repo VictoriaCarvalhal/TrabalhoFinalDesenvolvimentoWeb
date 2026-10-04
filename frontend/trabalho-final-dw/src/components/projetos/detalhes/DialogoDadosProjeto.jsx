@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROTAS } from '../../../utils/rotas.js';
 import { useProjetoImpressao } from '../../../hooks/useProjetoImpressao';
+import { gerarPdfPorDados } from '../../../services/gerarProjetoPdf.js';
 import ProjetoPrint from '../imprimir/ProjetoPrint';
 import '../imprimir/imprimir.css';
 import './dialogo.css';
@@ -11,6 +13,24 @@ import './dialogo.css';
 function DialogoDadosProjeto({ projetoId, aoFechar }) {
     const { dados, loading, erro } = useProjetoImpressao(projetoId);
     const navigate = useNavigate();
+    // Download direto do PDF usando os dados já carregados no diálogo.
+    const [baixando, setBaixando] = useState(false);
+    const [erroDownload, setErroDownload] = useState(null);
+
+    async function handleBaixar() {
+        if (!dados) {
+            return;
+        }
+        setBaixando(true);
+        setErroDownload(null);
+        try {
+            await gerarPdfPorDados(dados, { projetoId });
+        } catch {
+            setErroDownload('Não foi possível baixar o PDF. Tente novamente.');
+        } finally {
+            setBaixando(false);
+        }
+    }
 
     // Esc fecha, como em qualquer diálogo.
     useEffect(() => {
@@ -57,6 +77,12 @@ function DialogoDadosProjeto({ projetoId, aoFechar }) {
                                 <ProjetoPrint dados={dados} geradoEm={null} geradoPor={null} />
                             </div>
                         )}
+
+                        {erroDownload && (
+                            <div className="alert alert-danger mt-3 mb-0" role="alert">
+                                {erroDownload}
+                            </div>
+                        )}
                     </div>
 
                     <div className="modal-footer">
@@ -65,12 +91,30 @@ function DialogoDadosProjeto({ projetoId, aoFechar }) {
                         </button>
                         <button
                             type="button"
-                            className="btn btn-primary"
+                            className="btn btn-outline-primary"
                             disabled={loading || Boolean(erro)}
-                            onClick={() => navigate(`/Projetos/${projetoId}/imprimir`)}
+                            onClick={() => navigate(ROTAS.imprimirProjeto(projetoId))}
                         >
                             <i className="bi bi-printer me-2" aria-hidden="true"></i>
-                            Ir para a impressão
+                            Imprimir
+                        </button>
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            disabled={loading || Boolean(erro) || baixando}
+                            onClick={handleBaixar}
+                        >
+                            {baixando ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Baixando...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="bi bi-download me-2" aria-hidden="true"></i>
+                                    Baixar PDF
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>

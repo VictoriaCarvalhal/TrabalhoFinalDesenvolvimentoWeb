@@ -1,13 +1,23 @@
 import { create } from "zustand";
 
+// Auxiliar para recuperar e fazer parse seguro do perfil
+const getPerfilInicial = () => {
+    const perfilSalvo = localStorage.getItem('perfil');
+    if (!perfilSalvo) return null;
+    try {
+        return JSON.parse(perfilSalvo);
+    } catch {
+        return perfilSalvo; // Retorna como string se não for um JSON válido
+    }
+};
+
 export const useAuthStore = create((set) => ({
-    // Tenta recuperar do localStorage na inicialização para o F5 não deslogar
     token: localStorage.getItem('access') || null,
-    isAutenticado: !!localStorage.getItem('access'), // Se existir o token no localStorage, inicia como true
+    isAutenticado: !!localStorage.getItem('access'),
     nomeUsuario: localStorage.getItem('nomeUsuario') || null,
-    // Flag de admin (is_staff ou is_superuser no backend): so admin ve a lixeira.
     isAdmin: localStorage.getItem('isAdmin') === 'true',
-    perfil: localStorage.getItem('perfil') || null,
+    perfil: getPerfilInicial(),
+
     // Função de Login: armazena no estado e grava no localStorage
     login: (tokenRecebido, refreshTokenRecebido = null) => {
         if (tokenRecebido) {
@@ -18,26 +28,46 @@ export const useAuthStore = create((set) => ({
         }
         set({ isAutenticado: true, token: tokenRecebido });
     },
+
     // Permite atualizar apenas o access token (usado no Refresh Silencioso do api.js)
     setToken: (novoToken) => {
-        localStorage.setItem('access', novoToken);
-        set({ token: novoToken, isAutenticado: true });
+        if (novoToken) {
+            localStorage.setItem('access', novoToken);
+            set({ token: novoToken, isAutenticado: true });
+        }
     },
+
     setNomeUsuario: (nome) => {
-        localStorage.setItem('nomeUsuario', nome);
-        set({ nomeUsuario: nome });
+        if (nome) {
+            localStorage.setItem('nomeUsuario', nome);
+            set({ nomeUsuario: nome });
+        } else {
+            localStorage.removeItem('nomeUsuario');
+            set({ nomeUsuario: null });
+        }
     },
-    // Guarda se o usuario logado e admin (para exibir ou nao a lixeira).
+
     setAdmin: (admin) => {
         const valor = Boolean(admin);
         localStorage.setItem('isAdmin', String(valor));
         set({ isAdmin: valor });
     },
+
     setPerfil: (perfil) => {
-        localStorage.setItem('perfil', perfil);
-        set({ perfil: perfil, isAdmin: perfil === 'admin' });
-        localStorage.setItem('isAdmin', String(perfil === 'admin'));
+        if (!perfil) {
+            localStorage.removeItem('perfil');
+            set({ perfil: null });
+            return;
+        }
+
+        const valorParaSalvar = typeof perfil === 'object' 
+            ? JSON.stringify(perfil) 
+            : perfil;
+
+        localStorage.setItem('perfil', valorParaSalvar);
+        set({ perfil });
     },
+
     // Função de Logout: limpa a memória e o localStorage
     logout: () => {
         localStorage.removeItem('access');
@@ -45,6 +75,13 @@ export const useAuthStore = create((set) => ({
         localStorage.removeItem('nomeUsuario');
         localStorage.removeItem('isAdmin');
         localStorage.removeItem('perfil');
-        set({ isAutenticado: false, token: null, nomeUsuario: null, isAdmin: false, perfil: null });
+
+        set({ 
+            isAutenticado: false, 
+            token: null, 
+            nomeUsuario: null, 
+            isAdmin: false, 
+            perfil: null 
+        });
     },
 }));

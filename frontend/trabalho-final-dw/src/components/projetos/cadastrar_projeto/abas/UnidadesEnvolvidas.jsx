@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../../services/api';
+import CartaoItem from '../CartaoItem';
 
 function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], onChange, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
@@ -70,89 +71,76 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
 
             {erro && <div className="alert alert-danger py-2">{erro}</div>}
 
-            <div className="table-responsive">
-                <table className="table table-bordered align-middle">
-                    <thead className="table-light">
-                        <tr>
-                            <th scope="col" style={{ width: '4rem' }}>Nº</th>
-                            <th scope="col" style={{ width: '4rem' }}>
-                                <i className="bi bi-trash" aria-hidden="true"></i>
-                                <span className="visually-hidden">Excluir</span>
-                            </th>
-                            <th scope="col">* Unidade</th>
-                            <th scope="col">* Departamento</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {linhas.length === 0 && (
-                            <tr>
-                                <td colSpan={4} className="text-muted text-center">
-                                    Nenhuma unidade cadastrada.
-                                </td>
-                            </tr>
-                        )}
-                        {linhas.map((linha, i) => (
-                            <tr key={linha.id ?? `nova-${i}`}>
-                                <td>{i + 1}.</td>
-                                <td>
-                                    <button
-                                        type="button"
-                                        className="btn btn-sm btn-outline-danger"
-                                        onClick={() => excluir(i)}
-                                        aria-label={`Excluir unidade ${i + 1}`}
-                                    >
-                                        <i className="bi bi-trash" aria-hidden="true"></i>
-                                    </button>
-                                </td>
-                                <td>
-                                    <select
-                                        className="form-select"
-                                        value={linha.unidade}
-                                        required
-                                        aria-label={`Unidade envolvida ${i + 1}`}
-                                        onChange={(e) => {
-                                            const novaUnidade = e.target.value;
-                                            setLinhas((atuais) =>
-                                                atuais.map((l, idx) => (idx === i ? { ...l, unidade: novaUnidade, departamento: '' } : l))
-                                            );
-                                        }}
-                                        onBlur={() => gravar(i)}
-                                    >
-                                        <option value="">[Selecione]</option>
-                                        {unidades.map((unidade) => (
-                                            <option key={unidade.id} value={unidade.id}>
-                                                {unidade.sigla} — {unidade.nome}
+            {linhas.length === 0 ? (
+                <p className="text-muted">Nenhuma unidade cadastrada.</p>
+            ) : (
+                <div className="row g-3">
+                    {linhas.map((linha, i) => (
+                        <CartaoItem
+                            key={linha.id ?? `nova-${i}`}
+                            titulo={`Unidade ${i + 1}`}
+                            acoes={
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-danger"
+                                    onClick={() => excluir(i)}
+                                    aria-label={`Excluir unidade ${i + 1}`}
+                                    title="Excluir"
+                                >
+                                    <i className="bi bi-trash me-1" aria-hidden="true"></i>Excluir
+                                </button>
+                            }
+                        >
+                            <div className="mb-2">
+                                <label className="form-label" htmlFor={`ue-unidade-${i}`}>Unidade *</label>
+                                <select
+                                    id={`ue-unidade-${i}`}
+                                    className="form-select"
+                                    value={linha.unidade}
+                                    required
+                                    onChange={(e) => {
+                                        const novaUnidade = e.target.value;
+                                        setLinhas((atuais) =>
+                                            atuais.map((l, idx) => (idx === i ? { ...l, unidade: novaUnidade, departamento: '' } : l))
+                                        );
+                                    }}
+                                    onBlur={() => gravar(i)}
+                                >
+                                    <option value="">[Selecione]</option>
+                                    {unidades.map((unidade) => (
+                                        <option key={unidade.id} value={unidade.id}>
+                                            {unidade.sigla} — {unidade.nome}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="form-label" htmlFor={`ue-departamento-${i}`}>Departamento *</label>
+                                <select
+                                    id={`ue-departamento-${i}`}
+                                    className="form-select"
+                                    value={linha.departamento}
+                                    disabled={!linha.unidade}
+                                    required
+                                    onChange={(e) => editar(i, 'departamento', e.target.value)}
+                                    onBlur={() => gravar(i)}
+                                >
+                                    <option value="">
+                                        {linha.unidade ? "[Selecione]" : "Escolha uma unidade primeiro"}
+                                    </option>
+                                    {departamentos
+                                        .filter((d) => String(d.unidade) === String(linha.unidade))
+                                        .map((departamento) => (
+                                            <option key={departamento.id} value={departamento.id}>
+                                                {departamento.nome}
                                             </option>
                                         ))}
-                                    </select>
-                                </td>
-                                <td>
-                                    <select
-                                        className="form-select"
-                                        value={linha.departamento}
-                                        disabled={!linha.unidade}
-                                        required
-                                        aria-label={`Departamento da unidade ${i + 1}`}
-                                        onChange={(e) => editar(i, 'departamento', e.target.value)}
-                                        onBlur={() => gravar(i)}
-                                    >
-                                        <option value="">
-                                            {linha.unidade ? "[Selecione]" : "Escolha uma unidade primeiro"}
-                                        </option>
-                                        {departamentos
-                                            .filter((d) => String(d.unidade) === String(linha.unidade))
-                                            .map((departamento) => (
-                                                <option key={departamento.id} value={departamento.id}>
-                                                    {departamento.nome}
-                                                </option>
-                                            ))}
-                                    </select>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                                </select>
+                            </div>
+                        </CartaoItem>
+                    ))}
+                </div>
+            )}
         </fieldset>
     );
 }

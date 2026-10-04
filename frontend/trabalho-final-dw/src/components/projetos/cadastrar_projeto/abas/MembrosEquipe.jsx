@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../../services/api';
 import DialogoFormulario from '../DialogoFormulario';
+import CartaoItem, { DetalheItem } from '../CartaoItem';
 
 // Mesma lista do backend (core.VinculoInstitucional.TipoVinculo).
 const TIPOS_VINCULO = [
@@ -227,60 +228,44 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange, errosVali
 
             {erro && <div className="alert alert-danger py-2">{erro}</div>}
 
-            <div className="table-responsive">
-                <table className="table table-bordered align-middle">
-                    <thead className="table-light">
-                        <tr>
-                            <th scope="col" style={{ width: '4rem' }}>Nº</th>
-                            <th scope="col">Nome</th>
-                            <th scope="col">Tipo de vínculo</th>
-                            <th scope="col">Matrícula / CPF</th>
-                            <th scope="col">Cargo/Perfil</th>
-                            <th scope="col" style={{ width: '7rem' }}>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {linhas.length === 0 && (
-                            <tr>
-                                <td colSpan={6} className="text-muted text-center">
-                                    Nenhum membro cadastrado.
-                                </td>
-                            </tr>
-                        )}
-                        {linhas.map((linha, i) => (
-                            <tr key={linha.id ?? `novo-${i}`}>
-                                <td>{i + 1}.</td>
-                                <td>{linha.nome}</td>
-                                <td>{nomeVinculo(linha)}</td>
-                                <td>{linha.matricula || mascaraCpf(linha.cpf)}</td>
-                                <td>{nomeFuncao(linha)}</td>
-                                <td className="text-nowrap">
-                                    <div className="d-flex gap-2">
-                                        <button
-                                            type="button"
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => abrirEdicao(i)}
-                                            aria-label={`Editar o membro ${i + 1}`}
-                                            title="Editar"
-                                        >
-                                            <i className="bi bi-pencil" aria-hidden="true"></i>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="btn btn-sm btn-outline-danger"
-                                            onClick={() => excluir(i)}
-                                            aria-label={`Excluir o membro ${i + 1}`}
-                                            title="Excluir"
-                                        >
-                                            <i className="bi bi-trash" aria-hidden="true"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            {linhas.length === 0 ? (
+                <p className="text-muted">Nenhum membro cadastrado.</p>
+            ) : (
+                <div className="row g-3">
+                    {linhas.map((linha, i) => (
+                        <CartaoItem
+                            key={linha.id ?? `novo-${i}`}
+                            titulo={linha.nome || `Membro ${i + 1}`}
+                            acoes={
+                                <>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-secondary flex-grow-1"
+                                        onClick={() => abrirEdicao(i)}
+                                        aria-label={`Editar o membro ${i + 1}`}
+                                        title="Editar"
+                                    >
+                                        <i className="bi bi-pencil d-block mb-1" aria-hidden="true"></i>Editar
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-danger flex-grow-1"
+                                        onClick={() => excluir(i)}
+                                        aria-label={`Excluir o membro ${i + 1}`}
+                                        title="Excluir"
+                                    >
+                                        <i className="bi bi-trash d-block mb-1" aria-hidden="true"></i>Excluir
+                                    </button>
+                                </>
+                            }
+                        >
+                            <DetalheItem icone="bi-person-badge" rotulo="Tipo de vínculo" valor={nomeVinculo(linha)} />
+                            <DetalheItem icone="bi-card-text" rotulo="Matrícula / CPF" valor={linha.matricula || mascaraCpf(linha.cpf)} />
+                            <DetalheItem icone="bi-briefcase" rotulo="Cargo/Perfil" valor={nomeFuncao(linha)} />
+                        </CartaoItem>
+                    ))}
+                </div>
+            )}
 
             {edicao && (
                 <DialogoFormulario

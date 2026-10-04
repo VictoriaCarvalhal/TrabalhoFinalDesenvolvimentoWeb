@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '../../../stores/authStore';
+import { ROTAS } from '../../../utils/rotas.js';
 import api from '../../../services/api';
 
 import LocaisRealizacao from './abas/LocaisRealizacao';
@@ -48,6 +49,13 @@ const ABAS = [
     { id: "locais-realizacao", label: "Locais de Realização" },
     { id: "membros-equipe", label: "Membros da Equipe" },
 ];
+
+// TODO(backend): ainda não existe edital/período no backend, então estas
+// variáveis estão com placeholders. Alguém precisa trocá-las pelos valores
+// vindos do backend (edital vigente) — ex.: buscar no endpoint de editais e
+// preencher inicio/fim aqui.
+const PERIODO_INSCRICAO_INICIO = 'X';
+const PERIODO_INSCRICAO_FIM = 'Y';
 
 
 function CadastrarProjeto() {
@@ -115,6 +123,7 @@ function CadastrarProjeto() {
            if (!f.referencias_bibliograficas.trim()) erros.referencias_bibliograficas = "Referências são obrigatórias";
            return erros;
     }
+
 
     function validarEtapa3(f){
         const erros = {};
@@ -735,7 +744,7 @@ function CadastrarProjeto() {
                     await criarPlanoDeTrabalho(idDaUrl, planoDados);
                 }
 
-                navigate("/Projetos/SeusProjetos");
+                navigate(ROTAS.BEMVINDO);
                 return;
             }
 
@@ -752,7 +761,7 @@ function CadastrarProjeto() {
                 await criarPalavraChave(projeto_id, { palavra });
             }
 
-            navigate("/Projetos/SeusProjetos");
+            navigate(ROTAS.BEMVINDO);
         } catch (erro) {
             // O corpo do erro do DRF diz o campo e o motivo do erro (futuramente fica mais elegante exibir o erro usando o padrão de outros erros)
             const detalhe = erro.response?.data;
@@ -1031,10 +1040,20 @@ function CadastrarProjeto() {
                                 <p>
                                     O projeto <strong>{form.titulo}</strong> será {editando ? 'atualizado.' : 'enviado para a Pró-Reitoria de Extensão e ficará como proposta aguardando documentação.'}
                                 </p>
-                                <p className="mb-0">
-                                    Confira se está tudo preenchido antes de enviar. Depois do envio,
-                                    as mudanças passam pela lista de projetos.
-                                </p>
+                                {editando ? (
+                                    <p className="mb-0">
+                                        Confira se está tudo preenchido antes de enviar. Depois do envio,
+                                        as mudanças passam pela lista de projetos.
+                                    </p>
+                                ) : (
+                                    <div className="alert alert-warning mb-0">
+                                        Você está enviando o projeto para o sistema. Ainda será possível
+                                        editá-lo, mas apenas dentro do período de inscrição, que durará
+                                        de {PERIODO_INSCRICAO_INICIO} para {PERIODO_INSCRICAO_FIM}.
+                                        Ao clicar em Concordo, você declara estar ciente disso e arca
+                                        com as consequências.
+                                    </div>
+                                )}
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-outline-secondary" onClick={() => setConfirmando(false)}>
@@ -1046,7 +1065,7 @@ function CadastrarProjeto() {
                                     onClick={salvarDadosIdentificacao}
                                     disabled={enviando || carregandoEdicao}
                                 >
-                                    {enviando ? 'Salvando...' : editando ? 'Confirmar alterações' : 'Confirmar envio'}
+                                    {enviando ? 'Salvando...' : editando ? 'Confirmar alterações' : 'Concordo'}
                                 </button>
                             </div>
                         </div>

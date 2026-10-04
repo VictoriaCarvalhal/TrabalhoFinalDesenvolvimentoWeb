@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { useProjetoImpressao } from '../../../hooks/useProjetoImpressao';
 import { useAuthStore } from '../../../stores/authStore';
 import api from '../../../services/api';
+import { gerarPdfBase64 } from '../../../services/gerarProjetoPdf.js';
 import ProjetoPrint from './ProjetoPrint';
 import './imprimir.css';
 
@@ -68,28 +69,30 @@ function ImprimirProjeto() {
     }, [nomeUsuarioStore, setNomeUsuario]);
 
     const geradoPor = nomeUsuarioStore ?? nomeFallback ?? '—';
-
-    const executarImpressao = () => {
+    const [imprimindo, setImprimindo] = useState(false);
+    const [erroImpressao, setErroImpressao] = useState(null);
+    const handleImprimir = async () => {
+        if (!dados || imprimindo) {
+            return;
+        }
+        setImprimindo(true);
+        setErroImpressao(null);
         try {
+            const base64 = await gerarPdfBase64(dados, { geradoPor });
+            setGeradoEm(formatarGeradoEm(new Date()));
             printJS({
-                printable: 'area-impressao',
-                type: 'html',
+                printable: base64,
+                type: 'pdf',
+                base64: true,
                 showModal: true,
                 modalMessage: 'Preparando documento...',
-                targetStyles: [],
-                scanStyles: false,
-                css: '/imprimir-print.css',
-                ignoreElements: ['barra-impressao'],
-                documentTitle: `Projeto ${dados?.projeto?.ano ?? ''}/${dados?.projeto?.numero ?? ''}`,
+                onError: () => setErroImpressao('Não foi possível abrir a impressão. Tente novamente.'),
             });
         } catch {
-            window.print();
+            setErroImpressao('Não foi possível gerar o documento. Tente novamente.');
+        } finally {
+            setImprimindo(false);
         }
-    };
-
-    const handleImprimir = () => {
-        setGeradoEm(formatarGeradoEm(new Date()));
-        setTimeout(executarImpressao, 60);
     };
 
     if (loading) {
@@ -114,11 +117,26 @@ function ImprimirProjeto() {
         <div className="container mt-4">
             <div id="barra-impressao" className="d-flex justify-content-between align-items-center mb-3 no-print d-print-none">
                 <h1 className="h4 mb-0">Impressão do projeto</h1>
-                <button type="button" className="btn btn-primary" onClick={handleImprimir}>
-                    <i className="bi bi-printer me-2"></i>
-                    Imprimir
+                <button type="button" className="btn btn-primary" onClick={handleImprimir} disabled={imprimindo}>
+                    {imprimindo ? (
+                        <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Preparando...
+                        </>
+                    ) : (
+                        <>
+                            <i className="bi bi-printer me-2"></i>
+                            Imprimir
+                        </>
+                    )}
                 </button>
             </div>
+
+            {erroImpressao && (
+                <div className="alert alert-danger" role="alert">
+                    {erroImpressao}
+                </div>
+            )}
 
             <div id="area-impressao" className="p-3 border rounded bg-white">
                 <ProjetoPrint dados={dados} geradoEm={geradoEm} geradoPor={geradoPor} />
