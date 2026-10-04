@@ -22,8 +22,10 @@ function EsqueciSenha() {
 
             setMensagem(resposta.data.mensagem);
             setEmail('');
-        } catch {
-            setErro('Não foi possível solicitar a recuperação de senha.');
+        } catch (err) {
+            const detalhe = err.response?.data?.email?.join(' ')
+                || err.response?.data?.detail;
+            setErro(detalhe || 'Não foi possível solicitar a recuperação de senha.');
         } finally {
             setEnviando(false);
         }

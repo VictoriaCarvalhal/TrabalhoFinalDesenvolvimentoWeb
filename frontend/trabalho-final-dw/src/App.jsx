@@ -71,9 +71,9 @@ function App() {
         <Route element={<LayoutNotAutenticated />}>
           <Route path={ROTAS.INICIAL} element={<RotaInicial />} />
           {/* Solicitação de recuperação de senha */}
-          <Route path="/EsqueciSenha" element={<EsqueciSenha />} />
+          <Route path={ROTAS.ESQUECI_SENHA} element={<EsqueciSenha />} />
           {/* Tela aberta pelo link enviado por e-mail */}
-          <Route path="/RedefinirSenha" element={<RedefinirSenha />} />
+          <Route path={ROTAS.REDEFINIR_SENHA} element={<RedefinirSenha />} />
         </Route>
 
         {/* Rotas Protegidas */}

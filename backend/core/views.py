@@ -1,6 +1,7 @@
 from django.db.models import Q
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
@@ -28,6 +29,13 @@ from core.serializers import (
     PessoaPerfilSerializer, RegisterPessoaSerializer,
     UnidadeAcademicaSerializer, VinculoInstitucionalSerializer,
 )
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class EsqueciSenhaRateThrottle(AnonRateThrottle):
+    scope = 'password_reset'
 
 
 def _usuario_admin(user):
@@ -49,6 +57,7 @@ class RegisterView(generics.CreateAPIView):
 
 class EsqueciSenhaView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [EsqueciSenhaRateThrottle]
 
     def post(self, request):
         serializer = EsqueciSenhaSerializer(data=request.data)
@@ -66,7 +75,7 @@ class EsqueciSenhaView(APIView):
             token = default_token_generator.make_token(usuario)
 
             link = (
-                f'{settings.FRONTEND_URL}/RedefinirSenha'
+                f'{settings.FRONTEND_URL}/redefinir-senha'
                 f'?uid={uid}&token={token}'
             )
 
@@ -77,13 +86,18 @@ class EsqueciSenhaView(APIView):
                 'Se você não solicitou a alteração, ignore este e-mail.'
             )
 
-            send_mail(
-                'Redefinição de senha',
-                mensagem,
-                settings.DEFAULT_FROM_EMAIL,
-                [usuario.email_institucional],
-                fail_silently=False,
-            )
+            try:
+                send_mail(
+                    'Redefinição de senha',
+                    mensagem,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [usuario.email_institucional],
+                    fail_silently=False,
+                )
+            except Exception:
+                logger.exception(
+                    'Falha ao enviar e-mail de redefinição de senha'
+                )
 
         return Response({
             'mensagem': 'Se o e-mail estiver cadastrado, enviaremos as instruções para redefinir a senha.'

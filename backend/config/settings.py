@@ -136,6 +136,9 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_THROTTLE_RATES": {
+        "password_reset": "5/hour",
+    },
 }
 
 SIMPLE_JWT = {
@@ -199,7 +202,16 @@ EMAIL_BACKEND = os.environ.get(
 )
 
 EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+
+
+def _email_port():
+    try:
+        return int(os.environ.get('EMAIL_PORT', '') or 587)
+    except (TypeError, ValueError):
+        return 587
+
+
+EMAIL_PORT = _email_port()
 EMAIL_USE_TLS = os.environ.get(
     'EMAIL_USE_TLS',
     'True'

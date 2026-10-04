@@ -113,7 +113,7 @@ function Inicial() {
                 </form>
 
                 <div className="d-flex justify-content-between mt-4">
-                    <Link to="/EsqueciSenha" className="card-link m-0">Esqueci a senha</Link>
+                    <Link to={ROTAS.ESQUECI_SENHA} className="card-link m-0">Esqueci a senha</Link>
                     <a href="#" className="card-link m-0">Primeiro Acesso</a>
                 </div>
 
