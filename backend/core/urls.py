@@ -18,6 +18,19 @@ urlpatterns = [
     path('auth/login/', views.CustomTokenObtainPairView.as_view(), name='auth_login'),
     
     path('auth/register/', views.RegisterView.as_view(), name='auth_register'),
+
+    path(
+        'auth/password-reset/',
+        views.EsqueciSenhaView.as_view(),
+        name='password_reset'
+    ),
+
+    path(
+        'auth/password-reset/confirm/',
+        views.RedefinirSenhaView.as_view(),
+        name='password_reset_confirm'
+    ),
+
     path('auth/me/', views.PerfilView.as_view(), name='auth_me'),
     path('auth/me/vinculos/', views.MeusVinculosView.as_view(), name='auth_me_vinculos'),
     path('auth/session/', views.SessionCheckView.as_view(), name='auth_session_check'),

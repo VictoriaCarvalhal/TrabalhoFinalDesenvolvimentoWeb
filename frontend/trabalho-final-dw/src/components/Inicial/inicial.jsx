@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'; // 1. Adicionado useEffect
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '../../stores/authStore';
 import { ROTAS } from '../../utils/rotas.js';
@@ -113,7 +113,7 @@ function Inicial() {
                 </form>
 
                 <div className="d-flex justify-content-between mt-4">
-                    <a href="#" className="card-link m-0">Esqueci a senha</a>
+                    <Link to="/EsqueciSenha" className="card-link m-0">Esqueci a senha</Link>
                     <a href="#" className="card-link m-0">Primeiro Acesso</a>
                 </div>
 

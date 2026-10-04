@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Inicial from './components/Inicial/inicial';
+import EsqueciSenha from './components/EsqueciSenha/EsqueciSenha.jsx';
+import RedefinirSenha from './components/RedefinirSenha/RedefinirSenha.jsx';
 import LayoutAutenticated from './components/layout/layoutAutenticated.jsx';
 import LayoutNotAutenticated from './components/layout/layoutNotAutenticated.jsx';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx';
@@ -68,6 +70,10 @@ function App() {
         {/* Rotas Públicas */}
         <Route element={<LayoutNotAutenticated />}>
           <Route path={ROTAS.INICIAL} element={<RotaInicial />} />
+          {/* Solicitação de recuperação de senha */}
+          <Route path="/EsqueciSenha" element={<EsqueciSenha />} />
+          {/* Tela aberta pelo link enviado por e-mail */}
+          <Route path="/RedefinirSenha" element={<RedefinirSenha />} />
         </Route>
 
         {/* Rotas Protegidas */}
