@@ -37,7 +37,7 @@ function ModalAlerta({ variante = 'erro', titulo, mensagem, detalhes = [], texto
                 className="modal-dialog modal-dialog-centered modal-dialog-scrollable"
                 onClick={(evento) => evento.stopPropagation()}
             >
-                <div className="modal-content">
+                <div className="modal-content modal-alerta-entrada">
                     <div className="modal-header">
                         <h2 className="modal-title h5" id="titulo-modal-alerta">
                             <i className={`bi ${ICONES[variante] ?? ICONES.erro} me-2`} aria-hidden="true"></i>

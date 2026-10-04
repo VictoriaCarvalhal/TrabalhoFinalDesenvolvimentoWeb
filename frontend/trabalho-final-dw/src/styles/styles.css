@@ -355,6 +355,32 @@ strong {
     mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
 }
 
+@keyframes modal-alerta-entrada {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+}
+
+.modal-alerta-entrada {
+    animation: modal-alerta-entrada 150ms ease-out;
+}
+
+@media (max-width: 575.98px) {
+    .acoes-card {
+        flex-wrap: wrap;
+    }
+    .acoes-card .btn {
+        flex: 1 1 45%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .modal-alerta-entrada {
+        animation: none;
+    }
+}
+
 /* Responsividade celular e tablet */
 @media only screen and (max-width: 900px) {
     #header {

@@ -39,7 +39,7 @@ function ProjetoCard({ projeto, excluindo, baixando, onVer, onBaixar, onEditar, 
                     </div>
                     
                     {/* Parte de Baixo (Ações) */}
-                    <div className="d-flex gap-2 justify-content-end mt-auto pt-3 border-top">
+                    <div className="acoes-card d-flex gap-2 justify-content-end mt-auto pt-3 border-top">
                         <button
                             type="button"
                             className="btn btn-outline-secondary flex-grow-1"
