@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'; // 1. Adicionado useEffect
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '../../stores/authStore';
 import { ROTAS } from '../../utils/rotas.js';
@@ -90,7 +90,11 @@ function Inicial() {
                             id="cpf"
                             {...register("cpf", { required: "O CPF é obrigatório" })}
                         />
-                        {errors.cpf && <div className="invalid-feedback">{errors.cpf.message}</div>}
+                        {errors.cpf && (
+                            <div className="invalid-feedback">
+                                {errors.cpf.message}
+                            </div>
+                        )}
                     </div>
 
                     <div className="mb-3">
@@ -101,11 +105,19 @@ function Inicial() {
                             id="senha"
                             {...register("senha", { required: "A senha é obrigatória" })}
                         />
-                        {errors.senha && <div className="invalid-feedback">{errors.senha.message}</div>}
+                        {errors.senha && (
+                            <div className="invalid-feedback">
+                                {errors.senha.message}
+                            </div>
+                        )}
                     </div>
 
                     <div className="text-end">
-                        <button type="submit" className="btn btn-primary" disabled={enviando}>
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                            disabled={enviando}
+                        >
                             {enviando ? 'Entrando...' : 'Acessar'}
                         </button>
                     </div>
@@ -113,8 +125,16 @@ function Inicial() {
                 </form>
 
                 <div className="d-flex justify-content-between mt-4">
-                    <a href="#" className="card-link m-0">Esqueci a senha</a>
-                    <a href="#" className="card-link m-0">Primeiro Acesso</a>
+                    <Link
+                        to="/EsqueciSenha"
+                        className="card-link m-0"
+                    >
+                        Esqueci a senha
+                    </Link>
+
+                    <a href="#" className="card-link m-0">
+                        Primeiro Acesso
+                    </a>
                 </div>
 
             </div>
