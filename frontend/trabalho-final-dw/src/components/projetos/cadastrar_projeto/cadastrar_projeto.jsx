@@ -17,6 +17,7 @@ import DemandasBolsa from './abas/DemandasBolsa';
 import { MUNICIPIOS_RJ } from '../../../dados/municipiosRJ';
 import { usePeriodo } from '../../../hooks/usePeriodo';
 import FeedbackIndisponivel from '../../comum/FeedbackIndisponivel';
+import ModalAlerta from '../../comum/ModalAlerta';
 import { useUnidades } from '../../../hooks/useUnidades';
 import { useDepartamentos } from '../../../hooks/useDepartamentos';
 import { useVinculosCoordenador } from '../../../hooks/useVinculosCoordenador';
@@ -66,6 +67,26 @@ function CadastrarProjeto() {
     const { dados: periodo, aberto: periodoAberto, loading: periodoLoading } = usePeriodo();
     const bloqueadoPorPeriodo = !isAdmin && !periodoLoading && !periodoAberto;
     const [mostrarFeedbackPeriodo, setMostrarFeedbackPeriodo] = useState(false);
+    const [erroSalvamento, setErroSalvamento] = useState(null);
+
+    function formatarDetalhesErro(dadosErro) {
+        if (!dadosErro) return [];
+        if (typeof dadosErro === 'string') return [dadosErro];
+        if (Array.isArray(dadosErro)) {
+            return dadosErro.flatMap((item) => formatarDetalhesErro(item));
+        }
+        if (typeof dadosErro === 'object') {
+            return Object.entries(dadosErro).flatMap(([campo, valor]) => {
+                const mensagens = Array.isArray(valor) ? valor : [valor];
+                return mensagens.map((mensagem) =>
+                    typeof mensagem === 'object'
+                        ? `${campo}: ${JSON.stringify(mensagem)}`
+                        : `${campo}: ${mensagem}`
+                );
+            });
+        }
+        return [String(dadosErro)];
+    }
 
     // Abre o pop-up com o motivo assim que o bloqueio é confirmado.
     useEffect(() => {
@@ -778,11 +799,14 @@ function CadastrarProjeto() {
                 // pop-up com o motivo em vez do alerta genérico.
                 setMostrarFeedbackPeriodo(true);
             } else {
-                // O corpo do erro do DRF diz o campo e o motivo do erro (futuramente fica mais elegante exibir o erro usando o padrão de outros erros)
-                const detalhe = dadosErro;
-                window.alert(detalhe
-                    ? JSON.stringify(detalhe)
-                    : 'Não foi possível salvar o projeto. Verifique a conexão e tente de novo.');
+                const detalhes = formatarDetalhesErro(dadosErro);
+                setErroSalvamento({
+                    titulo: 'Não foi possível salvar o projeto',
+                    mensagem: detalhes.length > 0
+                        ? 'O servidor recusou o envio com os seguintes erros:'
+                        : 'Verifique a conexão e tente de novo.',
+                    detalhes,
+                });
             }
         } finally {
             setEnviando(false);
@@ -1066,6 +1090,16 @@ function CadastrarProjeto() {
                     fim={periodo?.fim}
                     mensagem={periodo?.mensagem_fechado}
                     aoFechar={() => setMostrarFeedbackPeriodo(false)}
+                />
+            )}
+
+            {erroSalvamento && (
+                <ModalAlerta
+                    variante="erro"
+                    titulo={erroSalvamento.titulo}
+                    mensagem={erroSalvamento.mensagem}
+                    detalhes={erroSalvamento.detalhes}
+                    aoFechar={() => setErroSalvamento(null)}
                 />
             )}
 

@@ -5,6 +5,7 @@ import DialogoFormulario from '../DialogoFormulario';
 import DialogoVisualizacao from '../DialogoVisualizacao';
 import CampoSomenteLeitura from '../CampoSomenteLeitura';
 import CartaoItem, { DetalheItem } from '../CartaoItem';
+import ModalAlerta from '../../../comum/ModalAlerta';
 
 const LINHA_VAZIA = {
     id: null, unidade: '', departamento: '', nome_instituicao: '', sigla_instituicao: '', participacao: '',
@@ -17,6 +18,7 @@ const LINHA_VAZIA = {
 function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onChange, tituloOculto = false, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
+    const [exclusaoPendente, setExclusaoPendente] = useState(null);
 
     // Rascunho do diálogo: null = fechado. indice null = parceria nova.
     const [edicao, setEdicao] = useState(null);
@@ -108,6 +110,12 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
         setLinhas((atuais) => atuais.filter((_, i) => i !== indice));
     }
 
+    async function confirmarExclusao() {
+        const indice = exclusaoPendente;
+        setExclusaoPendente(null);
+        if (indice !== null) await excluir(indice);
+    }
+
     // Nome por extenso das chaves estrangeiras, para a linha da lista. A API
     // devolve esses nomes no GET, mas uma parceria recém-digitada só tem o id.
     function nomeUnidade(linha) {
@@ -171,7 +179,7 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
                                     <button
                                         type="button"
                                         className="btn btn-sm btn-outline-danger flex-grow-1"
-                                        onClick={() => excluir(i)}
+                                        onClick={() => setExclusaoPendente(i)}
                                         aria-label={`Excluir a parceria interna ${i + 1}`}
                                         title="Excluir"
                                     >
@@ -287,6 +295,17 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
                     <CampoSomenteLeitura rotulo="Departamento" valor={nomeDepartamento(visualizacao)} />
                     <CampoSomenteLeitura rotulo="Participação da unidade no projeto" valor={visualizacao.participacao} />
                 </DialogoVisualizacao>
+            )}
+
+            {exclusaoPendente !== null && linhas[exclusaoPendente] && (
+                <ModalAlerta
+                    variante="aviso"
+                    titulo="Excluir parceria?"
+                    mensagem={`Excluir a parceria com "${linhas[exclusaoPendente].nome_instituicao || `Parceria ${exclusaoPendente + 1}`}"? Esta ação não pode ser desfeita.`}
+                    textoConfirmar="Excluir"
+                    aoConfirmar={confirmarExclusao}
+                    aoFechar={() => setExclusaoPendente(null)}
+                />
             )}
         </fieldset>
     );

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../../services/api';
 import CartaoItem from '../CartaoItem';
+import ModalAlerta from '../../../comum/ModalAlerta';
 
 function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], onChange, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
+    const [exclusaoPendente, setExclusaoPendente] = useState(null);
 
     // Com projeto, as linhas gravadas vêm da API.
     useEffect(() => {
@@ -57,6 +59,12 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
         setLinhas((atuais) => atuais.filter((_, i) => i !== indice));
     }
 
+    async function confirmarExclusao() {
+        const indice = exclusaoPendente;
+        setExclusaoPendente(null);
+        if (indice !== null) await excluir(indice);
+    }
+
     return (
         <fieldset>
             <legend>Unidades Envolvidas</legend>
@@ -83,7 +91,7 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
                                 <button
                                     type="button"
                                     className="btn btn-sm btn-outline-danger"
-                                    onClick={() => excluir(i)}
+                                    onClick={() => setExclusaoPendente(i)}
                                     aria-label={`Excluir unidade ${i + 1}`}
                                     title="Excluir"
                                 >
@@ -140,6 +148,17 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
                         </CartaoItem>
                     ))}
                 </div>
+            )}
+
+            {exclusaoPendente !== null && linhas[exclusaoPendente] && (
+                <ModalAlerta
+                    variante="aviso"
+                    titulo="Excluir unidade?"
+                    mensagem={`Excluir a unidade ${exclusaoPendente + 1} desta lista? Esta ação não pode ser desfeita.`}
+                    textoConfirmar="Excluir"
+                    aoConfirmar={confirmarExclusao}
+                    aoFechar={() => setExclusaoPendente(null)}
+                />
             )}
         </fieldset>
     );

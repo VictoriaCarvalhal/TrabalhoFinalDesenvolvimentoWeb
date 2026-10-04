@@ -7,6 +7,7 @@ import { excluirProjeto, restaurarProjeto } from '../../../services/projetoServi
 import { gerarPdfPorId } from '../../../services/gerarProjetoPdf.js';
 import DialogoDadosProjeto from '../detalhes/DialogoDadosProjeto';
 import FeedbackIndisponivel from '../../comum/FeedbackIndisponivel';
+import ModalAlerta from '../../comum/ModalAlerta';
 import { usePeriodo } from '../../../hooks/usePeriodo';
 import BarraDeBusca from './projetosComponentes/BarraDeBusca';
 import FiltrosDeOrdenacao from './projetosComponentes/FiltrosDeOrdenacao';
@@ -24,6 +25,7 @@ function Projetos() {
     const [erro, setErro] = useState(null);
     const [excluindoId, setExcluindoId] = useState(null);
     const [baixandoId, setBaixandoId] = useState(null);
+    const [confirmacaoPendente, setConfirmacaoPendente] = useState(null);
     // id do projeto aberto no diálogo de dados; null = diálogo fechado
     const [vendoId, setVendoId] = useState(null);
     const navigate = useNavigate();
@@ -75,14 +77,10 @@ function Projetos() {
     }
 
     async function handleExcluir(projeto) {
-        if (!window.confirm(`Excluir o projeto "${projeto.titulo}"? Ele irá para a lixeira.`)) {
-            return;
-        }
         setExcluindoId(projeto.id);
         setErro(null);
         try {
             await excluirProjeto(projeto.id);
-            // Sai da aba de ativos; aparece na lixeira ao trocar de aba.
             setProjetos((atuais) => atuais.filter((p) => p.id !== projeto.id));
         } catch (err) {
             setErro(err.response?.data?.detail ?? 'Erro ao excluir projeto.');
@@ -92,19 +90,26 @@ function Projetos() {
     }
 
     async function handleRestaurar(projeto) {
-        if (!window.confirm(`Restaurar o projeto "${projeto.titulo}"? Ele voltará para a lista normal.`)) {
-            return;
-        }
         setExcluindoId(projeto.id);
         setErro(null);
         try {
             await restaurarProjeto(projeto.id);
-            // Sai da lixeira; volta aos ativos ao trocar de aba.
             setProjetos((atuais) => atuais.filter((p) => p.id !== projeto.id));
         } catch (err) {
             setErro(err.response?.data?.detail ?? 'Erro ao restaurar projeto.');
         } finally {
             setExcluindoId(null);
+        }
+    }
+
+    async function confirmarPendente() {
+        const pendente = confirmacaoPendente;
+        if (!pendente) return;
+        setConfirmacaoPendente(null);
+        if (pendente.tipo === 'excluir') {
+            await handleExcluir(pendente.projeto);
+        } else {
+            await handleRestaurar(pendente.projeto);
         }
     }
 
@@ -377,8 +382,8 @@ function Projetos() {
                                         onVer={setVendoId}
                                         onBaixar={handleBaixar}
                                         onEditar={redirecionaParaEdicao}
-                                        onExcluir={handleExcluir}
-                                        onRestaurar={handleRestaurar}
+                                        onExcluir={(projeto) => setConfirmacaoPendente({ tipo: 'excluir', projeto })}
+                                        onRestaurar={(projeto) => setConfirmacaoPendente({ tipo: 'restaurar', projeto })}
                                         isAdmin={isAdmin}
                                         periodoBloqueado={periodoFechadoParaComum}
                                         onAcaoBloqueada={() => setMostrarFeedbackPeriodo(true)}
@@ -395,6 +400,21 @@ function Projetos() {
 
                         {vendoId && (
                             <DialogoDadosProjeto projetoId={vendoId} aoFechar={() => setVendoId(null)} />
+                        )}
+
+                        {confirmacaoPendente && (
+                            <ModalAlerta
+                                variante="aviso"
+                                titulo={confirmacaoPendente.tipo === 'excluir' ? 'Excluir projeto?' : 'Restaurar projeto?'}
+                                mensagem={confirmacaoPendente.tipo === 'excluir'
+                                    ? `Excluir o projeto "${confirmacaoPendente.projeto.titulo}"? Ele irá para a lixeira.`
+                                    : `Restaurar o projeto "${confirmacaoPendente.projeto.titulo}"? Ele voltará para a lista normal.`}
+                                textoConfirmar={confirmacaoPendente.tipo === 'excluir' ? 'Excluir' : 'Restaurar'}
+                                classeBotaoConfirmar={confirmacaoPendente.tipo === 'excluir' ? 'btn-danger' : 'btn-success'}
+                                aoConfirmar={confirmarPendente}
+                                confirmando={excluindoId === confirmacaoPendente.projeto.id}
+                                aoFechar={() => setConfirmacaoPendente(null)}
+                            />
                         )}
                     </div>
                 )}
