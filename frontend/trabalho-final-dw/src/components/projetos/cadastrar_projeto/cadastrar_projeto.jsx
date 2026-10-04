@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '../../../stores/authStore';
+import { ROTAS } from '../../../utils/rotas.js';
 import api from '../../../services/api';
 
 import LocaisRealizacao from './abas/LocaisRealizacao';
@@ -696,7 +697,7 @@ function CadastrarProjeto() {
                     await criarPlanoDeTrabalho(idDaUrl, planoDados);
                 }
 
-                navigate("/Projetos/SeusProjetos");
+                navigate(ROTAS.BEMVINDO);
                 return;
             }
 
@@ -713,7 +714,7 @@ function CadastrarProjeto() {
                 await criarPalavraChave(projeto_id, { palavra });
             }
 
-            navigate("/Projetos/SeusProjetos");
+            navigate(ROTAS.BEMVINDO);
         } catch (erro) {
             const dadosErro = erro.response?.data;
             if (erro.response?.status === 403 && dadosErro && dadosErro.aberto === false) {
@@ -786,7 +787,7 @@ function CadastrarProjeto() {
                     <button
                         type="button"
                         className="btn btn-sm btn-secondary"
-                        onClick={() => navigate('/Projetos/SeusProjetos')}
+                        onClick={() => navigate(ROTAS.BEMVINDO)}
                     >
                         Voltar aos projetos
                     </button>
@@ -1025,10 +1026,22 @@ function CadastrarProjeto() {
                                 <p>
                                     O projeto <strong>{form.titulo}</strong> será {editando ? 'atualizado.' : 'enviado para a Pró-Reitoria de Extensão e ficará como proposta aguardando documentação.'}
                                 </p>
-                                <p className="mb-0">
-                                    Confira se está tudo preenchido antes de enviar. Depois do envio,
-                                    as mudanças passam pela lista de projetos.
-                                </p>
+                                {editando ? (
+                                    <p className="mb-0">
+                                        Confira se está tudo preenchido antes de enviar. Depois do envio,
+                                        as mudanças passam pela lista de projetos.
+                                    </p>
+                                ) : (
+                                    <div className="alert alert-warning mb-0">
+                                        Você está enviando o projeto para o sistema. Ainda será possível
+                                        editá-lo, mas apenas dentro do período de inscrição
+                                        {periodo?.inicio && periodo?.fim
+                                            ? <> de {periodo.inicio} até {periodo.fim}</>
+                                            : null}.
+                                        Ao clicar em Concordo, você declara estar ciente disso e arca
+                                        com as consequências.
+                                    </div>
+                                )}
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-outline-secondary" onClick={() => setConfirmando(false)}>
@@ -1040,7 +1053,7 @@ function CadastrarProjeto() {
                                     onClick={salvarDadosIdentificacao}
                                     disabled={enviando || carregandoEdicao}
                                 >
-                                    {enviando ? 'Salvando...' : editando ? 'Confirmar alterações' : 'Confirmar envio'}
+                                    {enviando ? 'Salvando...' : editando ? 'Confirmar alterações' : 'Concordo'}
                                 </button>
                             </div>
                         </div>

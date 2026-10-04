@@ -19,7 +19,9 @@ AUTH_USER_MODEL = "core.PessoaGlobal"
 
 # Na Vercel: CORS_ALLOWED_ORIGINS=https://<projeto-do-front>.vercel.app
 CORS_ALLOWED_ORIGINS = [
-    origem for origem in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if origem
+    origem.strip() 
+    for origem in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") 
+    if origem.strip()
 ]
 if DEBUG:
     CORS_ALLOWED_ORIGINS.extend([
@@ -30,6 +32,18 @@ if DEBUG:
     ])
 
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
 
 # Na Vercel o Django roda atras de um proxy; sem isto ele acha que a
 # requisicao veio por http e recusa o login do admin por CSRF.

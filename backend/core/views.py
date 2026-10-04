@@ -3,6 +3,9 @@ from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from rest_framework_simplejwt.views import TokenObtainPairView
+from core.serializers import CustomTokenObtainPairSerializer
+
 from core.models import (
     AreaConhecimentoCNPq, AreaTematica, Departamento,
     LinhaExtensao, MunicipioIBGE, NaturezaExtensao,
@@ -24,6 +27,11 @@ def _usuario_admin(user):
     return bool(
         getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False)
     )
+
+
+# VIEW CUSTOMIZADA
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class RegisterView(generics.CreateAPIView):

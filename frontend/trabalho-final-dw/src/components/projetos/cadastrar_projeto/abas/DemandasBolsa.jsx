@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../../../services/api';
 import CampoTextoLongo from '../CampoTextoLongo';
 import DialogoFormulario from '../DialogoFormulario';
+import CartaoItem, { DetalheItem } from '../CartaoItem';
 
 // Mesma lista do backend (projetos.TipoBolsa).
 const TIPOS_BOLSA = [
@@ -131,67 +132,46 @@ function DemandasBolsa({ projetoId, valor = [], onChange }) {
 
             {erro && <div className="alert alert-danger py-2">{erro}</div>}
 
-            <div className="table-responsive">
-                <table className="table table-bordered align-middle">
-                    <thead className="table-light">
-                        <tr>
-                            <th scope="col" style={{ width: '4rem' }}>Nº</th>
-                            <th scope="col">Tipo de bolsa</th>
-                            <th scope="col" style={{ width: '8rem' }}>Quantidade</th>
-                            <th scope="col">Justificativa</th>
-                            <th scope="col" style={{ width: '7rem' }}>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {linhas.length === 0 && (
-                            <tr>
-                                <td colSpan={5} className="text-muted text-center">
-                                    Nenhuma bolsa pedida.
-                                </td>
-                            </tr>
-                        )}
+            {linhas.length === 0 ? (
+                <p className="text-muted">Nenhuma bolsa pedida.</p>
+            ) : (
+                <>
+                    <div className="row g-3">
                         {linhas.map((linha, i) => (
-                            <tr key={linha.id ?? `nova-${i}`}>
-                                <td>{i + 1}.</td>
-                                <td>{nomeTipo(linha)}</td>
-                                <td>{linha.quantidade}</td>
-                                <td>{linha.justificativa || <span className="text-muted">—</span>}</td>
-                                <td className="text-nowrap">
-                                    <div className="d-flex gap-2">
+                            <CartaoItem
+                                key={linha.id ?? `nova-${i}`}
+                                titulo={nomeTipo(linha)}
+                                acoes={
+                                    <>
                                         <button
                                             type="button"
-                                            className="btn btn-sm btn-outline-secondary"
+                                            className="btn btn-sm btn-outline-secondary flex-grow-1"
                                             onClick={() => abrirEdicao(i)}
                                             aria-label={`Editar a demanda ${i + 1}`}
                                             title="Editar"
                                         >
-                                            <i className="bi bi-pencil" aria-hidden="true"></i>
+                                            <i className="bi bi-pencil d-block mb-1" aria-hidden="true"></i>Editar
                                         </button>
                                         <button
                                             type="button"
-                                            className="btn btn-sm btn-outline-danger"
+                                            className="btn btn-sm btn-outline-danger flex-grow-1"
                                             onClick={() => excluir(i)}
                                             aria-label={`Excluir a demanda ${i + 1}`}
                                             title="Excluir"
                                         >
-                                            <i className="bi bi-trash" aria-hidden="true"></i>
+                                            <i className="bi bi-trash d-block mb-1" aria-hidden="true"></i>Excluir
                                         </button>
-                                    </div>
-                                </td>
-                            </tr>
+                                    </>
+                                }
+                            >
+                                <DetalheItem icone="bi-123" rotulo="Quantidade" valor={linha.quantidade} />
+                                <DetalheItem icone="bi-card-text" rotulo="Justificativa" valor={linha.justificativa} />
+                            </CartaoItem>
                         ))}
-                    </tbody>
-                    {linhas.length > 0 && (
-                        <tfoot>
-                            <tr>
-                                <td colSpan={2} className="text-end fw-semibold">Total de bolsas</td>
-                                <td className="fw-semibold">{total}</td>
-                                <td colSpan={2}></td>
-                            </tr>
-                        </tfoot>
-                    )}
-                </table>
-            </div>
+                    </div>
+                    <p className="fw-semibold mt-3 mb-0">Total de bolsas: {total}</p>
+                </>
+            )}
 
             {edicao && (
                 <DialogoFormulario

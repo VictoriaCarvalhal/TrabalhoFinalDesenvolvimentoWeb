@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../../services/api';
 import { MUNICIPIOS_RJ } from '../../../../dados/municipiosRJ';
+import CartaoItem from '../CartaoItem';
 
 // Aba "Locais de Realização" do cadastro de projeto. Funciona como no sistema
 // original: uma tabela vazia, o botão "Novo" acrescenta uma linha com
@@ -77,74 +78,61 @@ function LocaisRealizacao({ projetoId, valor = [], onChange }) {
 
             {erro && <div className="alert alert-danger py-2">{erro}</div>}
 
-            <div className="table-responsive">
-                <table className="table table-bordered align-middle">
-                    <thead className="table-light">
-                        <tr>
-                            <th scope="col" style={{ width: '4rem' }}>Nº</th>
-                            <th scope="col" style={{ width: '4rem' }}>
-                                <i className="bi bi-trash" aria-hidden="true"></i>
-                                <span className="visually-hidden">Excluir</span>
-                            </th>
-                            <th scope="col">* Instituição</th>
-                            <th scope="col">* Município</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {linhas.length === 0 && (
-                            <tr>
-                                <td colSpan={4} className="text-muted text-center">
-                                    Nenhum local cadastrado.
-                                </td>
-                            </tr>
-                        )}
-                        {linhas.map((linha, i) => (
-                            <tr key={linha.id ?? `nova-${i}`}>
-                                <td>{i + 1}.</td>
-                                <td>
-                                    <button
-                                        type="button"
-                                        className="btn btn-sm btn-outline-danger"
-                                        onClick={() => excluir(i)}
-                                        aria-label={`Excluir local ${i + 1}`}
-                                    >
-                                        <i className="bi bi-trash" aria-hidden="true"></i>
-                                    </button>
-                                </td>
-                                <td>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={linha.nome_local}
-                                        maxLength={255}
-                                        required
-                                        aria-label={`Instituição do local ${i + 1}`}
-                                        onChange={(e) => editar(i, 'nome_local', e.target.value)}
-                                        onBlur={() => gravar(i)}
-                                    />
-                                </td>
-                                <td>
-                                    <select
-                                        className="form-select"
-                                        value={linha.municipio}
-                                        required
-                                        aria-label={`Município do local ${i + 1}`}
-                                        onChange={(e) => editar(i, 'municipio', e.target.value)}
-                                        onBlur={() => gravar(i)}
-                                    >
-                                        <option value="">[Selecione]</option>
-                                        {MUNICIPIOS_RJ.map((m) => (
-                                            <option key={m.codigo} value={m.codigo}>
-                                                {m.nome}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            {linhas.length === 0 ? (
+                <p className="text-muted">Nenhum local cadastrado.</p>
+            ) : (
+                <div className="row g-3">
+                    {linhas.map((linha, i) => (
+                        <CartaoItem
+                            key={linha.id ?? `nova-${i}`}
+                            titulo={linha.nome_local || `Local ${i + 1}`}
+                            acoes={
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-danger"
+                                    onClick={() => excluir(i)}
+                                    aria-label={`Excluir local ${i + 1}`}
+                                    title="Excluir"
+                                >
+                                    <i className="bi bi-trash me-1" aria-hidden="true"></i>Excluir
+                                </button>
+                            }
+                        >
+                            <div className="mb-2">
+                                <label className="form-label" htmlFor={`lr-instituicao-${i}`}>Instituição *</label>
+                                <input
+                                    id={`lr-instituicao-${i}`}
+                                    type="text"
+                                    className="form-control"
+                                    value={linha.nome_local}
+                                    maxLength={255}
+                                    required
+                                    onChange={(e) => editar(i, 'nome_local', e.target.value)}
+                                    onBlur={() => gravar(i)}
+                                />
+                            </div>
+                            <div>
+                                <label className="form-label" htmlFor={`lr-municipio-${i}`}>Município *</label>
+                                <select
+                                    id={`lr-municipio-${i}`}
+                                    className="form-select"
+                                    value={linha.municipio}
+                                    required
+                                    onChange={(e) => editar(i, 'municipio', e.target.value)}
+                                    onBlur={() => gravar(i)}
+                                >
+                                    <option value="">[Selecione]</option>
+                                    {MUNICIPIOS_RJ.map((m) => (
+                                        <option key={m.codigo} value={m.codigo}>
+                                            {m.nome}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </CartaoItem>
+                    ))}
+                </div>
+            )}
         </fieldset>
     );
 }

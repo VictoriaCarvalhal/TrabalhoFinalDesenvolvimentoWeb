@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROTAS } from '../../../utils/rotas.js';
 import { useProjetoImpressao } from '../../../hooks/useProjetoImpressao';
 import { gerarPdfPorDados } from '../../../services/gerarProjetoPdf.js';
 import ProjetoPrint from '../imprimir/ProjetoPrint';
@@ -92,7 +93,7 @@ function DialogoDadosProjeto({ projetoId, aoFechar }) {
                             type="button"
                             className="btn btn-outline-primary"
                             disabled={loading || Boolean(erro)}
-                            onClick={() => navigate(`/Projetos/${projetoId}/imprimir`)}
+                            onClick={() => navigate(ROTAS.imprimirProjeto(projetoId))}
                         >
                             <i className="bi bi-printer me-2" aria-hidden="true"></i>
                             Imprimir

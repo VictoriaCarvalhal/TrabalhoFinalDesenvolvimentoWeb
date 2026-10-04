@@ -4,6 +4,7 @@ import CampoTextoLongo from '../CampoTextoLongo';
 import DialogoFormulario from '../DialogoFormulario';
 import DialogoVisualizacao from '../DialogoVisualizacao';
 import CampoSomenteLeitura from '../CampoSomenteLeitura';
+import CartaoItem, { DetalheItem } from '../CartaoItem';
 
 // Lista copiada do backend (projetos.TipoInstituicaoExterna).
 const TIPOS_INSTITUICAO = [
@@ -136,79 +137,52 @@ function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = fal
 
             {erro && <div className="alert alert-danger py-2">{erro}</div>}
 
-            <div className="table-responsive">
-                <table className="table table-bordered align-middle">
-                    <thead className="table-light">
-                        <tr>
-                            <th scope="col" style={{ width: '4rem' }}>Nº</th>
-                            <th scope="col">Instituição</th>
-                            <th scope="col">Tipo</th>
-                            <th scope="col">Participação</th>
-                            <th scope="col" style={{ width: '7rem' }}>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {linhas.length === 0 && (
-                            <tr>
-                                <td colSpan={5} className="text-muted text-center">
-                                    Nenhuma parceria externa cadastrada.
-                                </td>
-                            </tr>
-                        )}
-                        {linhas.map((linha, i) => (
-                            <tr key={linha.id ?? `nova-${i}`}>
-                                <td>{i + 1}.</td>
-                                <td>
-                                    {linha.nome_instituicao}
-                                    {linha.sigla_instituicao && ` (${linha.sigla_instituicao})`}
-                                </td>
-                                <td>{nomeTipo(linha)}</td>
-                                <td style={{ maxWidth: '220px' }}>
-                                    {/* O title mostra o texto inteiro no hover (tooltip nativo do navegador). */}
-                                    <span
-                                        className="d-inline-block text-truncate"
-                                        style={{ maxWidth: '220px' }}
-                                        title={linha.participacao || ''}
+            {linhas.length === 0 ? (
+                <p className="text-muted">Nenhuma parceria externa cadastrada.</p>
+            ) : (
+                <div className="row g-3">
+                    {linhas.map((linha, i) => (
+                        <CartaoItem
+                            key={linha.id ?? `nova-${i}`}
+                            titulo={`${linha.nome_instituicao}${linha.sigla_instituicao ? ` (${linha.sigla_instituicao})` : ''}`}
+                            acoes={
+                                <>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-secondary flex-grow-1"
+                                        onClick={() => abrirVisualizacao(i)}
+                                        aria-label={`Visualizar a parceria externa ${i + 1}`}
+                                        title="Visualizar"
                                     >
-                                        {linha.participacao || '—'}
-                                    </span>
-                                </td>
-                                <td className="text-nowrap">
-                                    <div className="d-flex gap-2">
-                                        <button
-                                            type="button"
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => abrirVisualizacao(i)}
-                                            aria-label={`Visualizar a parceria externa ${i + 1}`}
-                                            title="Visualizar"
-                                        >
-                                            <i className="bi bi-eye" aria-hidden="true"></i>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => abrirEdicao(i)}
-                                            aria-label={`Editar a parceria externa ${i + 1}`}
-                                            title="Editar"
-                                        >
-                                            <i className="bi bi-pencil" aria-hidden="true"></i>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="btn btn-sm btn-outline-danger"
-                                            onClick={() => excluir(i)}
-                                            aria-label={`Excluir a parceria externa ${i + 1}`}
-                                            title="Excluir"
-                                        >
-                                            <i className="bi bi-trash" aria-hidden="true"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                                        <i className="bi bi-eye d-block mb-1" aria-hidden="true"></i>Ver
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-secondary flex-grow-1"
+                                        onClick={() => abrirEdicao(i)}
+                                        aria-label={`Editar a parceria externa ${i + 1}`}
+                                        title="Editar"
+                                    >
+                                        <i className="bi bi-pencil d-block mb-1" aria-hidden="true"></i>Editar
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-danger flex-grow-1"
+                                        onClick={() => excluir(i)}
+                                        aria-label={`Excluir a parceria externa ${i + 1}`}
+                                        title="Excluir"
+                                    >
+                                        <i className="bi bi-trash d-block mb-1" aria-hidden="true"></i>Excluir
+                                    </button>
+                                </>
+                            }
+                        >
+                            <DetalheItem icone="bi-tag" rotulo="Tipo" valor={nomeTipo(linha)} />
+                            <DetalheItem icone="bi-chat-left-text" rotulo="Participação" valor={linha.participacao} />
+                        </CartaoItem>
+                    ))}
+                </div>
+            )}
 
             {edicao && (
                 <DialogoFormulario
