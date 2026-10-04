@@ -19,7 +19,7 @@ const LINHA_VAZIA = { id: null, tipo_bolsa: '', quantidade: 1, justificativa: ''
 // Aba "Demanda de Bolsa de Extensão": quantas bolsas o projeto pede, de cada
 // tipo. Segue a forma das outras abas de lista, com o diálogo para incluir e
 // editar. Cada tipo entra uma vez só; para pedir mais, muda-se a quantidade.
-function DemandasBolsa({ projetoId, valor = [], onChange }) {
+function DemandasBolsa({ projetoId, valor = [], onChange, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
     const [edicao, setEdicao] = useState(null);
@@ -126,6 +126,7 @@ function DemandasBolsa({ projetoId, valor = [], onChange }) {
                 para pedir mais de um, aumente a quantidade.
             </p>
 
+            {errosValidacao.demandasBolsa && <div className="alert alert-danger py-2">{errosValidacao.demandasBolsa}</div>}
             <button type="button" className="btn btn-sm btn-primary mb-3" onClick={abrirNova}>
                 <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova demanda
             </button>

@@ -40,7 +40,7 @@ function mascaraCpf(valor) {
 // Aba "Membros da Equipe". Segue a forma das outras abas de lista: a tabela
 // só mostra quem já está na equipe e o cadastro é feito no diálogo.
 // No diálogo a pessoa é achada pela matrícula ou CPF, ou pelo tipo de vínculo.
-function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
+function MembrosEquipe({ projetoId, coordenador, valor = [], onChange, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
     const [edicao, setEdicao] = useState(null);
@@ -221,6 +221,7 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange }) {
                 <p className="mb-2"><strong>Coordenador:</strong> {coordenador}</p>
             )}
 
+            {errosValidacao.membrosEquipe && <div className="alert alert-danger py-2">{errosValidacao.membrosEquipe}</div>}
             <button type="button" className="btn btn-sm btn-primary mb-3" onClick={abrirNovo}>
                 <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Novo membro
             </button>

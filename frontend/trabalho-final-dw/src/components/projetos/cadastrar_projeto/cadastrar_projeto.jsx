@@ -52,7 +52,6 @@ const ABAS = [
     { id: "membros-equipe", label: "Membros da Equipe" },
 ];
 
-
 function CadastrarProjeto() {
     const navigate = useNavigate();
     // Rota :id/editar reusa esta tela: com id na URL vira modo edição.
@@ -132,10 +131,55 @@ function CadastrarProjeto() {
            return erros;
     }
 
+
+    function validarEtapa3(f){
+        const erros = {};
+        if(!f.resultados_esperados.trim()) erros.resultados_esperados = "Este campo é obrigatório";
+        if(!f.cronograma_atividades.trim()) erros.cronograma_atividades = "Este campo é obrigatório";
+        return erros;
+    }
+
+    function validarEtapa4(f){
+        const erros = {};
+        if(!(f.unidadesEnvolvidas.length > 0 && f.unidadesEnvolvidas.every(item => item.unidade))) erros.unidadesEnvolvidas = "Adicione pelo menos 1 (uma) Unidade Envolvida";
+        return erros;
+    }
+
+    function validarEtapa5(f){
+        const erros = {};
+        if(!(f.parceriasInternas.length > 0 && f.parceriasInternas.every(item => item.nome_instituicao.trim() && item.unidade && item.participacao))) erros.parceriasInternas = "Adicione pelo menos 1 (uma) Parceria Interna";
+        if(!(f.parceriasExternas.length > 0 && f.parceriasExternas.every(item => item.nome_instituicao.trim() && item.tipo_instituicao && item.participacao))) erros.parceriasExternas = "Adicione pelo menos 1 (uma) Parceria Externa";
+        return erros;
+    }
+
+    function validarEtapa6(f){
+        const erros = {};
+        if(!(f.demandasBolsa.length > 0 && f.demandasBolsa.every(item => item.tipo_bolsa && item.quantidade))) erros.demandasBolsa = "Adicione pelo menos 1 (uma) demanda por bolsa.";
+        return erros;
+    }
+
+    function validarEtapa7(f){
+        const erros = {}
+        if(!(f.locaisRealizacao.length > 0 && f.locaisRealizacao.every(item => item.nome_local.trim() && item.municipio))) erros.locaisRealizacao = "Adicione pelo menos 1 (um) Local de Realização";
+        return erros;
+    }
+
+    function validarEtapa8(f){
+        const erros = {};
+        if(!(f.membrosEquipe.length > 0 && f.membrosEquipe.every(item => item.matricula && item.funcao))) erros.membrosEquipe = "Adicione pelo menos 1 (um) membro de equipe.";
+        return erros;
+    }
+
     function obterErrosEtapa(f = form, indice = etapaAtual) {
            if (indice === 0) return validarEtapa0(f);
            if (indice === 1) return validarEtapa1(f);
            if (indice === 2) return validarEtapa2(f);
+           if (indice === 3) return validarEtapa3(f);
+           if (indice === 4) return validarEtapa4(f);
+           if (indice === 5) return validarEtapa5(f);
+           if (indice === 6) return validarEtapa6(f);
+           if (indice === 7) return validarEtapa7(f);
+           if (indice === 8) return validarEtapa8(f);
            return {};
     }
 
@@ -421,6 +465,12 @@ function CadastrarProjeto() {
                     ...validarEtapa0(atualizado),
                     ...validarEtapa1(atualizado),
                     ...validarEtapa2(atualizado),
+                    ...validarEtapa3(atualizado),
+                    ...validarEtapa4(atualizado),
+                    ...validarEtapa5(atualizado),
+                    ...validarEtapa6(atualizado),
+                    ...validarEtapa7(atualizado),
+                    ...validarEtapa8(atualizado),
                 }[campo];
                 if (aindaComErro) return errosAtuais;
                 const { [campo]: _corrigido, ...restantes } = errosAtuais;
@@ -505,6 +555,12 @@ function CadastrarProjeto() {
             { indice: 0, nome: ABAS[0].label, erros: validarEtapa0(form) },
             { indice: 1, nome: ABAS[1].label, erros: validarEtapa1(form) },
             { indice: 2, nome: ABAS[2].label, erros: validarEtapa2(form) },
+            { indice: 3, nome: ABAS[3].label, erros: validarEtapa3(form) },
+            { indice: 4, nome: ABAS[4].label, erros: validarEtapa4(form) },
+            { indice: 5, nome: ABAS[5].label, erros: validarEtapa5(form) },
+            { indice: 6, nome: ABAS[6].label, erros: validarEtapa6(form) },
+            { indice: 7, nome: ABAS[7].label, erros: validarEtapa7(form) },
+            { indice: 8, nome: ABAS[8].label, erros: validarEtapa8(form) },
         ].filter((etapa) => Object.keys(etapa.erros).length > 0);
 
         if (faltando.length > 0) {
@@ -524,8 +580,8 @@ function CadastrarProjeto() {
     // tanto as abas vermelhas quanto o resumo do topo. Só aparece depois da
     // primeira tentativa de envio.
     const errosPorAba = tentouEnviar
-        ? [validarEtapa0(form), validarEtapa1(form), validarEtapa2(form)]
-        : [{}, {}, {}];
+        ? [validarEtapa0(form), validarEtapa1(form), validarEtapa2(form), validarEtapa3(form), validarEtapa4(form), validarEtapa5(form), validarEtapa6(form), validarEtapa7(form), validarEtapa8(form)]
+        : [{}, {}, {}, {}, {}, {}, {}, {}, {}];
     const totalPendencias = errosPorAba.reduce(
         (total, erros) => total + Object.keys(erros).length, 0);
 
@@ -911,6 +967,7 @@ function CadastrarProjeto() {
                     <PlanoTrabalho
                         form={form}
                         atualizarCampo={atualizarCampo}
+                        errosValidacao={errosValidacao}
                     />
                 )}
 
@@ -921,6 +978,7 @@ function CadastrarProjeto() {
                         departamentos={departamentos}
                         valor={form.unidadesEnvolvidas}
                         onChange={(linhas) => atualizarCampo("unidadesEnvolvidas", linhas)}
+                        errosValidacao={errosValidacao}
                     />
                 )}
 
@@ -931,6 +989,7 @@ function CadastrarProjeto() {
                         departamentos={departamentos}
                         form={form}
                         atualizarCampo={atualizarCampo}
+                        errosValidacao={errosValidacao}
                     />
                 )}
 
@@ -939,6 +998,7 @@ function CadastrarProjeto() {
                         projetoId={idDaUrl ?? projetoId}
                         valor={form.demandasBolsa}
                         onChange={(linhas) => atualizarCampo("demandasBolsa", linhas)}
+                        errosValidacao={errosValidacao}
                     />
                 )}
 
@@ -949,6 +1009,7 @@ function CadastrarProjeto() {
                         projetoId={idDaUrl ?? projetoId}
                         valor={form.locaisRealizacao}
                         onChange={(linhas) => atualizarCampo("locaisRealizacao", linhas)}
+                        errosValidacao={errosValidacao}
                     />
                 </div>
 
@@ -958,6 +1019,7 @@ function CadastrarProjeto() {
                         coordenador={form.coordenador}
                         valor={form.membrosEquipe}
                         onChange={(linhas) => atualizarCampo("membrosEquipe", linhas)}
+                        errosValidacao={errosValidacao}
                     />
                 </div>
 

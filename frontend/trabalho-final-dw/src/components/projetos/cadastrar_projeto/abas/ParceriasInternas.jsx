@@ -14,7 +14,7 @@ const LINHA_VAZIA = {
 // preenchimento acontece num diálogo, igual às outras abas de lista. Assim a
 // tabela não acumula as duas tarefas, mostrar e editar, e cada parceria fica
 // resumida a uma linha depois de salva.
-function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onChange, tituloOculto = false }) {
+function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onChange, tituloOculto = false, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
 
@@ -132,7 +132,8 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
                 Unidades da própria universidade que colaboram com o projeto.
                 Use o botão abaixo para acrescentar uma.
             </p>
-
+            
+            {errosValidacao && <div className="alert alert-danger py-2">{errosValidacao}</div>}
             <button type="button" className="btn btn-sm btn-primary mb-3" onClick={abrirNova}>
                 <i className="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova parceria interna
             </button>
