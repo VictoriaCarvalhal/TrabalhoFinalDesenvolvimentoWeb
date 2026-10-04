@@ -10,7 +10,7 @@ const ICONES = {
 function ModalAlerta({ variante = 'erro', titulo, mensagem, detalhes = [], textoBotao = 'Entendi', aoFechar, textoConfirmar = null, aoConfirmar = null, confirmando = false, classeBotaoConfirmar = 'btn-danger' }) {
     useEffect(() => {
         const aoTeclar = (evento) => {
-            if (evento.key === 'Escape') aoFechar();
+            if (evento.key === 'Escape' && !confirmando) aoFechar();
         };
         document.addEventListener('keydown', aoTeclar);
         const anterior = document.body.style.overflow;
@@ -19,7 +19,7 @@ function ModalAlerta({ variante = 'erro', titulo, mensagem, detalhes = [], texto
             document.removeEventListener('keydown', aoTeclar);
             document.body.style.overflow = anterior;
         };
-    }, [aoFechar]);
+    }, [aoFechar, confirmando]);
 
     const itens = Array.isArray(detalhes) ? detalhes.filter(Boolean) : [detalhes].filter(Boolean);
 
@@ -31,7 +31,7 @@ function ModalAlerta({ variante = 'erro', titulo, mensagem, detalhes = [], texto
             aria-labelledby="titulo-modal-alerta"
             aria-describedby={mensagem ? 'mensagem-modal-alerta' : undefined}
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)', overflowY: 'auto' }}
-            onClick={aoFechar}
+            onClick={() => { if (!confirmando) aoFechar(); }}
         >
             <div
                 className="modal-dialog modal-dialog-centered modal-dialog-scrollable"
@@ -43,7 +43,7 @@ function ModalAlerta({ variante = 'erro', titulo, mensagem, detalhes = [], texto
                             <i className={`bi ${ICONES[variante] ?? ICONES.erro} me-2`} aria-hidden="true"></i>
                             {titulo}
                         </h2>
-                        <button type="button" className="btn-close" aria-label="Fechar" onClick={aoFechar}></button>
+                        <button type="button" className="btn-close" aria-label="Fechar" onClick={aoFechar} disabled={confirmando}></button>
                     </div>
                     <div className="modal-body">
                         {mensagem && <p id="mensagem-modal-alerta">{mensagem}</p>}

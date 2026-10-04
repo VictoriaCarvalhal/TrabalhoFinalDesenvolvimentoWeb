@@ -99,7 +99,15 @@ function ProjetoCard({ projeto, excluindo, baixando, onVer, onBaixar, onEditar, 
                                     disabled={excluindo}
                                     onClick={() => onRestaurar(projeto)}
                                 >
-                                    <i className="bi bi-arrow-counterclockwise d-block mb-1"></i> Restaurar
+                                    {excluindo ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm d-block mx-auto mb-1" role="status" aria-hidden="true"></span> Restaurando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="bi bi-arrow-counterclockwise d-block mb-1"></i> Restaurar
+                                        </>
+                                    )}
                                 </button>
                             ))
                             : (podeExcluir && (
@@ -111,7 +119,15 @@ function ProjetoCard({ projeto, excluindo, baixando, onVer, onBaixar, onEditar, 
                                     disabled={excluindo}
                                     onClick={() => onExcluir(projeto)}
                                 >
-                                    <i className="bi bi-trash d-block mb-1"></i> Excluir
+                                    {excluindo ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm d-block mx-auto mb-1" role="status" aria-hidden="true"></span> Excluindo...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="bi bi-trash d-block mb-1"></i> Excluir
+                                        </>
+                                    )}
                                 </button>
                             ))}
                     </div>

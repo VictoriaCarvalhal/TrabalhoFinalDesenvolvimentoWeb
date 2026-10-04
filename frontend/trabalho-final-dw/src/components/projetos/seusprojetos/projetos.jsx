@@ -82,8 +82,10 @@ function Projetos() {
         try {
             await excluirProjeto(projeto.id);
             setProjetos((atuais) => atuais.filter((p) => p.id !== projeto.id));
+            return true;
         } catch (err) {
             setErro(err.response?.data?.detail ?? 'Erro ao excluir projeto.');
+            return false;
         } finally {
             setExcluindoId(null);
         }
@@ -95,8 +97,10 @@ function Projetos() {
         try {
             await restaurarProjeto(projeto.id);
             setProjetos((atuais) => atuais.filter((p) => p.id !== projeto.id));
+            return true;
         } catch (err) {
             setErro(err.response?.data?.detail ?? 'Erro ao restaurar projeto.');
+            return false;
         } finally {
             setExcluindoId(null);
         }
@@ -104,13 +108,13 @@ function Projetos() {
 
     async function confirmarPendente() {
         const pendente = confirmacaoPendente;
-        if (!pendente) return;
-        setConfirmacaoPendente(null);
+        if (!pendente || excluindoId !== null) return;
         if (pendente.tipo === 'excluir') {
             await handleExcluir(pendente.projeto);
         } else {
             await handleRestaurar(pendente.projeto);
         }
+        setConfirmacaoPendente(null);
     }
 
     useEffect(() => {
