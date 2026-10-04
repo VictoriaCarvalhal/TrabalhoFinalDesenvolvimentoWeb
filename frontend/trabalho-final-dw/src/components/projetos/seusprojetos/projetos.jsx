@@ -31,6 +31,7 @@ function Projetos() {
     const navigate = useNavigate();
     const [paginaAtual, setPaginaAtual] = useState(1);
     const [totalPaginas, setTotalPaginas] = useState(1);
+    const [totalProjetos, setTotalProjetos] = useState(0);
     const [buscaAplicada, setBuscaAplicada] = useState('');
 
     const [tipoBusca, setTipoBusca] = useState('nome');
@@ -176,8 +177,10 @@ function Projetos() {
                 }
                 if (dados && dados.count != undefined) {
                     setTotalPaginas(Math.ceil(dados.count / 6));
+                    setTotalProjetos(dados.count);
                 } else {
                     setTotalPaginas(1);
+                    setTotalProjetos(lista.length);
                 }
                 setProjetos(isAdmin ? lista : lista.filter((p) => !p.excluido));
             } catch (err) {
@@ -235,6 +238,10 @@ function Projetos() {
         }
     }, [isAdmin, mostrandoExcluidos]);
 
+    const textoContador = buscaAplicada
+        ? `${totalProjetos} ${totalProjetos === 1 ? 'resultado' : 'resultados'} para "${buscaAplicada}"`
+        : `${totalProjetos} ${totalProjetos === 1 ? 'projeto' : 'projetos'}`;
+
     return (
         <div>
             <div className="container mt-4 mb-5 pb-4">
@@ -288,6 +295,10 @@ function Projetos() {
                             </button>
                         )}
                     </div>
+                )}
+
+                {isAutenticado && !erro && (carregando || projetos.length > 0 || buscaAplicada) && (
+                    <p className="text-muted small mt-2 mb-0" role="status">{textoContador}</p>
                 )}
 
 
