@@ -14,6 +14,21 @@ function PrimeiroAcesso({ aoFechar, aoConcluir }) {
 
     const preenchido = nomeCompleto.trim() && cpf.trim() && email.trim() && senha && confirmarSenha;
 
+    const handleCpfChange = (e) => {
+        let valor = e.target.value.replace(/\D/g, '');
+        if (valor.length > 11) valor = valor.slice(0, 11);
+
+        if (valor.length > 9) {
+            valor = valor.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+        } else if (valor.length > 6) {
+            valor = valor.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+        } else if (valor.length > 3) {
+            valor = valor.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+        }
+
+        setCpf(valor);
+    };
+
     async function cadastrarUsuario() {
         setErro(null);
 
@@ -26,12 +41,12 @@ function PrimeiroAcesso({ aoFechar, aoConcluir }) {
         try {
             await api.post('/auth/register/', {
                 nome_completo: nomeCompleto,
-                cpf,
+                cpf: cpf.replace(/\D/g, ''), // Envia apenas os números
                 email_institucional: email,
                 lattes_url: lattes,
                 password: senha,
             });
-            aoConcluir(cpf, 'Cadastro realizado com sucesso. Você já pode fazer login.');
+            aoConcluir(cpf.replace(/\D/g, ''), 'Cadastro realizado com sucesso. Você já pode fazer login.');
         } catch (err) {
             const dados = err.response?.data;
             if (dados) {
@@ -72,9 +87,11 @@ function PrimeiroAcesso({ aoFechar, aoConcluir }) {
                         type="text"
                         className="form-control"
                         inputMode="numeric"
+                        placeholder="000.000.000-00"
+                        maxLength="14"
                         value={cpf}
                         required
-                        onChange={(e) => setCpf(e.target.value)}
+                        onChange={handleCpfChange}
                     />
                 </div>
                 <div className="col-sm-6">

@@ -78,6 +78,19 @@ function Inicial() {
         }
     };
 
+    const handleCpfInput = (e) => {
+        let valor = e.target.value.replace(/\D/g, '');
+        if (valor.length > 11) valor = valor.slice(0, 11);
+        if (valor.length > 9) {
+            valor = valor.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+        } else if (valor.length > 6) {
+            valor = valor.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+        } else if (valor.length > 3) {
+            valor = valor.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+        }
+        setValue('cpf', valor);
+    };
+
     return (
         <div className="card" style={{ width: '350px' }}>
             <div className="card-body">
@@ -107,9 +120,15 @@ function Inicial() {
                         <label htmlFor="cpf" className="form-label">CPF</label>
                         <input
                             type="text"
+                            inputMode="numeric"
+                            placeholder="000.000.000-00"
+                            maxLength="14"
                             className={`form-control ${errors.cpf ? 'is-invalid' : ''}`}
                             id="cpf"
-                            {...register("cpf", { required: "O CPF é obrigatório" })}
+                            {...register("cpf", { 
+                                required: "O CPF é obrigatório",
+                                onChange: handleCpfInput
+                            })}
                         />
                         {errors.cpf && <div className="invalid-feedback">{errors.cpf.message}</div>}
                     </div>
