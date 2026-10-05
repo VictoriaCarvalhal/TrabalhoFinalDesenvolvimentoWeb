@@ -241,6 +241,8 @@ class AreaConhecimentoCNPqViewSet(LookupViewSet):
 
 
 class VinculoInstitucionalViewSet(LookupViewSet):
+    # Lista pessoas, entao so para quem esta logado.
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = VinculoInstitucionalSerializer
 
     def get_queryset(self):

@@ -107,7 +107,7 @@ api.interceptors.response.use(
                 } catch (refreshError) {
                     processQueue(refreshError, null);
 
-                    useAuthStore.getState().logout?.();
+                    useAuthStore.getState().logout?.('inatividade');
                     localStorage.removeItem('access');
                     localStorage.removeItem('refresh');
                     if (window.location.pathname !== ROTAS.INICIAL) {
@@ -118,7 +118,7 @@ api.interceptors.response.use(
                     isRefreshing = false;
                 }
             } else {
-                useAuthStore.getState().logout?.();
+                useAuthStore.getState().logout?.('inatividade');
                 localStorage.removeItem('access');
                 localStorage.removeItem('refresh');
                 if (window.location.pathname !== ROTAS.INICIAL) {

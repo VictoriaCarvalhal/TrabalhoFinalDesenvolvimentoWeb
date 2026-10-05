@@ -182,8 +182,8 @@ class AreaConhecimentoCNPqSerializer(serializers.ModelSerializer):
 
 class VinculoInstitucionalSerializer(serializers.ModelSerializer):
     nome_completo = serializers.CharField(source='pessoa.nome_completo', read_only=True)
-    cpf = serializers.CharField(source='pessoa.cpf', read_only=True)
     tipo_vinculo_display = serializers.CharField(source='get_tipo_vinculo_display', read_only=True)
+    cpf = serializers.SerializerMethodField()
 
     class Meta:
         model = VinculoInstitucional
@@ -192,6 +192,13 @@ class VinculoInstitucionalSerializer(serializers.ModelSerializer):
             'tipo_vinculo', 'tipo_vinculo_display',
             'matricula', 'departamento', 'status',
         ]
+
+    def get_cpf(self, vinculo):
+        # So os digitos do meio, o suficiente para conferir quem e a pessoa.
+        digitos = ''.join(c for c in (vinculo.pessoa.cpf or '') if c.isdigit())
+        if len(digitos) != 11:
+            return ''
+        return f'***.{digitos[3:6]}.{digitos[6:9]}-**'
 
 
 class PeriodoExtensaoSerializer(serializers.ModelSerializer):

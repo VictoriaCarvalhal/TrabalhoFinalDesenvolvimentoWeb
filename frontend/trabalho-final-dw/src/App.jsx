@@ -13,6 +13,8 @@ import ScrollToTop from './components/layout/ScrollToTop.jsx';
 import { ROTAS } from './utils/rotas.js';
 import { useAuthStore } from './stores/authStore.jsx';
 import { useAutoRefreshOnActivity } from './hooks/useAutoRefreshOnActivity';
+import { useAvisoInatividade } from './hooks/useAvisoInatividade';
+import AvisoSessao from './components/comum/AvisoSessao.jsx';
 
 function RotaInicial() {
   const isAutenticado = useAuthStore((state) => state.isAutenticado);
@@ -21,9 +23,18 @@ function RotaInicial() {
 
 function App() {
   const { isSessionExpired, closeSessionExpiredModal } = useAutoRefreshOnActivity();
+  const { avisando, segundos, continuarConectada, encerrarPorInatividade } = useAvisoInatividade();
 
   return (
     <>
+      {avisando && !isSessionExpired && (
+        <AvisoSessao
+          segundos={segundos}
+          aoContinuar={continuarConectada}
+          aoSair={encerrarPorInatividade}
+        />
+      )}
+
       {isSessionExpired && (
         <>
           <div

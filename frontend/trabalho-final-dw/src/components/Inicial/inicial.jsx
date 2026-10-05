@@ -18,6 +18,13 @@ function Inicial() {
 
     const [erroLogin, setErroLogin] = useState(null);
     const [enviando, setEnviando] = useState(false);
+    // O motivo fica guardado até o próximo login dar certo, então o aviso
+    // sobrevive a um F5 na tela de login.
+    const [avisoSessao] = useState(() =>
+        sessionStorage.getItem('motivoLogout') === 'inatividade'
+            ? 'Sua sessão foi encerrada por inatividade. Entre de novo para continuar.'
+            : null
+    );
 
     useEffect(() => {
         if (isAutenticado) {
@@ -52,6 +59,7 @@ function Inicial() {
             setAdmin(perfil.data.is_staff || perfil.data.is_superuser);
             setPerfil(perfil.data.perfil);
 
+            sessionStorage.removeItem('motivoLogout');
             navigate(ROTAS.BEMVINDO);
         } catch (err) {
             logout();
@@ -71,6 +79,12 @@ function Inicial() {
         <div className="card" style={{ width: '350px' }}>
             <div className="card-body">
                 <h5 className="card-title text-center">Login</h5>
+
+                {avisoSessao && (
+                    <div className="alert alert-warning py-2" role="status">
+                        {avisoSessao}
+                    </div>
+                )}
 
                 {erroLogin && (
                     <div className="alert alert-danger py-2" role="alert">

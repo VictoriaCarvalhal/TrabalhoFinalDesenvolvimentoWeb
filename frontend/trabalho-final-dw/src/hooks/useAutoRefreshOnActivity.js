@@ -24,7 +24,7 @@ export function useAutoRefreshOnActivity() {
                 const refreshToken = localStorage.getItem('refresh');
 
                 if (!refreshToken) {
-                    logout();
+                    logout('inatividade');
                     setIsSessionExpired(true);
                     return;
                 }
@@ -46,7 +46,7 @@ export function useAutoRefreshOnActivity() {
                 } catch (error) {
                     console.error('Sessão expirada no refresh de inatividade:', error);
                     
-                    logout();
+                    logout('inatividade');
                     setIsSessionExpired(true);
                 } finally {
                     isRefreshingGlobal = false;

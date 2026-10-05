@@ -65,7 +65,10 @@ export const useAuthStore = create((set) => ({
         set({ perfil });
     },
 
-    logout: () => {
+    logout: (motivo = null) => {
+        if (motivo) {
+            sessionStorage.setItem('motivoLogout', motivo);
+        }
         localStorage.removeItem('access');
         localStorage.removeItem('refresh');
         localStorage.removeItem('nomeUsuario');
