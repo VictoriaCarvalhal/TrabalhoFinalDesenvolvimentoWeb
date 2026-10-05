@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useAuthStore } from '../../stores/authStore';
 import { ROTAS } from '../../utils/rotas.js';
 import api from '../../services/api';
+import PrimeiroAcesso from './PrimeiroAcesso';
 
 function Inicial() {
     const navigate = useNavigate();
@@ -18,8 +19,8 @@ function Inicial() {
 
     const [erroLogin, setErroLogin] = useState(null);
     const [enviando, setEnviando] = useState(false);
-    // O motivo fica guardado até o próximo login dar certo, então o aviso
-    // sobrevive a um F5 na tela de login.
+    const [mostrarPrimeiroAcesso, setMostrarPrimeiroAcesso] = useState(false);
+    const [sucessoPrimeiroAcesso, setSucessoPrimeiroAcesso] = useState(null);
     const [avisoSessao] = useState(() =>
         sessionStorage.getItem('motivoLogout') === 'inatividade'
             ? 'Sua sessão foi encerrada por inatividade. Entre de novo para continuar.'
@@ -75,6 +76,19 @@ function Inicial() {
         }
     };
 
+    const handleCpfInput = (e) => {
+        let valor = e.target.value.replace(/\D/g, '');
+        if (valor.length > 11) valor = valor.slice(0, 11);
+        if (valor.length > 9) {
+            valor = valor.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+        } else if (valor.length > 6) {
+            valor = valor.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+        } else if (valor.length > 3) {
+            valor = valor.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+        }
+        setValue('cpf', valor);
+    };
+
     return (
         <div className="card" style={{ width: '350px' }}>
             <div className="card-body">
@@ -92,15 +106,27 @@ function Inicial() {
                     </div>
                 )}
 
+                {sucessoPrimeiroAcesso && (
+                    <div className="alert alert-success py-2" role="status">
+                        {sucessoPrimeiroAcesso}
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit(handleLogin)}>
 
                     <div className="mb-3">
                         <label htmlFor="cpf" className="form-label">CPF</label>
                         <input
                             type="text"
+                            inputMode="numeric"
+                            placeholder="000.000.000-00"
+                            maxLength="14"
                             className={`form-control ${errors.cpf ? 'is-invalid' : ''}`}
                             id="cpf"
-                            {...register("cpf", { required: "O CPF é obrigatório" })}
+                            {...register("cpf", { 
+                                required: "O CPF é obrigatório",
+                                onChange: handleCpfInput
+                            })}
                         />
                         {errors.cpf && <div className="invalid-feedback">{errors.cpf.message}</div>}
                     </div>
@@ -126,10 +152,31 @@ function Inicial() {
 
                 <div className="d-flex justify-content-between mt-4">
                     <Link to={ROTAS.ESQUECI_SENHA} className="card-link m-0">Esqueci a senha</Link>
-                    <a href="#" className="card-link m-0">Primeiro Acesso</a>
+                    <a
+                        href="#"
+                        className="card-link m-0"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setMostrarPrimeiroAcesso(true);
+                        }}
+                    >
+                        Cadastre-se
+                    </a>
                 </div>
 
             </div>
+
+            {mostrarPrimeiroAcesso && (
+                <PrimeiroAcesso
+                    aoFechar={() => setMostrarPrimeiroAcesso(false)}
+                    aoConcluir={(cpf, mensagem) => {
+                        setMostrarPrimeiroAcesso(false);
+                        setSucessoPrimeiroAcesso(mensagem);
+                        setErroLogin(null);
+                        setValue('cpf', cpf);
+                    }}
+                />
+            )}
         </div>
     );
 }

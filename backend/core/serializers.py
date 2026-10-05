@@ -48,6 +48,19 @@ class RegisterPessoaSerializer(serializers.ModelSerializer):
             'lattes_url',
             'password',
         ]
+
+    def validate_cpf(self, value):
+        return validar_cpf(value)
+
+    def validate_email_institucional(self, value):
+        if value:
+            return value.strip().lower()
+        return value
+
+    def create(self, validated_data):
+        return PessoaGlobal.objects.create_user(**validated_data)
+
+
 class EsqueciSenhaSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
@@ -65,17 +78,6 @@ class RedefinirSenhaSerializer(serializers.Serializer):
             })
 
         return dados
-    def validate_cpf(self, value):
-        return validar_cpf(value)
-
-    def validate_email_institucional(self, value):
-        if value:
-            return value.strip().lower()
-        return value
-
-    def create(self, validated_data):
-        return PessoaGlobal.objects.create_user(**validated_data)
-
 
 class PessoaPerfilSerializer(serializers.ModelSerializer):
     perfil = serializers.SerializerMethodField()
@@ -194,7 +196,6 @@ class VinculoInstitucionalSerializer(serializers.ModelSerializer):
         ]
 
     def get_cpf(self, vinculo):
-        # So os digitos do meio, o suficiente para conferir quem e a pessoa.
         digitos = ''.join(c for c in (vinculo.pessoa.cpf or '') if c.isdigit())
         if len(digitos) != 11:
             return ''
