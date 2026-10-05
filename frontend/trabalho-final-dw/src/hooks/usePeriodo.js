@@ -9,7 +9,6 @@ export function usePeriodo() {
     const [erro, setErro] = useState(null);
 
     const recarregar = useCallback(() => {
-        // Sem token não há o que buscar; assume aberto para não travar telas públicas.
         if (!useAuthStore.getState().isAutenticado) {
             setDados(null);
             setErro(null);
@@ -63,8 +62,6 @@ export function usePeriodo() {
         };
     }, [isAutenticado]);
 
-    // Antes de carregar (ou se der erro de rede), assume aberto para não
-    // esconder botões por engano. Quem consome deve respeitar `loading`.
     const aberto = dados ? Boolean(dados.aberto_efetivo) : true;
     return { dados, aberto, loading, erro, recarregar };
 }

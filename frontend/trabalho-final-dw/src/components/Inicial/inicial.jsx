@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // 1. Adicionado useEffect
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '../../stores/authStore';
@@ -8,7 +8,6 @@ import api from '../../services/api';
 function Inicial() {
     const navigate = useNavigate();
     
-    // 2. Resgata o estado de autenticação
     const isAutenticado = useAuthStore((state) => state.isAutenticado);
     
     const login = useAuthStore((state) => state.login);
@@ -20,7 +19,6 @@ function Inicial() {
     const [erroLogin, setErroLogin] = useState(null);
     const [enviando, setEnviando] = useState(false);
 
-    // 3. Se o usuário já estiver logado ao entrar no "/", redireciona direto
     useEffect(() => {
         if (isAutenticado) {
             navigate('/Bemvindo', { replace: true });

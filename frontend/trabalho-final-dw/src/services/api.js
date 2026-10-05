@@ -6,7 +6,6 @@ const api = axios.create({
     baseURL: `${import.meta.env.VITE_API_URL ?? ''}/api/v1`,
 });
 
-// Controle de concorrência para o Refresh Token
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -21,7 +20,6 @@ const processQueue = (error, token = null) => {
     failedQueue = [];
 };
 
-// Lista de rotas públicas
 const PUBLIC_AUTH_ENDPOINTS = [
     '/auth/login/',
     '/auth/token/',
@@ -31,14 +29,12 @@ const PUBLIC_AUTH_ENDPOINTS = [
     '/auth/password-reset/confirm/',
 ];
 
-// 1. Interceptor de requisição
 api.interceptors.request.use((config) => {
     const isPublicAuthRoute = PUBLIC_AUTH_ENDPOINTS.some((endpoint) =>
         config.url?.includes(endpoint)
     );
 
     if (!isPublicAuthRoute) {
-        // Busca o token no localStorage ou Zustand
         const token = localStorage.getItem('access') || useAuthStore.getState().token;
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -48,7 +44,6 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-// 2. Interceptor de resposta
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -66,7 +61,6 @@ api.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        // Trata erro 401 em rotas protegidas
         if (error.response?.status === 401 && !originalRequest._retry) {
             
             if (isRefreshing) {
@@ -95,7 +89,6 @@ api.interceptors.response.use(
                     const newAccessToken = data.access;
                     const newRefreshToken = data.refresh || refreshToken;
 
-                    // Atualiza Zustand e localStorage
                     const { login, setToken } = useAuthStore.getState();
                     if (login) {
                         login(newAccessToken, newRefreshToken);
@@ -105,7 +98,6 @@ api.interceptors.response.use(
                         localStorage.setItem('refresh', newRefreshToken);
                     }
 
-                    // Atualiza o header padrão do Axios
                     api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
                     originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 

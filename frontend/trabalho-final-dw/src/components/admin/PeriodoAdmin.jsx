@@ -3,8 +3,6 @@ import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { getPeriodoConfig, atualizarPeriodo } from '../../services/periodoService';
 
-// Página exclusiva de admin: altera as datas do período de extensão e
-// abre/fecha a criação e a edição de projetos para usuários comuns.
 function PeriodoAdmin() {
     const isAdmin = useAuthStore((state) => state.isAdmin);
 
@@ -51,7 +49,6 @@ function PeriodoAdmin() {
         };
     }, [isAdmin]);
 
-    // Comum não entra aqui nem pela URL direta.
     if (!isAdmin) {
         return <Navigate to="/Bemvindo" replace />;
     }

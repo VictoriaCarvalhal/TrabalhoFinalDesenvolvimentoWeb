@@ -1,6 +1,3 @@
-// Municípios do estado do Rio de Janeiro, com o código IBGE que o backend
-// grava em municipio. Lista fixa: são os mesmos 92 que estão no banco
-// e não mudam, então não vale uma requisição só pra montar o dropdown.
 export const MUNICIPIOS_RJ = [
     { codigo: 3300100, nome: 'Angra dos Reis' },
     { codigo: 3300159, nome: 'Aperibé' },

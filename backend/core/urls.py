@@ -14,7 +14,6 @@ router.register('dominios/vinculos', views.VinculoInstitucionalViewSet, basename
 
 
 urlpatterns = [
-    # Rota de login apontando para a view customizada
     path('auth/login/', views.CustomTokenObtainPairView.as_view(), name='auth_login'),
     
     path('auth/register/', views.RegisterView.as_view(), name='auth_register'),

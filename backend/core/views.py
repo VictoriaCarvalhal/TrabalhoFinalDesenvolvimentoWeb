@@ -39,13 +39,11 @@ class EsqueciSenhaRateThrottle(AnonRateThrottle):
 
 
 def _usuario_admin(user):
-    """Mesma regra de projetos.permissions.is_admin (sem importar projetos aqui)."""
     return bool(
         getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False)
     )
 
 
-# VIEW CUSTOMIZADA
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
@@ -155,9 +153,6 @@ class PerfilView(generics.RetrieveUpdateAPIView):
 
 
 class SessionCheckView(APIView):
-    """
-    Endpoint para verificar se a sessão/token JWT do usuário continua ativa e válida.
-    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -172,7 +167,6 @@ class SessionCheckView(APIView):
 
 
 class MeusVinculosView(generics.ListCreateAPIView):
-    """Vinculos da pessoa logada: lista os seus e deixa cadastrar um novo."""
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = MeuVinculoSerializer
     pagination_class = None
@@ -280,7 +274,6 @@ class PeriodoAtualView(APIView):
 
 
 class PeriodoConfigView(APIView):
-    """Leitura e alteração do período (exclusivo de admin)."""
     permission_classes = [permissions.IsAuthenticated]
 
     def _get_ou_403(self, request):

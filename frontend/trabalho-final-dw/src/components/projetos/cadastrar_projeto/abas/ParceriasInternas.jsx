@@ -11,19 +11,13 @@ const LINHA_VAZIA = {
     id: null, unidade: '', departamento: '', nome_instituicao: '', sigla_instituicao: '', participacao: '',
 };
 
-// Parcerias internas: a aba só lista o que já foi cadastrado e o
-// preenchimento acontece num diálogo, igual às outras abas de lista. Assim a
-// tabela não acumula as duas tarefas, mostrar e editar, e cada parceria fica
-// resumida a uma linha depois de salva.
 function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onChange, tituloOculto = false, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
     const [exclusaoPendente, setExclusaoPendente] = useState(null);
 
-    // Rascunho do diálogo: null = fechado. indice null = parceria nova.
     const [edicao, setEdicao] = useState(null);
 
-    // Linha aberta no modal de visualização (só leitura). null = fechado.
     const [visualizacao, setVisualizacao] = useState(null);
 
     useEffect(() => {
@@ -33,13 +27,10 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
             .catch(() => setErro('Não foi possível carregar as parcerias já cadastradas.'));
     }, [projetoId]);
 
-    // Toda mudança nas linhas sobe pra página que hospeda a aba.
     useEffect(() => {
         onChange?.(linhas);
     }, [linhas]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Dois campos obrigatórios: unidade e os dados da instituição. O
-    // departamento é opcional no modelo, então não entra na checagem.
     function completa(linha) {
         return Boolean(linha.unidade && linha.nome_instituicao && linha.sigla_instituicao);
     }
@@ -64,7 +55,6 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
         const { indice, dados } = edicao;
         if (!completa(dados)) return;
 
-        // Sem projeto gravado ainda, a parceria fica na lista e sobe junto no envio.
         if (!projetoId) {
             setLinhas((atuais) => (indice === null
                 ? [...atuais, dados]
@@ -77,7 +67,6 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
             setErro(null);
             const corpo = {
                 unidade: dados.unidade,
-                // A API espera null, e não string vazia, quando não há departamento.
                 departamento: dados.departamento || null,
                 nome_instituicao: dados.nome_instituicao,
                 sigla_instituicao: dados.sigla_instituicao,
@@ -116,8 +105,6 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
         if (indice !== null) await excluir(indice);
     }
 
-    // Nome por extenso das chaves estrangeiras, para a linha da lista. A API
-    // devolve esses nomes no GET, mas uma parceria recém-digitada só tem o id.
     function nomeUnidade(linha) {
         if (linha.unidade_sigla) return linha.unidade_sigla;
         const u = unidades.find((x) => String(x.id) === String(linha.unidade));
@@ -236,7 +223,6 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
                             className="form-select"
                             value={dados.unidade}
                             required
-                            // Trocar a unidade limpa o departamento: o antigo é de outra unidade.
                             onChange={(e) => mudarCampo({ unidade: e.target.value, departamento: '' })}
                         >
                             <option value="">[Selecione]</option>

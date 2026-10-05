@@ -55,9 +55,6 @@ body {
     text-decoration: underline;
 }
 
-/* Header */
-/* Risco que separa as duas logos, no lugar da divisoria que vinha desenhada
-   na imagem antiga. */
 .header-separador {
     display: inline-block;
     width: 1px;
@@ -82,7 +79,6 @@ body {
     color: var(--cor-titulo-header);
 }
 
-/* Navbar */
 #navbar {
     padding: 12px 0;
     background-color: #1E2D40;
@@ -129,8 +125,8 @@ body {
 #navbar li .nav-link i {
     color: #8FB6CE;
     transition: color 0.2s ease-in-out;
-    font-size: 20px; /* Aligns better with text */
-    margin-top: -2px; /* Fine-tune vertical alignment */
+    font-size: 20px; 
+    margin-top: -2px; 
 }
 
 #navbar li a:hover i {
@@ -141,7 +137,6 @@ body {
     color: #FFFFFF;
 }
 
-/* Acoes da barra (tema, e depois sair): sao botoes, nao itens de menu */
 .navbar-acao {
     color: #8FB6CE !important;
     --bs-btn-color: #8FB6CE;
@@ -174,7 +169,6 @@ body {
     align-items: center;
 }
 
-/* Estilos específicos para o Dropdown Menu */
 #navbar .dropdown-menu {
     background-color: var(--cor-fundo);
     border: 1px solid var(--cor-borda-footer);
@@ -244,7 +238,6 @@ body {
     padding: 10px 15px;          
 }
 
-/* Layout Flex */
 #flex {
     display: flex;
 }
@@ -279,7 +272,6 @@ main {
     order: 3;
 }
 
-/* Typography & Utils */
 h1, h2, h3 {
     color: var(--cor-texto);
 }
@@ -302,7 +294,6 @@ strong {
     background-color: var(--cor-topbar);
 }
 
-/* Footer */
 #footer {
     width: 100%;
     background-color: var(--cor-fundo);
@@ -381,7 +372,6 @@ strong {
     }
 }
 
-/* Responsividade celular e tablet */
 @media only screen and (max-width: 900px) {
     #header {
         padding: 15px 20px;

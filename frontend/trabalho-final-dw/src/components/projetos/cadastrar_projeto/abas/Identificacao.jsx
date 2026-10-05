@@ -4,7 +4,6 @@ import { criarMeuVinculo } from '../../../../services/dominioService';
 import CampoContato from '../CampoContato';
 import CampoSomenteLeitura from '../CampoSomenteLeitura';
 
-// Mesma lista do backend (core.VinculoInstitucional.TipoVinculo).
 const TIPOS_VINCULO = [
     { valor: 'PROFESSOR_EFETIVO', rotulo: 'Professor Efetivo' },
     { valor: 'PROFESSOR_VISITANTE', rotulo: 'Professor Visitante' },
@@ -16,9 +15,6 @@ const TIPOS_VINCULO = [
 ];
 
 function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVinculos, erroVinculos, recarregarVinculos, unidades, departamentos, buscarCep, buscandoCep, avisoCep, errosValidacao }) {
-    // Quem se cadastra no sistema nasce sem vínculo institucional, e sem ele a
-    // lista de matrículas fica vazia e não há como seguir para a próxima etapa.
-    // Nesse caso a aba oferece o cadastro do vínculo aqui mesmo.
     const [novoVinculo, setNovoVinculo] = useState({ tipo_vinculo: '', matricula: '' });
     const [salvandoVinculo, setSalvandoVinculo] = useState(false);
     const [erroNovoVinculo, setErroNovoVinculo] = useState(null);
@@ -35,7 +31,6 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
         try {
             const resposta = await criarMeuVinculo(novoVinculo);
             await recarregarVinculos?.();
-            // já deixa escolhido o vínculo recém-criado
             atualizarCampo('coordenador_vinculo', resposta.data.id);
             atualizarCampo('matricula_coordenador', resposta.data.matricula ?? '');
             atualizarCampo('coordenador', resposta.data.nome_completo ?? '');
@@ -50,7 +45,6 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
         }
     }
 
-    //funções internas, não confundir com as da API
     function adicionarContato(campo) {
         atualizarCampo(campo, [...form[campo], '']);
     }
@@ -197,8 +191,6 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
                     <select
                         className={`form-select ${errosValidacao?.departamento ? 'is-invalid' : ''}`}
                         value={form.departamento}
-                        // Boa parte das unidades nao tem departamento nenhum
-                        // cadastrado, entao ali nao ha o que escolher.
                         disabled={!form.unidade || semDepartamento}
                         onChange={(e) => atualizarCampo("departamento", e.target.value)}
                     >

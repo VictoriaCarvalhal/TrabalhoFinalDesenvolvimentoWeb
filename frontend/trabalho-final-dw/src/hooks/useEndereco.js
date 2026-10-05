@@ -35,7 +35,6 @@ const buscarCepNoFormulario = async (cep) => {
             logradouro: data.logradouro || f.logradouro,
         }));
     } catch {
-        /* silent */
     } finally {
         setBuscandoCep(false);
     }

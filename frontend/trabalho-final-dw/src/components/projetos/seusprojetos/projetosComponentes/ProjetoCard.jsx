@@ -4,7 +4,6 @@ function ProjetoCard({ projeto, excluindo, baixando, onVer, onBaixar, onEditar, 
     const podeEditar = projeto.pode_editar ?? true;
     const podeExcluir = projeto.pode_excluir ?? isAdmin;
     const excluido = Boolean(projeto.excluido);
-    // Fora do período, o lápis vira cadeado com pop-up (admin bypassa).
     const edicaoBloqueada = Boolean(periodoBloqueado) && !isAdmin;
     return (
         <div className="col-12 col-lg-6">
@@ -14,7 +13,6 @@ function ProjetoCard({ projeto, excluindo, baixando, onVer, onBaixar, onEditar, 
             >
                 <div className="card-body d-flex flex-column">
 
-                    {/* Parte de Cima (Título e Status) */}
                     <div className="d-flex justify-content-between align-items-start mb-2">
                         <h5 className="card-title fw-bold mb-0 text-break" style={{ color: 'var(--cor-titulo-header)' }}>
                             {projeto.titulo}
@@ -29,7 +27,6 @@ function ProjetoCard({ projeto, excluindo, baixando, onVer, onBaixar, onEditar, 
                         )}
                     </div>
                     
-                    {/* Meio (Detalhes com os rótulos) */}
                     <div className="card-text mb-3 flex-grow-1" style={{ fontSize: '0.9rem', color: 'var(--cor-texto)' }}>
                         <div className="mb-1"><i className="bi bi-calendar-event me-2"></i><strong>Ano/Nº:</strong> {projeto.ano} - {projeto.numero ?? 'S/N'}</div>
                         <div className="mb-1"><i className="bi bi-building me-2"></i><strong>Unidade:</strong> {projeto.unidade_sigla}</div>
@@ -38,7 +35,6 @@ function ProjetoCard({ projeto, excluindo, baixando, onVer, onBaixar, onEditar, 
                         <div className="mb-1"><i className="bi bi-clock me-2"></i><strong>Atualizado:</strong> {projeto.updated_at ? new Date(projeto.updated_at).toLocaleDateString('pt-BR') : '-'}</div>
                     </div>
                     
-                    {/* Parte de Baixo (Ações) */}
                     <div className="acoes-card d-flex gap-2 justify-content-end mt-auto pt-3 border-top">
                         <button
                             type="button"

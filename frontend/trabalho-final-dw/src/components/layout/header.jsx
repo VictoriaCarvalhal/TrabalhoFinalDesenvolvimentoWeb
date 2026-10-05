@@ -2,9 +2,6 @@ import React from 'react';
 import uerjLogo from '../../assets/uerj_logo.png';
 import pr3Logo from '../../assets/pr3_extensao_logo.png';
 
-// As duas logos vinham numa imagem so, dentro de um link unico para a UERJ,
-// entao quem clicava na PR3 caia no site da universidade. Agora cada logo e
-// um link para o seu proprio site.
 function Header() {
     return (
         <header className="container-fluid py-3 border-bottom" style={{ backgroundColor: 'var(--cor-fundo)' }}>

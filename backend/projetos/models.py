@@ -9,8 +9,6 @@ from core.models import (
 )
 
 
-# --- Choices ---
-
 class SituacaoProjeto(models.TextChoices):
     RASCUNHO = 'RASCUNHO', 'Rascunho'
     SUBMETIDO = 'SUBMETIDO', 'Submetido'
@@ -81,8 +79,6 @@ class FuncaoMembroEquipe(models.TextChoices):
     DISCENTE = 'DISCENTE', 'Discente'
 
 
-# --- Models ---
-
 class Projeto(AuditModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     ano = models.PositiveSmallIntegerField(db_index=True)
@@ -130,7 +126,6 @@ class Projeto(AuditModel):
 
 
 class ProjetoEndereco(AuditModel):
-    """Endereço de realização do projeto (1:1)."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     projeto = models.OneToOneField(Projeto, related_name='endereco', on_delete=models.CASCADE)
     logradouro = models.CharField(max_length=255, blank=True)
@@ -155,7 +150,7 @@ class ProjetoContato(AuditModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     projeto = models.ForeignKey(Projeto, related_name='contatos', on_delete=models.CASCADE)
     tipo_contato = models.CharField(max_length=10, choices=TipoContato.choices)
-    valor = models.CharField(max_length=100)  # email ou telefone
+    valor = models.CharField(max_length=100)
     ddd = models.CharField(max_length=3, blank=True)
     ramal = models.CharField(max_length=10, blank=True)
     tipo_telefone = models.CharField(max_length=15, choices=TipoTelefone.choices, blank=True)
@@ -179,7 +174,6 @@ class ProjetoPalavraChave(AuditModel):
         ordering = ['palavra']
 
 class ProjetoCaracterizacao(AuditModel):
-    """Classificações e metadados do projeto (1:1)."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     projeto = models.OneToOneField(Projeto, related_name='caracterizacao', on_delete=models.CASCADE)
     situacao_academica = models.CharField(max_length=20, choices=SituacaoProjetoAcademico.choices, blank=True)
@@ -202,7 +196,6 @@ class ProjetoCaracterizacao(AuditModel):
 
 
 class ProjetoDescricao(AuditModel):
-    """Textos longos do projeto, separados pra não pesar a listagem (1:1)."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     projeto = models.OneToOneField(Projeto, related_name='descricao', on_delete=models.CASCADE)
     resumo = models.TextField(blank=True)
@@ -263,7 +256,6 @@ class DemandaBolsa(AuditModel):
 
 
 class ProjetoUnidade(AuditModel):
-    """Tabela intermediária do M:N entre Projeto e UnidadeAcademica."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     projeto = models.ForeignKey(Projeto, related_name='projeto_unidades', on_delete=models.CASCADE)
     unidade = models.ForeignKey(UnidadeAcademica, related_name='unidade_projetos', on_delete=models.PROTECT)

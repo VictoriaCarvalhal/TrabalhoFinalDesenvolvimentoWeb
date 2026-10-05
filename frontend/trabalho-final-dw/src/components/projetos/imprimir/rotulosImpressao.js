@@ -5,7 +5,6 @@ export function simNao(valor) {
     return '—';
 }
 
-// Labels para choices que o serializer retorna só como código.
 export const ABRANGENCIA_LABELS = {
     LOCAL: 'Local',
     REGIONAL: 'Regional',

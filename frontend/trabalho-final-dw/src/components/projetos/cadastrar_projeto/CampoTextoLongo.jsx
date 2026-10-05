@@ -1,8 +1,5 @@
 import React, { useId } from 'react';
 
-// Campo de texto longo do formulário, com o contador de caracteres embaixo.
-// Antes os campos tinham só o limite no maxLength, que corta o texto sem
-// avisar: quem estava escrevendo não descobria que tinha estourado.
 function CampoTextoLongo({ rotulo, campo, limite, valor = '', aoMudar, linhas = 4, obrigatorio = false, ajuda, errosValidacao }) {
     const id = useId();
     const idContador = `${id}-contador`;
@@ -27,13 +24,11 @@ function CampoTextoLongo({ rotulo, campo, limite, valor = '', aoMudar, linhas = 
                 required={obrigatorio}
                 value={valor}
                 aria-describedby={ajuda ? `${idAjuda} ${idContador}` : idContador}
-                // o slice garante o limite mesmo se o texto chegar sem passar pelo teclado
                 onChange={(e) => aoMudar(campo, e.target.value.slice(0, limite))}
             />
 
             {erro && <div className="invalid-feedback">{erro}</div>}
 
-            {/* aria-live avisa quem usa leitor de tela quando o limite se aproxima */}
             <div
                 id={idContador}
                 className={`form-text text-end ${perto ? 'text-warning-emphasis fw-semibold' : ''}`}

@@ -2,12 +2,6 @@ import React, { useState } from 'react';
 import ParceriasInternas from './ParceriasInternas';
 import ParceriasExternas from './ParceriasExternas';
 
-// As duas parcerias eram etapas separadas do formulário, com o mesmo tipo de
-// conteúdo e a mesma forma de preencher. Ficam numa etapa só, dividida em duas
-// abinhas, que é o mesmo lugar para a mesma tarefa.
-//
-// As duas listas continuam montadas o tempo todo, só escondidas, para não
-// perder o que foi digitado nem refazer a busca ao trocar de abinha.
 function Parcerias({ projetoId, unidades, departamentos, form, atualizarCampo, errosValidacao }) {
     const [aba, setAba] = useState('internas');
 

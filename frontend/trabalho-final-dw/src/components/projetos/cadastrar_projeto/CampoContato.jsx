@@ -1,10 +1,6 @@
 import React, { useId, useState } from 'react';
 import { aplicarMascaraTelefone, formatarEmail, validarEmail, validarTelefone } from '../../../utils/mascaras';
 
-// Um telefone ou um e-mail do projeto. O botão ao lado muda conforme a posição:
-// o último campo da lista tem "+", que acrescenta mais um embaixo; os anteriores
-// têm "−", que tira aquela entrada. Assim a lista nunca fica vazia, porque o
-// campo que sobra é sempre o último e só oferece o "+".
 function CampoContato({ rotulo, tipoEntrada, placeholder, valor, indice, total, aoMudar, aoAdicionar, aoRemover, erro }) {
     const id = useId();
     const ultimo = indice === total - 1;

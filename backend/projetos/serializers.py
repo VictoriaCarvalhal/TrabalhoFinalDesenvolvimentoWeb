@@ -1,12 +1,3 @@
-"""Serializers das abas do formulario que aceitam varias linhas.
-
-Cada aba (Unidades Envolvidas, Locais de Realizacao, Parcerias Internas,
-Parcerias Externas, Membros da Equipe, Demanda de Bolsa e Plano de Trabalho)
-vira uma lista de linhas ligadas a um projeto. O projeto nunca vem no corpo
-da requisicao: ele e o da URL e a view injeta no save(). As chaves
-estrangeiras vao com o nome por extenso ao lado do id, para o front nao
-precisar cruzar tabela nenhuma.
-"""
 from django.db import transaction
 from rest_framework import serializers
 
@@ -18,21 +9,18 @@ from projetos.models import (
 
 
 class LinhaDoProjetoSerializer(serializers.ModelSerializer):
-    """Base das linhas: sabe qual e o projeto e checa repeticao dentro dele."""
 
     @property
     def projeto(self):
         return self.context['projeto']
 
     def ja_existe(self, **campos):
-        """True se outra linha deste projeto tiver os mesmos valores."""
         qs = self.Meta.model.objects.filter(projeto=self.projeto, **campos)
         if self.instance is not None:
             qs = qs.exclude(pk=self.instance.pk)
         return qs.exists()
 
     def valor(self, attrs, campo):
-        """Valor do campo apos o PATCH: o novo se veio, senao o gravado."""
         if campo in attrs:
             return attrs[campo]
         return getattr(self.instance, campo, None)
@@ -110,8 +98,6 @@ class ParceriaExternaSerializer(LinhaDoProjetoSerializer):
 
 
 class MembroEquipeSerializer(LinhaDoProjetoSerializer):
-    # A tabela da tela mostra tipo de vinculo, matricula, CPF, nome e
-    # cargo/perfil. Tudo isso vem do vinculo da pessoa, por isso vai junto.
     nome = serializers.CharField(source='vinculo.pessoa.nome_completo', read_only=True)
     cpf = serializers.CharField(source='vinculo.pessoa.cpf', read_only=True)
     matricula = serializers.CharField(source='vinculo.matricula', read_only=True)
@@ -160,7 +146,6 @@ class DemandaBolsaSerializer(LinhaDoProjetoSerializer):
 
 
 class PlanoTrabalhoSerializer(LinhaDoProjetoSerializer):
-    # Os dois textos sao "(no maximo 3000 caracteres)" no formulario.
     resultados_esperados = serializers.CharField(max_length=3000, required=False, allow_blank=True)
     cronograma_atividades = serializers.CharField(max_length=3000, required=False, allow_blank=True)
 
@@ -175,10 +160,6 @@ class PlanoTrabalhoSerializer(LinhaDoProjetoSerializer):
                 {'ano': 'Ja existe um plano de trabalho para este ano neste projeto.'})
         return attrs
 
-
-
-
-#------------- serializers das seções simples
 
 class ProjetoEnderecoSerializer(serializers.ModelSerializer):
     municipio_nome = serializers.CharField(source='municipio.nome', read_only=True)
@@ -245,7 +226,6 @@ class ProjetoResumoSerializer(serializers.ModelSerializer):
     departamento_nome = serializers.CharField(source='departamento_proponente.nome', read_only=True, default=None)
     coordenador_nome = serializers.CharField(source='coordenador.pessoa.nome_completo', read_only=True)
     situacao_display = serializers.CharField(source='get_situacao_display', read_only=True)
-    # Edicao liberada em qualquer situacao para dono e admin; exclusao so admin.
     pode_editar = serializers.SerializerMethodField()
     pode_excluir = serializers.SerializerMethodField()
 
@@ -268,8 +248,6 @@ class ProjetoResumoSerializer(serializers.ModelSerializer):
         )
 
     def get_pode_editar(self, obj):
-        # Todo projeto listado ja passou pelo filtro de visibilidade
-        # (dono ou admin), e a edicao vale em qualquer situacao por enquanto.
         return True
 
     def get_pode_excluir(self, obj):
@@ -281,24 +259,16 @@ class ProjetoCreateSerializer(serializers.ModelSerializer):
     contatos = ProjetoContatoSerializer(many=True, required=False)
     caracterizacao = ProjetoCaracterizacaoSerializer(required=False)
     descricao = ProjetoDescricaoSerializer(required=False)
-    # A aba guarda linhas de ProjetoUnidade (unidade + tipo de participacao),
-    # e nao o M:N de UnidadeAcademica que existe no Projeto: dai o source.
     unidades_envolvidas = UnidadeEnvolvidaSerializer(
         source='projeto_unidades', many=True, required=False)
     parcerias_internas = ParceriaInternaSerializer(many=True, required=False)
     parcerias_externas = ParceriaExternaSerializer(many=True, required=False)
     demandas_bolsa = DemandaBolsaSerializer(many=True, required=False)
     locais_realizacao = LocalRealizacaoSerializer(many=True, required=False)
-    # A aba e "membros_equipe" na tela e no payload, mas a relacao no Projeto
-    # se chama "membros"; o source guarda essa traducao.
     membros_equipe = MembroEquipeSerializer(
         source='membros', many=True, required=False)
     planos_trabalho = PlanoTrabalhoSerializer(many=True, required=False)
 
-    # Abas que nao podem repetir linha dentro do projeto (unique_together):
-    # (campo no payload, chave em validated_data, campo que nao pode repetir,
-    #  aviso). A repeticao precisa ser barrada aqui, porque o projeto so nasce
-    # no create() e os serializers das abas nao tem o que consultar.
     ABAS_SEM_REPETICAO = (
         ('unidades_envolvidas', 'projeto_unidades', 'unidade',
          'A mesma unidade foi enviada mais de uma vez.'),
@@ -323,9 +293,6 @@ class ProjetoCreateSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Os serializers das abas leem context['projeto'] para checar repeticao.
-        # Aqui o projeto ainda vai ser criado, entao vai None: a busca nao acha
-        # nada e o validate() logo abaixo e quem barra o payload repetido.
         self._context.setdefault('projeto', None)
 
     def validate(self, attrs):
@@ -333,8 +300,6 @@ class ProjetoCreateSerializer(serializers.ModelSerializer):
             vistos = set()
             for linha in attrs.get(chave, []):
                 if linha[campo_unico] in vistos:
-                    # O erro sai com o nome do campo no payload, que e o que
-                    # o front conhece.
                     raise serializers.ValidationError({campo: aviso})
                 vistos.add(linha[campo_unico])
         return attrs
@@ -353,21 +318,16 @@ class ProjetoCreateSerializer(serializers.ModelSerializer):
         locais_data = validated_data.pop('locais_realizacao', [])
         planos_data = validated_data.pop('planos_trabalho', [])
 
-        # 1. Cria o projeto base
         projeto = Projeto.objects.create(**validated_data)
 
-        # 2. Garante a criação dos registros 1:1 auxiliares
         caracterizacao, _ = ProjetoCaracterizacao.objects.get_or_create(projeto=projeto)
         descricao, _ = ProjetoDescricao.objects.get_or_create(projeto=projeto)
 
-        # 3. Cria o endereço, mesmo que vazio: a tela de consulta conta com ele
         ProjetoEndereco.objects.create(projeto=projeto, **(endereco_data or {}))
 
-        # 4. Cria os contatos se enviados
         for contato_data in contatos_data:
             ProjetoContato.objects.create(projeto=projeto, **contato_data)
 
-        # 5. Cria/atualiza dados de caracterização se enviados
         if caracterizacao_data:
             for campo, valor in caracterizacao_data.items():
                 setattr(caracterizacao, campo, valor)
@@ -377,31 +337,24 @@ class ProjetoCreateSerializer(serializers.ModelSerializer):
                 setattr(descricao, campo, valor)
             descricao.save()
 
-        # 6. Cria as unidades envolvidas se enviadas
         for unidade_data in unidades_data:
             ProjetoUnidade.objects.create(projeto=projeto, **unidade_data)
 
-        # 7. Cria as parcerias internas se enviadas
         for parceria_data in parcerias_data:
             ParceriaInterna.objects.create(projeto=projeto, **parceria_data)
 
-        # 8. Cria as parcerias externas se enviadas
         for parceria_externa_data in parcerias_externas_data:
             ParceriaExterna.objects.create(projeto=projeto, **parceria_externa_data)
 
-        # Demandas de bolsa de extensao
         for demanda_data in demandas_data:
             DemandaBolsa.objects.create(projeto=projeto, **demanda_data)
 
-        # 9. Cria os locais de realizacao se enviados
         for local_data in locais_data:
             LocalRealizacao.objects.create(projeto=projeto, **local_data)
 
-        # 10. Cria os membros da equipe se enviados
         for membro_data in membros_data:
             MembroEquipe.objects.create(projeto=projeto, **membro_data)
 
-        # 11. Cria os planos de trabalho se enviados
         for plano_data in planos_data:
             PlanoTrabalho.objects.create(projeto=projeto, **plano_data)
 

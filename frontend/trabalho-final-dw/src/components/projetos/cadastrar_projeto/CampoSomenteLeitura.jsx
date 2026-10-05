@@ -1,11 +1,5 @@
 import React from 'react';
 
-// Campo que a pessoa não preenche: o valor vem do sistema. Aparece como
-// texto, e não como caixa de formulário, porque caixa cinza convida a clicar
-// e digitar, e aí nada acontece.
-//
-// Continua dentro de um elemento de formulário, mas desenhado como texto,
-// para quem usa leitor de tela ainda ouvir o rótulo junto com o valor.
 function CampoSomenteLeitura({ rotulo, valor, ajuda, vazio = '—' }) {
     const mostrar = valor === null || valor === undefined || valor === '' ? vazio : valor;
 

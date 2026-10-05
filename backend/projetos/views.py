@@ -1,20 +1,3 @@
-"""Endpoints das abas do formulario que aceitam varias linhas.
-
-Todas as rotas ficam embaixo de um projeto:
-
-    /api/v1/projetos/<projeto_id>/unidades-envolvidas/
-    /api/v1/projetos/<projeto_id>/locais-realizacao/
-    /api/v1/projetos/<projeto_id>/parcerias-internas/
-    /api/v1/projetos/<projeto_id>/parcerias-externas/
-    /api/v1/projetos/<projeto_id>/membros-equipe/
-    /api/v1/projetos/<projeto_id>/demandas-bolsa/
-    /api/v1/projetos/<projeto_id>/planos-trabalho/
-    /api/v1/projetos/<projeto_id>/abas/          (leitura de tudo de uma vez)
-
-Cada uma responde GET (lista), POST (nova linha), GET/PUT/PATCH/DELETE
-em <id>/ para uma linha. Projeto que nao pertence ao usuario logado da 404,
-igual a projeto inexistente, para nao revelar que ele existe.
-"""
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, viewsets, status, filters
 from rest_framework.decorators import action
@@ -49,7 +32,6 @@ from projetos.serializers import (
 
 
 class ProjetoDaUrlMixin:
-    """Resolve o <projeto_id> da URL para um projeto que o usuario pode ver."""
     permission_classes = [permissions.IsAuthenticated]
 
     def get_projeto(self):
@@ -62,7 +44,6 @@ class ProjetoDaUrlMixin:
 
 
 def _resposta_periodo_fechado():
-    """403 padrão quando um não-admin tenta escrever fora do período."""
     periodo = PeriodoExtensao.atual()
     return Response(
         {
@@ -77,15 +58,11 @@ def _resposta_periodo_fechado():
 
 
 def _escrita_bloqueada(user):
-    """True se o usuário não pode criar/editar agora (admin bypassa)."""
     return not pode_escrever_projeto(user)
 
 
 class AbaDoProjetoViewSet(ProjetoDaUrlMixin, viewsets.ModelViewSet):
-    """CRUD das linhas de uma aba, sempre restrito ao projeto da URL."""
-    # As abas tem poucas linhas; o front recebe a lista inteira, sem paginas.
     pagination_class = None
-    # Chaves estrangeiras cujo nome entra na resposta, para evitar N+1.
     select_related = ()
 
     def get_queryset(self):
@@ -103,7 +80,6 @@ class AbaDoProjetoViewSet(ProjetoDaUrlMixin, viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(projeto=self.get_projeto())
 
-    # Fora do período, não-admin não cria/edita/exclui linhas (admin bypassa).
     def create(self, request, *args, **kwargs):
         if _escrita_bloqueada(request.user):
             return _resposta_periodo_fechado()
@@ -174,7 +150,6 @@ class ContatoViewSet(AbaDoProjetoViewSet):
     serializer_class = ProjetoContatoSerializer
 
 
-# Aba -> (viewset, related_name no Projeto). A ordem e a das abas na tela.
 ABAS = [
     ('unidades_envolvidas', UnidadeEnvolvidaViewSet, 'projeto_unidades'),
     ('locais_realizacao', LocalRealizacaoViewSet, 'locais_realizacao'),
@@ -188,11 +163,6 @@ ABAS = [
 
 
 class AbasDoProjetoView(ProjetoDaUrlMixin, APIView):
-    """Todas as abas de linhas de um projeto numa resposta so.
-
-    Serve para a tela Consultar e para montar o relatorio sem sete
-    requisicoes. Somente leitura; para gravar, use a rota de cada aba.
-    """
 
     def get(self, request, projeto_id):
         projeto = self.get_projeto()
@@ -217,7 +187,7 @@ class ProjetoPagination(PageNumberPagination):
 
 
 class ProjetoViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated] #dev: AllowAny | prod: IsAuthenticated
+    permission_classes = [permissions.IsAuthenticated]
     pagination_class = ProjetoPagination
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ['titulo', 'created_at']
@@ -225,14 +195,12 @@ class ProjetoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = (
-            projetos_visiveis_para(self.request.user) #dev: Projeto.objects.all() | prod: projetos_visiveis_para(self.request.user)
+            projetos_visiveis_para(self.request.user)
             .select_related('coordenador__pessoa', 'unidade_proponente', 'departamento_proponente', 'endereco',
 'caracterizacao', 'descricao')
             .prefetch_related('contatos')
         )
 
-        # Aba da lixeira: ?excluido=true mostra só excluídos, ?excluido=false (default) só ativos.
-        # Comum sempre vê só ativos, mesmo se pedir excluido=true.
         excluido_param = (self.request.query_params.get('excluido') or '').strip().lower()
         if is_admin(self.request.user):
             if excluido_param == 'true':
@@ -270,8 +238,6 @@ class ProjetoViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save()
 
-    # Fora do período, não-admin não cria nem edita (admin bypassa).
-    # O destroy/restaurar já são exclusivos de admin, então não entram aqui.
     def create(self, request, *args, **kwargs):
         if _escrita_bloqueada(request.user):
             return _resposta_periodo_fechado()
@@ -288,7 +254,6 @@ class ProjetoViewSet(viewsets.ModelViewSet):
         return super().partial_update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
-        # Exclusao e exclusiva de admin; comum recebe 403 em qualquer situacao.
         if not pode_excluir_projeto(request.user):
             return Response(
                 {'detail': 'Apenas administradores podem excluir projetos.'},
@@ -302,7 +267,6 @@ class ProjetoViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='restaurar')
     def restaurar(self, request, pk=None):
-        # Restaurar e exclusiva de admin, igual a excluir.
         if not pode_excluir_projeto(request.user):
             return Response(
                 {'detail': 'Apenas administradores podem restaurar projetos.'},
@@ -315,8 +279,6 @@ class ProjetoViewSet(viewsets.ModelViewSet):
         projeto.excluido = False
         projeto.save(update_fields=['excluido', 'updated_at'])
         return Response({'id': projeto.id, 'excluido': False})
-
-    # --- endpoint para cada "Salvar" de aba simples ---
 
     @action(detail=True, methods=['get', 'put', 'patch'])
     def caracterizacao(self, request, pk=None):
