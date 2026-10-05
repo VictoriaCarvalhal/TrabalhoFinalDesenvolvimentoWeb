@@ -21,8 +21,6 @@ function Inicial() {
     const [enviando, setEnviando] = useState(false);
     const [mostrarPrimeiroAcesso, setMostrarPrimeiroAcesso] = useState(false);
     const [sucessoPrimeiroAcesso, setSucessoPrimeiroAcesso] = useState(null);
-    // O motivo fica guardado até o próximo login dar certo, então o aviso
-    // sobrevive a um F5 na tela de login.
     const [avisoSessao] = useState(() =>
         sessionStorage.getItem('motivoLogout') === 'inatividade'
             ? 'Sua sessão foi encerrada por inatividade. Entre de novo para continuar.'
