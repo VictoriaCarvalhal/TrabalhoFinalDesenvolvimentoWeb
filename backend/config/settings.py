@@ -134,6 +134,7 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_THROTTLE_RATES": {
         "password_reset": "5/hour",
+        "primeiro_acesso": "10/hour",
     },
 }
 

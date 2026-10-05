@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useAuthStore } from '../../stores/authStore';
 import { ROTAS } from '../../utils/rotas.js';
 import api from '../../services/api';
+import PrimeiroAcesso from './PrimeiroAcesso';
 
 function Inicial() {
     const navigate = useNavigate();
@@ -18,6 +19,8 @@ function Inicial() {
 
     const [erroLogin, setErroLogin] = useState(null);
     const [enviando, setEnviando] = useState(false);
+    const [mostrarPrimeiroAcesso, setMostrarPrimeiroAcesso] = useState(false);
+    const [sucessoPrimeiroAcesso, setSucessoPrimeiroAcesso] = useState(null);
     // O motivo fica guardado até o próximo login dar certo, então o aviso
     // sobrevive a um F5 na tela de login.
     const [avisoSessao] = useState(() =>
@@ -92,6 +95,12 @@ function Inicial() {
                     </div>
                 )}
 
+                {sucessoPrimeiroAcesso && (
+                    <div className="alert alert-success py-2" role="status">
+                        {sucessoPrimeiroAcesso}
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit(handleLogin)}>
 
                     <div className="mb-3">
@@ -126,10 +135,31 @@ function Inicial() {
 
                 <div className="d-flex justify-content-between mt-4">
                     <Link to={ROTAS.ESQUECI_SENHA} className="card-link m-0">Esqueci a senha</Link>
-                    <a href="#" className="card-link m-0">Primeiro Acesso</a>
+                    <a
+                        href="#"
+                        className="card-link m-0"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setMostrarPrimeiroAcesso(true);
+                        }}
+                    >
+                        Primeiro Acesso
+                    </a>
                 </div>
 
             </div>
+
+            {mostrarPrimeiroAcesso && (
+                <PrimeiroAcesso
+                    aoFechar={() => setMostrarPrimeiroAcesso(false)}
+                    aoConcluir={(cpf, mensagem) => {
+                        setMostrarPrimeiroAcesso(false);
+                        setSucessoPrimeiroAcesso(mensagem);
+                        setErroLogin(null);
+                        setValue('cpf', cpf);
+                    }}
+                />
+            )}
         </div>
     );
 }
