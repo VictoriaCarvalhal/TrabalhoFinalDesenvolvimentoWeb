@@ -8,7 +8,6 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
     const [erro, setErro] = useState(null);
     const [exclusaoPendente, setExclusaoPendente] = useState(null);
 
-    // Com projeto, as linhas gravadas vêm da API.
     useEffect(() => {
         if (!projetoId) return;
         api.get(`/projetos/${projetoId}/unidades-envolvidas/`)
@@ -16,7 +15,6 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
             .catch(() => setErro('Não foi possível carregar as unidades já cadastradas.'));
     }, [projetoId]);
 
-    // Toda mudança nas linhas sobe pra página que hospeda a aba.
     useEffect(() => {
         onChange?.(linhas);
     }, [linhas]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -30,8 +28,6 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
     }
 
     async function gravar(indice) {
-        // Só a unidade é obrigatória e persistida (ProjetoUnidade só tem unidade).
-        // O departamento é visual e não vai para a API.
         const linha = linhas[indice];
         if (!projetoId || !linha.unidade) return;
         try {

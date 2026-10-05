@@ -1,15 +1,11 @@
 import React, { useEffect } from 'react';
 
-// Caixa de diálogo só de leitura, pra ver os dados completos de um item já
-// cadastrado (sem poder editar). Mesma moldura visual do DialogoFormulario,
-// mas sem <form> e sem botão de Salvar — só um botão de Fechar.
 function DialogoVisualizacao({ titulo, children, aoFechar }) {
     useEffect(() => {
         const aoTeclar = (e) => {
             if (e.key === 'Escape') aoFechar();
         };
         document.addEventListener('keydown', aoTeclar);
-        // Trava o scroll da página de fundo enquanto o diálogo está aberto.
         const anterior = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
         return () => {
@@ -27,9 +23,6 @@ function DialogoVisualizacao({ titulo, children, aoFechar }) {
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)', overflowY: 'auto' }}
             onClick={aoFechar}
         >
-            {/* Sem modal-dialog-centered: centralizar corta o topo quando o
-                conteúdo é maior que a tela. Sem ele o diálogo alinha no topo
-                e o modal-body rola por dentro. */}
             <div
                 className="modal-dialog modal-lg modal-dialog-scrollable"
                 onClick={(e) => e.stopPropagation()}

@@ -1,9 +1,5 @@
 import React from 'react';
 
-// Cartão de item das abas de lista (unidades, parcerias, bolsas, locais,
-// membros). Segue a mesma lógica do ProjetoCard — título em cima, atributos
-// no meio, ações embaixo — mas sem tabela, para funcionar bem no celular.
-// O conteúdo do meio (detalhes ou campos de edição) vai em `children`.
 function CartaoItem({ titulo, children, acoes }) {
     return (
         <div className="col-12 col-md-6">
@@ -37,8 +33,6 @@ function CartaoItem({ titulo, children, acoes }) {
     );
 }
 
-// Uma linha de atributo do cartão, no mesmo formato do ProjetoCard:
-// ícone + rótulo em negrito + valor.
 export function DetalheItem({ icone, rotulo, valor }) {
     return (
         <div className="mb-1 text-break">

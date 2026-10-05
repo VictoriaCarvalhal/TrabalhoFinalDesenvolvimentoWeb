@@ -7,13 +7,9 @@ import ProjetoPrint from '../imprimir/ProjetoPrint';
 import '../imprimir/imprimir.css';
 import './dialogo.css';
 
-// Diálogo que mostra todos os dados de um projeto sem passar pela tela de
-// impressão. Usa o mesmo endpoint e o mesmo componente do relatório, então o
-// que aparece aqui é exatamente o que sai no papel.
 function DialogoDadosProjeto({ projetoId, aoFechar }) {
     const { dados, loading, erro } = useProjetoImpressao(projetoId);
     const navigate = useNavigate();
-    // Download direto do PDF usando os dados já carregados no diálogo.
     const [baixando, setBaixando] = useState(false);
     const [erroDownload, setErroDownload] = useState(null);
 
@@ -32,7 +28,6 @@ function DialogoDadosProjeto({ projetoId, aoFechar }) {
         }
     }
 
-    // Esc fecha, como em qualquer diálogo.
     useEffect(() => {
         const aoTeclar = (e) => {
             if (e.key === 'Escape') aoFechar();
@@ -50,7 +45,6 @@ function DialogoDadosProjeto({ projetoId, aoFechar }) {
             aria-modal="true"
             aria-labelledby="titulo-dados-projeto"
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-            // clicar fora fecha, mas o clique dentro do conteúdo não sobe
             onClick={aoFechar}
         >
             <div

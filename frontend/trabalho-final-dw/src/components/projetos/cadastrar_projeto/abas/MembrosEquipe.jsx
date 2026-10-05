@@ -4,7 +4,6 @@ import DialogoFormulario from '../DialogoFormulario';
 import CartaoItem, { DetalheItem } from '../CartaoItem';
 import ModalAlerta from '../../../comum/ModalAlerta';
 
-// Mesma lista do backend (core.VinculoInstitucional.TipoVinculo).
 const TIPOS_VINCULO = [
     { valor: 'PROFESSOR_EFETIVO', rotulo: 'Professor Efetivo' },
     { valor: 'PROFESSOR_VISITANTE', rotulo: 'Professor Visitante' },
@@ -15,7 +14,6 @@ const TIPOS_VINCULO = [
     { valor: 'EXTERNO', rotulo: 'Externo' },
 ];
 
-// Mesma lista do backend (projetos.FuncaoMembroEquipe). É o "Cargo/Perfil".
 const FUNCOES = [
     { valor: 'COORDENADOR', rotulo: 'Coordenador(a)' },
     { valor: 'VICE_COORDENADOR', rotulo: 'Vice-Coordenador(a)' },
@@ -31,23 +29,18 @@ const MEMBRO_VAZIO = {
     tipo_vinculo: '', tipo_vinculo_display: '', funcao: '',
 };
 
-// Deixa o CPF no formato 000.000.000-00 (só para exibir).
 function mascaraCpf(valor) {
     const nums = (valor || '').replace(/\D/g, '');
     if (nums.length !== 11) return valor || '';
     return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6, 9)}-${nums.slice(9)}`;
 }
 
-// Aba "Membros da Equipe". Segue a forma das outras abas de lista: a tabela
-// só mostra quem já está na equipe e o cadastro é feito no diálogo.
-// No diálogo a pessoa é achada pela matrícula ou CPF, ou pelo tipo de vínculo.
 function MembrosEquipe({ projetoId, coordenador, valor = [], onChange, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
     const [edicao, setEdicao] = useState(null);
     const [exclusaoPendente, setExclusaoPendente] = useState(null);
 
-    // Busca de pessoa dentro do diálogo
     const [busca, setBusca] = useState('');
     const [filtroTipo, setFiltroTipo] = useState('');
     const [sugestoes, setSugestoes] = useState([]);
@@ -86,7 +79,6 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange, errosVali
         setEdicao((atual) => ({ ...atual, dados: { ...atual.dados, ...mudancas } }));
     }
 
-    // A filtragem é feita no backend: /dominios/vinculos/?q=...&tipo=...
     async function buscarPessoa(tipo = filtroTipo) {
         const termo = busca.trim();
         setSugestoes([]);
@@ -116,7 +108,6 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange, errosVali
         }
     }
 
-    // Ao escolher o tipo de vínculo a busca já roda, sem precisar clicar em Buscar.
     function trocarTipo(tipo) {
         setFiltroTipo(tipo);
         buscarPessoa(tipo);
@@ -146,7 +137,6 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange, errosVali
         return Boolean(membro.vinculo) && Boolean(membro.funcao);
     }
 
-    // O backend recusa a mesma pessoa duas vezes no projeto, então a tela avisa antes.
     function pessoaRepetida(membro, indice) {
         return linhas.some((l, i) => i !== indice && l.vinculo === membro.vinculo);
     }
@@ -159,7 +149,6 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange, errosVali
             return;
         }
 
-        // Sem projeto gravado ainda, o membro fica na lista e sobe junto no envio.
         if (!projetoId) {
             setLinhas((atuais) => (indice === null
                 ? [...atuais, dados]
@@ -296,7 +285,6 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange, errosVali
                                         value={busca}
                                         onChange={(e) => setBusca(e.target.value)}
                                         onKeyDown={(e) => {
-                                            // Enter aqui busca a pessoa em vez de salvar o diálogo
                                             if (e.key === 'Enter') {
                                                 e.preventDefault();
                                                 buscarPessoa();
@@ -362,7 +350,6 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange, errosVali
                                     <label className="form-label" htmlFor="me-vinculo">Tipo de vínculo</label>
                                     <input id="me-vinculo" type="text" className="form-control" value={nomeVinculo(dados)} readOnly />
                                 </div>
-                                {/* Quem tem matrícula mostra a matrícula; externo mostra o CPF */}
                                 <div className="col-sm-3">
                                     <label className="form-label" htmlFor="me-documento">
                                         {dados.matricula ? 'Matrícula' : 'CPF'}

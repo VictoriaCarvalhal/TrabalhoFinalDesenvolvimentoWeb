@@ -7,7 +7,6 @@ import CampoSomenteLeitura from '../CampoSomenteLeitura';
 import CartaoItem, { DetalheItem } from '../CartaoItem';
 import ModalAlerta from '../../../comum/ModalAlerta';
 
-// Lista copiada do backend (projetos.TipoInstituicaoExterna).
 const TIPOS_INSTITUICAO = [
     { valor: 'GOV_FEDERAL', rotulo: 'Instituição Governamental Federal' },
     { valor: 'GOV_ESTADUAL', rotulo: 'Instituição Governamental Estadual' },
@@ -22,15 +21,12 @@ const LINHA_VAZIA = {
     id: null, nome_instituicao: '', sigla_instituicao: '', tipo_instituicao: '', participacao: '',
 };
 
-// Mesma forma das parcerias internas: a aba lista o que já existe e o
-// preenchimento acontece num diálogo.
 function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = false, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
     const [edicao, setEdicao] = useState(null);
     const [exclusaoPendente, setExclusaoPendente] = useState(null);
 
-    // Linha aberta no modal de visualização (só leitura). null = fechado.
     const [visualizacao, setVisualizacao] = useState(null);
 
     useEffect(() => {
@@ -40,12 +36,10 @@ function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = fal
             .catch(() => setErro('Não foi possível carregar as parcerias já cadastradas.'));
     }, [projetoId]);
 
-    // Toda mudança nas linhas sobe pra página que hospeda a aba.
     useEffect(() => {
         onChange?.(linhas);
     }, [linhas]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // A instituição e o tipo são obrigatórios no modelo.
     function completa(linha) {
         return Boolean(linha.nome_instituicao && linha.tipo_instituicao);
     }
@@ -70,7 +64,6 @@ function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = fal
         const { indice, dados } = edicao;
         if (!completa(dados)) return;
 
-        // Sem projeto gravado ainda, a parceria fica na lista e sobe junto no envio.
         if (!projetoId) {
             setLinhas((atuais) => (indice === null
                 ? [...atuais, dados]
@@ -120,8 +113,6 @@ function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = fal
         if (indice !== null) await excluir(indice);
     }
 
-    // A API devolve o tipo por extenso no GET; uma parceria recém-digitada
-    // só tem o código, então o nome sai da lista local.
     function nomeTipo(linha) {
         if (linha.tipo_instituicao_display) return linha.tipo_instituicao_display;
         const t = TIPOS_INSTITUICAO.find((x) => x.valor === linha.tipo_instituicao);

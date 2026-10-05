@@ -6,12 +6,10 @@ from projetos.models import Projeto
 
 
 def is_admin(user):
-    """True se o usuario e staff ou superuser (pode excluir projetos)."""
     return bool(getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False))
 
 
 def pode_excluir_projeto(user):
-    """Exclusao de projeto e exclusiva de admin. O soft-delete e mantido."""
     return is_admin(user)
 
 
@@ -21,19 +19,10 @@ def periodo_aberto():
 
 
 def pode_escrever_projeto(user):
-    """Quem pode criar/editar: admin sempre, comum só com período aberto."""
     return is_admin(user) or periodo_aberto()
 
 
 def projetos_visiveis_para(user):
-    """Projetos que o usuario logado pode abrir: so os que ele coordena.
-
-    E o unico lugar que sabe como ligar o usuario da sessao ao coordenador.
-    Quando a autenticacao entrar na main, se o usuario for a propria
-    PessoaGlobal a comparacao e por chave; se for o User padrao do Django a
-    ligacao e pelo e-mail institucional. Staff e superusuario enxergam tudo,
-    inclusive excluidos (com tag no frontend), para dar para testar pelo admin.
-    """
     if is_admin(user):
         return Projeto.objects.all()
 

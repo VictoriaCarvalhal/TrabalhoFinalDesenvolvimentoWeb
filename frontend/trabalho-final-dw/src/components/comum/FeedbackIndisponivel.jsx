@@ -1,6 +1,5 @@
 import React from 'react';
 
-// "2026-01-31" -> "31/01/2026" sem cair no fuso (Date puro desloca o dia).
 function formatarData(iso) {
     if (!iso) return null;
     const partes = String(iso).slice(0, 10).split('-');
@@ -9,8 +8,6 @@ function formatarData(iso) {
     return `${dia}/${mes}/${ano}`;
 }
 
-// Pop-up padrão de indisponibilidade fora do período de extensão.
-// Uso: lápis bloqueado, botão criar bloqueado, acesso direto por URL.
 function FeedbackIndisponivel({ inicio, fim, mensagem, aoFechar }) {
     const texto = mensagem
         || 'Fora do período de extensão. A criação e a edição de projetos estão indisponíveis no momento.';

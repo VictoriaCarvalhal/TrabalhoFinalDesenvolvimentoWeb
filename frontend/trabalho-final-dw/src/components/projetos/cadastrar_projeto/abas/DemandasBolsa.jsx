@@ -5,7 +5,6 @@ import DialogoFormulario from '../DialogoFormulario';
 import CartaoItem, { DetalheItem } from '../CartaoItem';
 import ModalAlerta from '../../../comum/ModalAlerta';
 
-// Mesma lista do backend (projetos.TipoBolsa).
 const TIPOS_BOLSA = [
     { valor: 'IC', rotulo: 'Iniciação Científica' },
     { valor: 'EXTENSAO', rotulo: 'Extensão' },
@@ -17,9 +16,6 @@ const TIPOS_BOLSA = [
 
 const LINHA_VAZIA = { id: null, tipo_bolsa: '', quantidade: 1, justificativa: '' };
 
-// Aba "Demanda de Bolsa de Extensão": quantas bolsas o projeto pede, de cada
-// tipo. Segue a forma das outras abas de lista, com o diálogo para incluir e
-// editar. Cada tipo entra uma vez só; para pedir mais, muda-se a quantidade.
 function DemandasBolsa({ projetoId, valor = [], onChange, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
@@ -41,7 +37,6 @@ function DemandasBolsa({ projetoId, valor = [], onChange, errosValidacao }) {
         return Boolean(linha.tipo_bolsa) && Number(linha.quantidade) >= 1;
     }
 
-    // O backend recusa o mesmo tipo duas vezes no projeto, então a tela avisa antes.
     function tipoRepetido(linha, indice) {
         return linhas.some((l, i) => i !== indice && l.tipo_bolsa === linha.tipo_bolsa);
     }
@@ -67,7 +62,6 @@ function DemandasBolsa({ projetoId, valor = [], onChange, errosValidacao }) {
             return;
         }
 
-        // Sem projeto gravado ainda, a demanda fica na lista e sobe junto no envio.
         if (!projetoId) {
             setLinhas((atuais) => (indice === null
                 ? [...atuais, dados]

@@ -21,7 +21,6 @@ def _calcular_digito(digitos: str) -> int:
     return (soma * 10) % 11 % 10
 
 def validar_cpf(cpf: str) -> str:
-    """Limpa a pontuação e valida os dígitos verificadores do CPF."""
     cpf_limpo = re.sub(r"\D", "", str(cpf))
 
     if len(cpf_limpo) != 11 or cpf_limpo == cpf_limpo[0] * 11:
@@ -220,10 +219,6 @@ class PeriodoExtensaoSerializer(serializers.ModelSerializer):
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """
-    Customiza a autenticação via JWT para aceitar CPF (com ou sem pontuação) 
-    ou Email, ignorando maiúsculas/minúsculas e espaços, e injeta os dados do usuário na resposta.
-    """
     def validate(self, attrs):
         username_field = self.username_field
         raw_identifier = attrs.get(username_field, '')
@@ -241,7 +236,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         data = super().validate(attrs)
 
-        # Injeta os dados do perfil do usuário na própria resposta do login
         perfil_data = PessoaPerfilSerializer(self.user).data
         data.update({
             'user': perfil_data

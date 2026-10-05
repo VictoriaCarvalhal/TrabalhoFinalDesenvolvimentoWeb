@@ -13,7 +13,6 @@ function Paginacao({ paginaAtual, totalPaginas, onMudarPagina }) {
     return (
         <nav aria-label="Navegação de páginas" className="mt-5">
             <ul className="pagination justify-content-center">
-                {/* Botão Anterior */}
                 <li className={`page-item ${paginaAtual === 1 ? 'disabled' : ''}`}>
                     <a
                         className="page-link"
@@ -25,7 +24,6 @@ function Paginacao({ paginaAtual, totalPaginas, onMudarPagina }) {
                     </a>
                 </li>
 
-                {/* Renderiza os números das páginas */}
                 {[...Array(totalPaginas)].map((_, index) => {
                     const numPagina = index + 1;
                     return (
@@ -41,7 +39,6 @@ function Paginacao({ paginaAtual, totalPaginas, onMudarPagina }) {
                     );
                 })}
 
-                {/* Botão Próximo */}
                 <li className={`page-item ${paginaAtual === totalPaginas ? 'disabled' : ''}`}>
                     <a
                         className="page-link"

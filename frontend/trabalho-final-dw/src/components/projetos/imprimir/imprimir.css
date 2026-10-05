@@ -1,10 +1,4 @@
-/* Impressão do documento do projeto.
- * Cobre o caminho window.print(); o caminho print-js recebe as mesmas
- * regras via opção `style` em ImprimirProjeto.jsx (manter sincronizado). */
 
-/* Timbre e rodapé repetidos: invisíveis na tela, fixos no papel
- * (o Chrome repete elementos fixed em todas as páginas impressas).
- * A numeração "Página X de Y" sai na caixa de margem @bottom-right do @page. */
 .print-cabecalho {
     display: none;
 }
@@ -13,7 +7,6 @@
     display: none;
 }
 
-/* Capa: logo único centralizado, colado no topo (vale para tela e papel). */
 .capa {
     margin-top: 0;
 }
@@ -70,7 +63,6 @@
         }
     }
 
-    /* Chrome do app e barra de ferramentas: fora do papel. */
     #container > header,
     #container > nav,
     #container > footer,
@@ -87,7 +79,6 @@
         margin: 0 !important;
     }
 
-    /* Área do documento: sem borda de tela, texto preto. */
     #area-impressao {
         border: none !important;
         padding: 0 !important;
@@ -104,8 +95,6 @@
         color: #000 !important;
     }
 
-    /* Seções longas podem quebrar entre páginas; o título nunca fica
-     * órfão no fim e nenhum parágrafo é cortado com menos de 3 linhas. */
     #area-impressao section {
         break-inside: auto;
         margin-bottom: 16px;
@@ -133,7 +122,6 @@
         break-after: avoid;
     }
 
-    /* Tabelas: ocupam a largura do papel, sem rolagem nem corte. */
     #area-impressao table {
         width: 100%;
         table-layout: fixed;

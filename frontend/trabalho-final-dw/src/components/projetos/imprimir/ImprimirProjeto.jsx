@@ -9,7 +9,6 @@ import ProjetoPrint from './ProjetoPrint';
 import './imprimir.css';
 
 
-// Texto amigável para cada falha do GET /projetos/:id/impressao/.
 function mensagemErro(erro) {
     if (erro === 401) {
         return 'Sua sessão expirou. Faça login novamente.';
@@ -41,11 +40,8 @@ function ImprimirProjeto() {
     const nomeUsuarioStore = useAuthStore((state) => state.nomeUsuario);
     const setNomeUsuario = useAuthStore((state) => state.setNomeUsuario);
     const [nomeFallback, setNomeFallback] = useState(null);
-    // "Gerado em" = momento do clique. Inicializa com agora para a
-    // pré-visualização e atualiza no handleImprimir antes de imprimir.
     const [geradoEm, setGeradoEm] = useState(() => formatarGeradoEm(new Date()));
 
-    // Reload direto na tela de impressão: o store pode estar vazio.
     useEffect(() => {
         if (nomeUsuarioStore) return;
         let cancelado = false;
@@ -57,7 +53,6 @@ function ImprimirProjeto() {
                     try {
                         setNomeUsuario(nome);
                     } catch {
-                        // store indisponível: segue só com o fallback local.
                     }
                 }
             })

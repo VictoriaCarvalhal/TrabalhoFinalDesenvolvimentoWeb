@@ -55,7 +55,6 @@ const ABAS = [
 
 function CadastrarProjeto() {
     const navigate = useNavigate();
-    // Rota :id/editar reusa esta tela: com id na URL vira modo edição.
     const { id: idDaUrl } = useParams();
     const editando = Boolean(idDaUrl);
 
@@ -63,7 +62,6 @@ function CadastrarProjeto() {
     const isAdmin = useAuthStore((state) => state.isAdmin);
     const token = useAuthStore((state) => state.token);
 
-    // Fora do período, comum não cria nem edita (nem pela URL direta).
     const { dados: periodo, aberto: periodoAberto, loading: periodoLoading } = usePeriodo();
     const bloqueadoPorPeriodo = !isAdmin && !periodoLoading && !periodoAberto;
     const [mostrarFeedbackPeriodo, setMostrarFeedbackPeriodo] = useState(false);
@@ -88,7 +86,6 @@ function CadastrarProjeto() {
         return [String(dadosErro)];
     }
 
-    // Abre o pop-up com o motivo assim que o bloqueio é confirmado.
     useEffect(() => {
         if (bloqueadoPorPeriodo) {
             setMostrarFeedbackPeriodo(true);
@@ -103,8 +100,6 @@ function CadastrarProjeto() {
            if (!f.titulo.trim()) erros.titulo = "Título é obrigatório";
            if (!f.coordenador_vinculo) erros.coordenador_vinculo = "Selecione uma matrícula";
            if (!f.unidade) erros.unidade = "Selecione uma unidade";
-           // Unidade sem departamento cadastrado nao tem o que escolher,
-           // entao o campo fica como "Nao se aplica" e nao e cobrado.
            const temDepartamento = departamentos.some(
                (d) => String(d.unidade) === String(f.unidade));
            if (temDepartamento && !f.departamento) erros.departamento = "Selecione um departamento";
@@ -204,14 +199,7 @@ function CadastrarProjeto() {
            return {};
     }
 
-    // Navegação entre abas é livre: nenhuma validação prende o usuário.
-    // A cobrança de campos obrigatórios acontece só no "Enviar projeto"
-    // (abrirConfirmacao), conforme as regras de negócio.
-    // tentouEnviar marca que já houve uma tentativa: a partir daí as abas
-    // com pendência ficam vermelhas e a aba atual mostra os erros dela,
-    // sem pular o usuário de lugar.
     function errosParaExibirNaEtapa(indice, f = form) {
-        // Antes de qualquer tentativa de envio, não marca nada em vermelho.
         if (!tentouEnviar) return {};
         return obterErrosEtapa(f, indice);
     }
@@ -228,7 +216,6 @@ function CadastrarProjeto() {
         setEtapaAtual(anterior);
     }
 
-    // Clicar numa aba leva direto para ela, sem validar nada no caminho.
     function irParaEtapa(indice) {
         if (indice === etapaAtual) return;
         setErrosValidacao(errosParaExibirNaEtapa(indice));
@@ -240,9 +227,6 @@ function CadastrarProjeto() {
     const resumoRef = useRef(null);
     const conteudoRef = useRef(null);
 
-    // Vai para a aba com pendência e rola até o primeiro campo inválido
-    // dela. O duplo rAF espera o React trocar a aba antes de procurar o
-    // campo no DOM.
     function irParaAbaComPendencia(indice) {
         setEtapaAtual(indice);
         setErrosValidacao(obterErrosEtapa(form, indice));
@@ -261,7 +245,6 @@ function CadastrarProjeto() {
     const [buscandoCep, setBuscandoCep] = useState(false);
     const [avisoCep, setAvisoCep] = useState(null);
 
-    // Hooks para carregar dados dos dominios e vinculos do coordenador
     const { dados: unidades, loading: carregandoUnidades, erro: erroUnidades } = useUnidades();
     const { dados: departamentos, loading: carregandoDepartamentos, erro: erroDepartamentos } = useDepartamentos();
     const { dados: vinculosCoordenador, loading: carregandoVinculos, erro: erroVinculos, recarregar: recarregarVinculos } = useVinculosCoordenador();
@@ -271,7 +254,6 @@ function CadastrarProjeto() {
     const { dados: linhasExtensao, loading: carregandoLinhasExtensao, erro: erroLinhasExtensao } = useLinhasExtensao();
 
 
-    //projetoId é UUID vindo do POST; no modo edição vem da URL
     const [projetoId, setProjetoId] = useState(null);
     const [enviando, setEnviando] = useState(false);
     const [erroEnvio, setErroEnvio] = useState(null);
@@ -279,22 +261,18 @@ function CadastrarProjeto() {
     const [erroCarregamento, setErroCarregamento] = useState(null);
 
     const [form, setForm] = useState({
-        //identificação
         titulo: "",
         coordenador: "",
         matricula_coordenador: "",
         coordenador_vinculo: "",
-        //contato: sempre começa com um campo de cada, o botão + acrescenta mais
         telefones: [""],
         emails: [""],
-        //endereço
         cep: "",
         logradouro: "",
         municipio: "",
         bairro: "",
         complemento: "",
         numero: "",
-        //caracterização
         publicoAlvo: "",
         vinculado_extensao: "",
         curricular: "",
@@ -305,7 +283,6 @@ function CadastrarProjeto() {
         area_tematica_principal: "",
         area_tematica_secundaria: "",
         linha_extensao: "",
-        //descrição
         resumo: "",
         palavras_chave: [""],
         palavra_chave_1: "",
@@ -324,13 +301,10 @@ function CadastrarProjeto() {
         indissociabilidade: "",
         impacto_social: "",
         referencias_bibliograficas: "",
-        //plano de trabalho
         resultados_esperados: "",
         cronograma_atividades: "",
-        //unidade proponente, da Identificação
         unidade: "",
         departamento: "",
-        //abas de tabela
         locaisRealizacao: [],
         membrosEquipe: [],
         unidadesEnvolvidas: [],
@@ -343,7 +317,6 @@ function CadastrarProjeto() {
 
     useEffect(() => {
         if (!idDaUrl || !isAutenticado) return;
-        // Bloqueado: nem carrega os dados, a tela mostra só o pop-up.
         if (periodoLoading || bloqueadoPorPeriodo) return;
         let cancelado = false;
         setCarregandoEdicao(true);
@@ -468,7 +441,6 @@ function CadastrarProjeto() {
                 logradouro: data.logradouro || f.logradouro,
             }));
         } catch {
-            /* silent */
         } finally {
             setBuscandoCep(false);
         }
@@ -477,9 +449,6 @@ function CadastrarProjeto() {
     function atualizarCampo(campo, valor) {
         setForm((prev) => {
             const atualizado = { ...prev, [campo]: valor };
-            // A caixa vermelha some assim que o campo deixa de estar errado.
-            // Checa as 3 etapas validadas (não só a atual), porque a
-            // navegação é livre e o erro pode ser de outra aba.
             setErrosValidacao((errosAtuais) => {
                 if (!errosAtuais[campo]) return errosAtuais;
                 const aindaComErro = {
@@ -501,14 +470,10 @@ function CadastrarProjeto() {
         });
     }
 
-    // Monta as linhas das abas de tabela. A tela deixa a linha meio
-    // preenchida à vontade, então só as completas entram no payload.
     function linhasDeUnidadesEnvolvidas() {
         return form.unidadesEnvolvidas
             .filter((linha) => linha.unidade)
             .map((linha) => ({
-                // O departamento da linha é só para filtrar o dropdown: quem
-                // guarda o vínculo é ProjetoUnidade, que só tem a unidade.
                 unidade: linha.unidade,
             }));
     }
@@ -565,11 +530,6 @@ function CadastrarProjeto() {
             }));
     }
 
-    // Essa função é responsável por persistir os dados de todas as abas em 1 única chamada atômica
-    // Antes de enviar, confere as tres etapas que tem campo obrigatorio e
-    // mostra o que falta. So abre a confirmacao se estiver tudo certo.
-    // Não pula de aba: marca as abas com pendência de vermelho, mostra os
-    // erros da aba atual e rola até o resumo no topo.
     function abrirConfirmacao() {
         setTentouEnviar(true);
         const faltando = [
@@ -585,7 +545,6 @@ function CadastrarProjeto() {
         ].filter((etapa) => Object.keys(etapa.erros).length > 0);
 
         if (faltando.length > 0) {
-            // mostra os erros da aba onde o usuário está, sem tirá-lo dela
             setErrosValidacao(obterErrosEtapa(form, etapaAtual));
             requestAnimationFrame(() => {
                 resumoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -597,9 +556,6 @@ function CadastrarProjeto() {
         setConfirmando(true);
     }
 
-    // Contagem viva de erros por aba (recalculada a cada render): alimenta
-    // tanto as abas vermelhas quanto o resumo do topo. Só aparece depois da
-    // primeira tentativa de envio.
     const errosPorAba = tentouEnviar
         ? [validarEtapa0(form), validarEtapa1(form), validarEtapa2(form), validarEtapa3(form), validarEtapa4(form), validarEtapa5(form), validarEtapa6(form), validarEtapa7(form), validarEtapa8(form)]
         : [{}, {}, {}, {}, {}, {}, {}, {}, {}];
@@ -620,7 +576,7 @@ function CadastrarProjeto() {
             ...form.emails.map((valor) => ({ tipo_contato: 'EMAIL', valor: valor.trim() })),
         ].filter((c) => c.valor);
         const caracterizacaoDados = {
-            situacao_academica: "NOVO", //no backend bem que podia ser NOVO por default
+            situacao_academica: "NOVO",
             vinculado_programa_extensao: form.vinculado_extensao === "sim",
             curricularizado: form.curricular === "sim",
             natureza: form.natureza || null,
@@ -648,7 +604,6 @@ function CadastrarProjeto() {
             referencias_bibliograficas: form.referencias_bibliograficas || null,
         };
         const payload = {
-            //ABA IDENTIFICAÇÃO
             ano: new Date().getFullYear(),
             titulo: form.titulo,
             coordenador: form.coordenador_vinculo,
@@ -656,19 +611,13 @@ function CadastrarProjeto() {
             departamento_proponente: form.departamento ? Number(form.departamento) : null,
             endereco: enderecoDados,
             contatos: contatosDados,
-            //ABA CARACTERIZAÇÃO
             caracterizacao : caracterizacaoDados,
-            //ABA DESCRIÇÃO
-            // O backend cria a Descrição junto com o projeto, mas o conteúdo
-            // dela só entra por aqui.
             descricao: descricaoDados,
-            //ABA PLANO DE TRABALHO
             planos_trabalho: [{
                 ano: new Date().getFullYear(),
                 resultados_esperados: form.resultados_esperados,
                 cronograma_atividades: form.cronograma_atividades,
             }],
-            //ABAS DE TABELA
             unidades_envolvidas: linhasDeUnidadesEnvolvidas(),
             parcerias_internas: linhasDeParceriasInternas(),
             parcerias_externas: linhasDeParceriasExternas(),
@@ -681,9 +630,6 @@ function CadastrarProjeto() {
         setErroEnvio(null);
         setConfirmando(false);
         try {
-            // Modo edição: atualiza o projeto e as seções simples via PATCH.
-            // As abas de tabela já salvam sozinhas (modo API), então não
-            // entram aqui para não duplicar linhas.
             if (editando && idDaUrl) {
                 await atualizarProjeto(idDaUrl, {
                     titulo: form.titulo,
@@ -760,8 +706,6 @@ function CadastrarProjeto() {
                     }
                 }
 
-                // Plano de trabalho atualiza o primeiro ou cria se não houver,
-                // preservando o ano do plano existente.
                 const planos = abasResp.data?.planos_trabalho ?? [];
                 const planoDados = {
                     ano: planos.length > 0 ? planos[0].ano : new Date().getFullYear(),
@@ -784,8 +728,6 @@ function CadastrarProjeto() {
                 setProjetoId(projeto_id);
             }
 
-            // Todas as abas já foram no payload do POST; só as palavras-chave
-            // continuam tendo endpoint próprio.
             const palavras = form.palavras_chave.map((p) => p.trim()).filter((p) => p);
             for (const palavra of palavras) {
                 await criarPalavraChave(projeto_id, { palavra });
@@ -795,8 +737,6 @@ function CadastrarProjeto() {
         } catch (erro) {
             const dadosErro = erro.response?.data;
             if (erro.response?.status === 403 && dadosErro && dadosErro.aberto === false) {
-                // O período fechou no meio do preenchimento: mostra o
-                // pop-up com o motivo em vez do alerta genérico.
                 setMostrarFeedbackPeriodo(true);
             } else {
                 const detalhes = formatarDetalhesErro(dadosErro);
@@ -814,7 +754,6 @@ function CadastrarProjeto() {
     }
 
 
-    // Se houver apenas um vínculo ativo, preenche automaticamente o coordenador
     useEffect(() => {
         if (vinculosCoordenador.length === 1) {
             atualizarCampo('coordenador_vinculo', vinculosCoordenador[0].id);
@@ -823,7 +762,6 @@ function CadastrarProjeto() {
         }
     }, [vinculosCoordenador]);
 
-    // No modo edição, completa nome/matrícula do coordenador quando os vínculos carregam, a partir do vínculo já gravado no projeto.
     useEffect(() => {
         if (!editando || !form.coordenador_vinculo || form.matricula_coordenador) return;
         const vinculo = vinculosCoordenador.find(
@@ -836,8 +774,6 @@ function CadastrarProjeto() {
 
     return (
         <div className="container mt-4">
-            {/* Mesma ideia da lista: o titulo fica so para leitor de tela,
-                porque os botoes de etapa dizem onde a pessoa esta. */}
             <h1 className="visually-hidden">{editando ? "Edição de projeto" : "Cadastro de projeto"}</h1>
 
             {editando && carregandoEdicao && (
@@ -875,9 +811,6 @@ function CadastrarProjeto() {
             ) : (
             !(editando && carregandoEdicao) && (
             <>
-            {/* Resumo das pendências: fica acima das abas e do formulário para
-                ser visto sem rolar até o fim. O envio rola até aqui.
-                Mostra só a contagem por aba; o detalhe está nos campos. */}
             {tentouEnviar && totalPendencias > 0 && (
                 <div
                     ref={resumoRef}
@@ -909,9 +842,6 @@ function CadastrarProjeto() {
                 </div>
             )}
 
-            {/* A tira de abas: mostra todas as partes do formulario e deixa ir
-                direto para uma delas, em vez de so avancar de uma em uma.
-                Abas com pendência ficam vermelhas com a contagem. */}
             <ul className="nav nav-tabs" role="tablist">
                 {ABAS.map((aba, indice) => {
                     const qtd = (errosPorAba[indice] && Object.keys(errosPorAba[indice]).length) || 0;
@@ -1026,8 +956,6 @@ function CadastrarProjeto() {
                     />
                 )}
 
-                {/* As abas ficam escondidas, não desmontadas, pra não perder as
-                    linhas nem recarregar o dropdown ao trocar de aba. */}
                 <div hidden={etapaAtual !== 7}>
                     <LocaisRealizacao
                         projetoId={idDaUrl ?? projetoId}
@@ -1068,8 +996,6 @@ function CadastrarProjeto() {
                         </button>
                     )}
 
-                    {/* O envio e um so, e aparece em qualquer aba: quem terminou
-                        de preencher nao precisa andar ate a ultima para enviar. */}
                     <button
                         type="button"
                         className="btn btn-primary"

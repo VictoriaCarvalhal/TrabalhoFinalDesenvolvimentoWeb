@@ -4,19 +4,11 @@ import { MUNICIPIOS_RJ } from '../../../../dados/municipiosRJ';
 import CartaoItem from '../CartaoItem';
 import ModalAlerta from '../../../comum/ModalAlerta';
 
-// Aba "Locais de Realização" do cadastro de projeto. Funciona como no sistema
-// original: uma tabela vazia, o botão "Novo" acrescenta uma linha com
-// Instituição e Município, e a lixeira apaga a linha.
-//
-// Enquanto o projeto ainda não foi criado (sem projetoId) as linhas ficam só
-// na memória e sobem pelo onChange, pra página juntar tudo no salvar. Com o
-// projetoId, cada linha é gravada na hora em /projetos/<id>/locais-realizacao/.
 function LocaisRealizacao({ projetoId, valor = [], onChange, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
     const [exclusaoPendente, setExclusaoPendente] = useState(null);
 
-    // Com projeto, as linhas gravadas vêm da API.
     useEffect(() => {
         if (!projetoId) return;
         api.get(`/projetos/${projetoId}/locais-realizacao/`)
@@ -24,7 +16,6 @@ function LocaisRealizacao({ projetoId, valor = [], onChange, errosValidacao }) {
             .catch(() => setErro('Não foi possível carregar os locais já cadastrados.'));
     }, [projetoId]);
 
-    // Toda mudança nas linhas sobe pra página que hospeda a aba.
     useEffect(() => {
         onChange?.(linhas);
     }, [linhas]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -38,7 +29,6 @@ function LocaisRealizacao({ projetoId, valor = [], onChange, errosValidacao }) {
     }
 
     async function gravar(indice) {
-        // Só grava quando os dois campos obrigatórios estão preenchidos.
         const linha = linhas[indice];
         if (!projetoId || !linha.nome_local || !linha.municipio) return;
         try {

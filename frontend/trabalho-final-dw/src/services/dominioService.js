@@ -16,8 +16,6 @@ export async function buscarVinculos() {
     return api.get('/dominios/vinculos/');
 }
 
-// Vinculos da pessoa logada. Separado de buscarVinculos, que traz os de
-// todo mundo e obriga o front a filtrar.
 export async function buscarMeusVinculos() {
     return api.get('/auth/me/vinculos/');
 }

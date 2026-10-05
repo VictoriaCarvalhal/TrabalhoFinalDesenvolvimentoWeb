@@ -8,8 +8,6 @@ import {
     simNao,
 } from './rotulosImpressao.js';
 
-// Documento de impressão do projeto. Componente puro: recebe o DTO e
-// renderiza. O CSS de impressão vive em imprimir.css.
 
 function Secao({ titulo, children }) {
     return (
@@ -54,7 +52,7 @@ function ProjetoPrint({ dados, geradoEm, geradoPor }) {
     const contatos = dados?.contatos ?? [];
     const caracterizacao = dados?.caracterizacao ?? {};
     const descricao = dados?.descricao ?? {};
-    const palavrasChave = (dados?.palavras_chave ?? []) //palavras_chave não estão em descrição
+    const palavrasChave = (dados?.palavras_chave ?? [])
         .map((palavra) => palavra?.palavra)
         .filter(Boolean);
     const planosTrabalho = dados?.planos_trabalho ?? [];
@@ -93,7 +91,6 @@ function ProjetoPrint({ dados, geradoEm, geradoPor }) {
             <div className="print-cabecalho" aria-hidden="true">
                 UERJ · PR-3 — {tituloCurto} — {projeto.ano ?? '—'}/{projeto.numero ?? '—'}
             </div>
-            {/* Capa institucional */}
             <header className="capa mb-3">
                 <img src={pr3Logo} alt="UERJ · PR-3" className="capa-logo" />
                 <p className="capa-inst">Universidade do Estado do Rio de Janeiro · Pró-Reitoria de Extensão e Cultura</p>
@@ -115,12 +112,10 @@ function ProjetoPrint({ dados, geradoEm, geradoPor }) {
                 </p>
             </header>
 
-            {/* Identificação — endereço */}
             <Secao titulo="Endereço">
                 <p className="mb-0">{enderecoLinha}</p>
             </Secao>
 
-            {/* Identificação — contatos */}
             <Secao titulo="Contatos">
                 {contatos.length === 0 ? (
                     <p className="mb-0">—</p>
@@ -139,7 +134,6 @@ function ProjetoPrint({ dados, geradoEm, geradoPor }) {
                 )}
             </Secao>
 
-            {/* Caracterização */}
             <Secao titulo="Caracterização">
                 <Campo rotulo="Situação acadêmica" valor={rotuloCodigo(caracterizacao.situacao_academica, SITUACAO_ACADEMICA_LABELS)} />
                 <Campo rotulo="Vinculado a programa de extensão" valor={simNao(caracterizacao.vinculado_programa_extensao)} />
@@ -153,7 +147,6 @@ function ProjetoPrint({ dados, geradoEm, geradoPor }) {
                 <Campo rotulo="Linha de extensão" valor={caracterizacao.linha_extensao_display ?? caracterizacao.linha_extensao} />
             </Secao>
 
-            {/* Descrição */}
             <Secao titulo="Descrição">
                 <Campo rotulo="Resumo" valor={descricao.resumo} />
                 <p className="mb-2">
@@ -175,7 +168,6 @@ function ProjetoPrint({ dados, geradoEm, geradoPor }) {
                 <Campo rotulo="Referências bibliográficas" valor={descricao.referencias_bibliograficas} />
             </Secao>
 
-            {/* Planos de trabalho */}
             <Secao titulo="Planos de trabalho">
                 <Tabela
                     colunas={['Ano', 'Resultados esperados', 'Cronograma de atividades']}
@@ -190,7 +182,6 @@ function ProjetoPrint({ dados, geradoEm, geradoPor }) {
                 />
             </Secao>
 
-            {/* Demandas de bolsa */}
             <Secao titulo="Demandas de bolsa">
                 <Tabela
                     colunas={['Tipo', 'Quantidade', 'Justificativa']}
@@ -205,7 +196,6 @@ function ProjetoPrint({ dados, geradoEm, geradoPor }) {
                 />
             </Secao>
 
-            {/* Unidades envolvidas */}
             <Secao titulo="Unidades envolvidas">
                 <Tabela
                     colunas={['Sigla', 'Nome', 'Participação']}
@@ -220,7 +210,6 @@ function ProjetoPrint({ dados, geradoEm, geradoPor }) {
                 />
             </Secao>
 
-            {/* Locais de realização */}
             <Secao titulo="Locais de realização">
                 {locaisRealizacao.length === 0 ? (
                     <p className="mb-0">—</p>
@@ -237,7 +226,6 @@ function ProjetoPrint({ dados, geradoEm, geradoPor }) {
                 )}
             </Secao>
 
-            {/* Parcerias internas */}
             <Secao titulo="Parcerias internas">
                 {parceriasInternas.length === 0 ? (
                     <p className="mb-0">—</p>
@@ -258,7 +246,6 @@ function ProjetoPrint({ dados, geradoEm, geradoPor }) {
                 )}
             </Secao>
 
-            {/* Parcerias externas */}
             <Secao titulo="Parcerias externas">
                 {parceriasExternas.length === 0 ? (
                     <p className="mb-0">—</p>
@@ -276,7 +263,6 @@ function ProjetoPrint({ dados, geradoEm, geradoPor }) {
                 )}
             </Secao>
 
-            {/* Equipe */}
             <Secao titulo="Equipe">
                 <Tabela
                     colunas={['Nome', 'Função', 'Carga horária semanal (h)']}

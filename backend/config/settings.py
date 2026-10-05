@@ -17,7 +17,6 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
 AUTH_USER_MODEL = "core.PessoaGlobal"
 
-# Na Vercel: CORS_ALLOWED_ORIGINS=https://<projeto-do-front>.vercel.app
 CORS_ALLOWED_ORIGINS = [
     origem.strip() 
     for origem in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") 
@@ -45,8 +44,6 @@ CORS_ALLOW_HEADERS = [
     "x-requested-with",
 ]
 
-# Na Vercel o Django roda atras de um proxy; sem isto ele acha que a
-# requisicao veio por http e recusa o login do admin por CSRF.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 INSTALLED_APPS = [
@@ -106,7 +103,6 @@ DATABASES = {
     )
 }
 
-# Habilita o schema public
 DATABASES["default"]["OPTIONS"] = {
     "options": "-c search_path=public",
 }
@@ -144,11 +140,10 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15), #Deixo aqui meu honesto pedido de desculpas para o pessoal do backend, att, Aprigio
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),                                            #Garanto que depois eu volto aqui, desfaço e arrumo uma solução no front, isso é só pra testar as requisições do frontend
-    # --- ALTERADO: Ativa a renovação/rotação do Refresh Token a cada chamada ---
     'ROTATE_REFRESH_TOKENS': True,
     # --- ALTERADO: Invalida o Refresh Token anterior colocando na blacklist ---
     'BLACKLIST_AFTER_ROTATION': True,                                                       #Como demonstração de boa fé ajustei esse bugzin aqui, tmj.  BLACK_LIST_AFTER_ROTATION -> BLACKLIST_AFTER_ROTATION
-    'USER_ID_FIELD': 'id',                                                                  #A duração de access estava 15 minutos aqui mas na prática durava só 5 minutos, e eu penso que era isso
+    'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',

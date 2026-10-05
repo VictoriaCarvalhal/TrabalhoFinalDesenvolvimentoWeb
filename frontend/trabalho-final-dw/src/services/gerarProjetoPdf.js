@@ -29,7 +29,6 @@ function nomeArquivoPdf(dados, fallbackId) {
     return `projeto-${fallbackId ?? 'download'}.pdf`;
 }
 
-// Logo do asset empacotado -> dataURL (pdfmake só aceita imagem embutida).
 async function logoDataUrl() {
     try {
         const resposta = await fetch(pr3LogoUrl);
@@ -51,7 +50,6 @@ function tituloCurto(projeto) {
     return titulo.length > 80 ? `${titulo.slice(0, 80)}…` : titulo;
 }
 
-// Título de seção (h3 do papel): texto + filete full-width.
 function secao(titulo, conteudo) {
     return [
         { text: titulo, style: 'h3', margin: [0, 10, 0, 2] },
@@ -61,7 +59,6 @@ function secao(titulo, conteudo) {
     ];
 }
 
-// Par "Rótulo: valor" (Campo do papel).
 function campo(rotulo, valor) {
     return {
         text: [{ text: `${rotulo}: `, bold: true }, valor ?? '—'],
@@ -69,7 +66,6 @@ function campo(rotulo, valor) {
     };
 }
 
-// Tabela do papel: bordas pretas, cabeçalho em negrito repetido por página.
 function tabela(colunas, linhas) {
     if (!linhas || linhas.length === 0) {
         return { text: '—', margin: [0, 0, 0, 4] };
@@ -142,7 +138,6 @@ function montarConteudo(dados, geradoEm, geradoPor, logo) {
 
     const conteudo = [];
 
-    // Capa institucional (espelha o header.capa do papel).
     if (logo) {
         conteudo.push({ image: logo, fit: [180, 68], alignment: 'center', margin: [0, 0, 0, 2] });
     }
@@ -298,7 +293,6 @@ function montarConteudo(dados, geradoEm, geradoPor, logo) {
 
     return {
         pageSize: 'A4',
-        // Margens próximas ao @page do papel (16/12/25/12mm) + respiro p/ corrido.
         pageMargins: [34, 72, 34, 64],
         header: () => ({
             text: cabecalhoCorrido,
@@ -325,14 +319,11 @@ function montarConteudo(dados, geradoEm, geradoPor, logo) {
     };
 }
 
-// Monta o documento pdfmake (compartilhado por Baixar e Imprimir).
 async function montarPdf(dados, { geradoEm, geradoPor } = {}) {
-    // Import dinâmico: o bundle do pdfmake só baixa no clique.
     const [{ default: pdfMake }, helveticaMod] = await Promise.all([
         import('pdfmake/build/pdfmake.js'),
         import('pdfmake/build/standard-fonts/Helvetica.js'),
     ]);
-    // Interop CJS: o container pode vir no default ou direto no namespace.
     const container = helveticaMod?.fonts ? helveticaMod : helveticaMod?.default;
     if (container) {
         pdfMake.addFontContainer(container);
@@ -345,7 +336,6 @@ async function montarPdf(dados, { geradoEm, geradoPor } = {}) {
             const respostaMe = await api.get('/auth/me/');
             textoGeradoPor = respostaMe.data?.nome_completo ?? respostaMe.data?.nome ?? null;
         } catch {
-            // sem nome: segue com o placeholder abaixo.
         }
     }
     textoGeradoPor ??= '—';
@@ -356,21 +346,16 @@ async function montarPdf(dados, { geradoEm, geradoPor } = {}) {
     return { pdfMake, docDefinition };
 }
 
-// Baixa direto o PDF (download em 1 clique, sem diálogo e sem navegar).
 export async function gerarPdfPorDados(dados, { geradoEm, geradoPor, projetoId } = {}) {
     const { pdfMake, docDefinition } = await montarPdf(dados, { geradoEm, geradoPor });
     pdfMake.createPdf(docDefinition).download(nomeArquivoPdf(dados, projetoId));
 }
 
-// Gera o PDF em base64 (para o botão Imprimir: mesmo documento do Baixar,
-// enviado ao printJS sem navegar e sem duplicar a montagem).
-// Na pdfmake 0.3.x, getBase64() é async e retorna Promise (sem callback).
 export async function gerarPdfBase64(dados, { geradoEm, geradoPor } = {}) {
     const { pdfMake, docDefinition } = await montarPdf(dados, { geradoEm, geradoPor });
     return pdfMake.createPdf(docDefinition).getBase64();
 }
 
-// Busca os dados no backend e baixa direto, sem abrir a página de impressão.
 export async function gerarPdfPorId(projetoId) {
     const resposta = await api.get(`/projetos/${projetoId}/impressao/`);
     await gerarPdfPorDados(resposta.data, { projetoId });

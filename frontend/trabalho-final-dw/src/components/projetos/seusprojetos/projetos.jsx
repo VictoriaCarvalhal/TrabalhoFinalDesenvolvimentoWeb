@@ -28,7 +28,6 @@ function Projetos() {
     const [baixandoId, setBaixandoId] = useState(null);
     const [confirmacaoPendente, setConfirmacaoPendente] = useState(null);
     const [toast, setToast] = useState(null);
-    // id do projeto aberto no diálogo de dados; null = diálogo fechado
     const [vendoId, setVendoId] = useState(null);
     const navigate = useNavigate();
     const [paginaAtual, setPaginaAtual] = useState(1);
@@ -39,20 +38,16 @@ function Projetos() {
     const [tipoBusca, setTipoBusca] = useState('nome');
     const [ordemAlfabetica, setOrdemAlfabetica] = useState('asc');
     const [ordemCronologica, setOrdemCronologica] = useState('recentes');
-    // Aba da lixeira (só admin): false = ativos, true = excluídos.
     const [mostrandoExcluidos, setMostrandoExcluidos] = useState(false);
-    // Período de extensão: fora dele, comum não cria nem edita (admin bypassa).
     const { dados: periodo, aberto: periodoAberto, loading: periodoLoading } = usePeriodo();
     const [mostrarFeedbackPeriodo, setMostrarFeedbackPeriodo] = useState(false);
     const periodoFechadoParaComum = !isAdmin && !periodoLoading && !periodoAberto;
-    // Ignora respostas antigas quando o usuário troca rápido de aba/página.
     const buscaIdRef = useRef(0);
 
     function redirecionaProCadastro() {
         navigate(ROTAS.NOVO_PROJETO);
     }
 
-    // Baixa direto o PDF
     async function handleBaixar(id) {
         setBaixandoId(id);
         setErro(null);
@@ -122,23 +117,19 @@ function Projetos() {
     }
 
     useEffect(() => {
-        // Sem token não tem nem por que chamar a API.
         if (!isAutenticado) {
             return;
         }
 
-        // Garante a flag de admin mesmo para sessoes antigas (logadas antes
-        // de a flag existir): o perfil diz se a lixeira aparece ou nao.
         api.get('/auth/me/')
             .then((resposta) => {
                 setPerfil(resposta.data.perfil);
                 setAdmin(resposta.data.is_staff || resposta.data.is_superuser);
             })
-            .catch(() => { /* mantem o valor atual da flag */ });
+            .catch(() => {});
     }, [isAutenticado, setAdmin, setPerfil]);
 
     useEffect(() => {
-        // Sem token não tem nem por que chamar a API.
         if (!isAutenticado) {
             setCarregando(false);
             return;
@@ -160,21 +151,16 @@ function Projetos() {
                     page: paginaAtual,
                     search: buscaAplicada || undefined,
                     busca_por: tipoBusca,
-                    // Backend separa as abas; comum ignora e sempre recebe ativos.
                     excluido: mostrandoExcluidos ? 'true' : 'false',
                 };
                 if (orderingArray.length > 0) {
                     params.ordering = orderingArray.join(',');
                 }
 
-                // O token já é injetado automaticamente pelo interceptor do api.js.
                 const resposta = await api.get('/projetos/', { params });
                 const dados = resposta.data;
 
-                // A API pagina a resposta, então os itens vêm em "results".
-                // O backend já separa ativos/excluídos por aba; o filtro aqui é só defesa para comum.
                 const lista = Array.isArray(dados) ? dados : dados.results ?? [];
-                // Ignora resposta antiga se outra busca já começou (troca rápida de aba/página).
                 if (buscaIdRef.current !== buscaId) {
                     return;
                 }
@@ -187,7 +173,6 @@ function Projetos() {
                 }
                 setProjetos(isAdmin ? lista : lista.filter((p) => !p.excluido));
             } catch (err) {
-                // Ignora erro de busca antiga também.
                 if (buscaIdRef.current !== buscaId) {
                     return;
                 }
@@ -197,7 +182,6 @@ function Projetos() {
                     setErro(err.response?.data?.detail ?? 'Erro ao buscar projetos.');
                 }
             } finally {
-                // Só limpa o carregando se for a busca mais recente.
                 if (buscaIdRef.current === buscaId) {
                     setCarregando(false);
                 }
@@ -233,7 +217,6 @@ function Projetos() {
         setProjetos([]);
     };
 
-    // Comum nunca fica na lixeira: se perder o admin, volta aos ativos.
     useEffect(() => {
         if (!isAdmin && mostrandoExcluidos) {
             setMostrandoExcluidos(false);
@@ -248,9 +231,6 @@ function Projetos() {
     return (
         <div>
             <div className="container mt-4 mb-5 pb-4">
-                {/* O menu ja diz em que tela a pessoa esta, entao o titulo nao
-                aparece de novo aqui. Ele continua no html, escondido, porque a
-                pagina precisa de um h1 para quem usa leitor de tela. */}
                 <h1 className="visually-hidden">Seus projetos</h1>
 
                 {isAutenticado && (
@@ -404,7 +384,6 @@ function Projetos() {
 
                 {isAutenticado && !erro && projetos.length > 0 && (
                     <div style={{ opacity: carregando ? 0.5 : 1, transition: 'opacity 0.3s', pointerEvents: carregando ? 'none' : 'auto' }}>
-                        {/* Visão de Cartões para Todos os Dispositivos */}
                         <div className="mt-3">
                             <div className="row g-3">
                                 {projetos.map((projeto) => (

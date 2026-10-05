@@ -6,9 +6,6 @@ function Bemvindo() {
     const nomeUsuario = useAuthStore((state) => state.nomeUsuario);
     const localizacao = useLocation();
 
-    // A lista fica aqui por exigência do cliente. O `key` força remontagem
-    // quando o usuário clica em Início já estando nesta página
-    // (navbar envia state.recarregarEm), zerando busca/página.
     const chaveLista = localizacao.state?.recarregarEm ?? 'lista';
 
     return (

@@ -4,8 +4,6 @@ from rest_framework.routers import SimpleRouter
 from projetos import views
 from .views_impressao import ProjetoImpressaoView
 
-# O <projeto_id> entra no prefixo de cada rota; o router aceita regex e
-# repassa o grupo como kwarg para a view.
 PROJETO = r'projetos/(?P<projeto_id>[0-9a-f-]{36})'
 
 router = SimpleRouter()

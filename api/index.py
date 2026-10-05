@@ -1,8 +1,3 @@
-"""Entrada do Django na Vercel.
-
-A Vercel procura uma funcao em api/ e uma variavel chamada "app". O codigo
-do backend continua todo em backend/, este arquivo so aponta para ele.
-"""
 import os
 import sys
 

@@ -7,7 +7,6 @@ from django.utils import timezone
 
 
 class AuditModel(models.Model):
-    """Base com campos de auditoria."""
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -223,11 +222,6 @@ class VinculoInstitucional(AuditModel):
 
 
 class PeriodoExtensao(AuditModel):
-    """Período único/global de extensão (singleton, sempre id=1).
-
-    O período está efetivamente aberto quando a chave manual ``aberto``
-    está ligada E hoje está entre ``inicio`` e ``fim``.
-    """
 
     inicio = models.DateField(default=date(2026, 1, 1))
     fim = models.DateField(default=date(2026, 12, 31))
@@ -256,7 +250,6 @@ class PeriodoExtensao(AuditModel):
         return super().save(*args, **kwargs)
 
     def aberto_efetivo(self):
-        """True se aceita escrita de não-admin agora (chave + janela de datas)."""
         if not self.aberto or not self.inicio or not self.fim:
             return False
         hoje = timezone.localdate()
@@ -264,7 +257,6 @@ class PeriodoExtensao(AuditModel):
 
     @classmethod
     def atual(cls):
-        """Retorna o singleton (id=1), criando com defaults se não existir."""
         obj, _ = cls.objects.get_or_create(
             pk=1,
             defaults={

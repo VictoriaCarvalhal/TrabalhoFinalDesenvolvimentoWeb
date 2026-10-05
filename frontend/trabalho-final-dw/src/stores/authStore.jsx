@@ -1,13 +1,12 @@
 import { create } from "zustand";
 
-// Auxiliar para recuperar e fazer parse seguro do perfil
 const getPerfilInicial = () => {
     const perfilSalvo = localStorage.getItem('perfil');
     if (!perfilSalvo) return null;
     try {
         return JSON.parse(perfilSalvo);
     } catch {
-        return perfilSalvo; // Retorna como string se não for um JSON válido
+        return perfilSalvo;
     }
 };
 
@@ -18,7 +17,6 @@ export const useAuthStore = create((set) => ({
     isAdmin: localStorage.getItem('isAdmin') === 'true',
     perfil: getPerfilInicial(),
 
-    // Função de Login: armazena no estado e grava no localStorage
     login: (tokenRecebido, refreshTokenRecebido = null) => {
         if (tokenRecebido) {
             localStorage.setItem('access', tokenRecebido);
@@ -29,7 +27,6 @@ export const useAuthStore = create((set) => ({
         set({ isAutenticado: true, token: tokenRecebido });
     },
 
-    // Permite atualizar apenas o access token (usado no Refresh Silencioso do api.js)
     setToken: (novoToken) => {
         if (novoToken) {
             localStorage.setItem('access', novoToken);
@@ -68,7 +65,6 @@ export const useAuthStore = create((set) => ({
         set({ perfil });
     },
 
-    // Função de Logout: limpa a memória e o localStorage
     logout: () => {
         localStorage.removeItem('access');
         localStorage.removeItem('refresh');
