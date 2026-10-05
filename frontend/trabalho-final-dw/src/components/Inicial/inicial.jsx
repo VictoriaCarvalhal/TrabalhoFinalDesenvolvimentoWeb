@@ -143,7 +143,7 @@ function Inicial() {
                             setMostrarPrimeiroAcesso(true);
                         }}
                     >
-                        Primeiro Acesso
+                        Cadastre-se
                     </a>
                 </div>
 

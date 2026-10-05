@@ -24,7 +24,7 @@ from core.serializers import (
     PeriodoExtensaoSerializer,
     AreaConhecimentoCNPqSerializer, AreaTematicaSerializer,
     DepartamentoSerializer, LinhaExtensaoSerializer,
-    EsqueciSenhaSerializer, PrimeiroAcessoSerializer, RedefinirSenhaSerializer,
+    EsqueciSenhaSerializer, RedefinirSenhaSerializer,
     MunicipioIBGESerializer, NaturezaExtensaoSerializer,
     PessoaPerfilSerializer, RegisterPessoaSerializer,
     UnidadeAcademicaSerializer, VinculoInstitucionalSerializer,
@@ -141,64 +141,6 @@ class RedefinirSenhaView(APIView):
 
         return Response({
             'mensagem': 'Senha alterada com sucesso.'
-        })
-
-
-class PrimeiroAcessoRateThrottle(AnonRateThrottle):
-    scope = 'primeiro_acesso'
-
-
-class PrimeiroAcessoView(APIView):
-    """
-    Primeiro acesso: a pessoa já está cadastrada pela universidade, mas ainda
-    não tem senha. Ela confirma quem é (CPF + matrícula ou e-mail institucional)
-    e cria a senha para entrar no sistema.
-    """
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [PrimeiroAcessoRateThrottle]
-
-    def post(self, request):
-        serializer = PrimeiroAcessoSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        cpf = serializer.validated_data['cpf']
-        identificacao = serializer.validated_data['identificacao'].strip()
-        nova_senha = serializer.validated_data['nova_senha']
-
-        usuario = PessoaGlobal.objects.filter(cpf=cpf, is_active=True).first()
-
-        # A matrícula pode ser de qualquer vínculo da pessoa.
-        confere = usuario is not None and (
-            (usuario.email_institucional or '').lower() == identificacao.lower()
-            or usuario.vinculos.filter(matricula__iexact=identificacao).exists()
-        )
-
-        # Mesma mensagem nos dois casos para não revelar quais CPFs existem.
-        if not confere:
-            return Response(
-                {'erro': 'Os dados informados não conferem com o cadastro da universidade.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if usuario.password and usuario.has_usable_password():
-            return Response(
-                {'erro': 'Este CPF já tem senha cadastrada. Use "Esqueci a senha" se não lembrar dela.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            validate_password(nova_senha, user=usuario)
-        except ValidationError as erro:
-            return Response(
-                {'nova_senha': erro.messages},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        usuario.set_password(nova_senha)
-        usuario.save()
-
-        return Response({
-            'mensagem': 'Senha criada com sucesso. Agora é só entrar com seu CPF e a nova senha.'
         })
 
 

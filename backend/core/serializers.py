@@ -48,28 +48,21 @@ class RegisterPessoaSerializer(serializers.ModelSerializer):
             'lattes_url',
             'password',
         ]
-class EsqueciSenhaSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-
-
-class PrimeiroAcessoSerializer(serializers.Serializer):
-    # identificacao = matrícula ou e-mail institucional, para confirmar
-    # que quem está criando a senha é mesmo a pessoa dona do CPF.
-    cpf = serializers.CharField()
-    identificacao = serializers.CharField()
-    nova_senha = serializers.CharField(write_only=True, min_length=8)
-    confirmar_senha = serializers.CharField(write_only=True, min_length=8)
 
     def validate_cpf(self, value):
-        # Só tira pontos e traço; quem confere se o CPF existe é a view.
-        return re.sub(r"\D", "", value)
+        return validar_cpf(value)
 
-    def validate(self, dados):
-        if dados['nova_senha'] != dados['confirmar_senha']:
-            raise serializers.ValidationError({
-                'confirmar_senha': 'As senhas não são iguais.'
-            })
-        return dados
+    def validate_email_institucional(self, value):
+        if value:
+            return value.strip().lower()
+        return value
+
+    def create(self, validated_data):
+        return PessoaGlobal.objects.create_user(**validated_data)
+
+
+class EsqueciSenhaSerializer(serializers.Serializer):
+    email = serializers.EmailField()
 
 
 class RedefinirSenhaSerializer(serializers.Serializer):
@@ -85,17 +78,6 @@ class RedefinirSenhaSerializer(serializers.Serializer):
             })
 
         return dados
-    def validate_cpf(self, value):
-        return validar_cpf(value)
-
-    def validate_email_institucional(self, value):
-        if value:
-            return value.strip().lower()
-        return value
-
-    def create(self, validated_data):
-        return PessoaGlobal.objects.create_user(**validated_data)
-
 
 class PessoaPerfilSerializer(serializers.ModelSerializer):
     perfil = serializers.SerializerMethodField()

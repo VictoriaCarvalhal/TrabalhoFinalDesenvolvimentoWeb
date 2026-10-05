@@ -2,47 +2,42 @@ import React, { useState } from 'react';
 import api from '../../services/api';
 import DialogoFormulario from '../projetos/cadastrar_projeto/DialogoFormulario';
 
-// Pop-up de "Primeiro Acesso" da tela de login.
-// A pessoa já está cadastrada pela universidade, mas ainda não tem senha:
-// ela confirma quem é (CPF + matrícula ou e-mail) e cria a senha.
-// Quem confere os dados no banco é o backend (POST /auth/primeiro-acesso/).
 function PrimeiroAcesso({ aoFechar, aoConcluir }) {
+    const [nomeCompleto, setNomeCompleto] = useState('');
     const [cpf, setCpf] = useState('');
-    const [identificacao, setIdentificacao] = useState('');
-    const [novaSenha, setNovaSenha] = useState('');
+    const [email, setEmail] = useState('');
+    const [lattes, setLattes] = useState('');
+    const [senha, setSenha] = useState('');
     const [confirmarSenha, setConfirmarSenha] = useState('');
     const [erro, setErro] = useState(null);
     const [enviando, setEnviando] = useState(false);
 
-    const preenchido = cpf.trim() && identificacao.trim() && novaSenha && confirmarSenha;
+    const preenchido = nomeCompleto.trim() && cpf.trim() && email.trim() && senha && confirmarSenha;
 
-    async function criarSenha() {
+    async function cadastrarUsuario() {
         setErro(null);
 
-        if (novaSenha !== confirmarSenha) {
-            setErro('As senhas não são iguais.');
+        if (senha !== confirmarSenha) {
+            setErro('As senhas não conferem.');
             return;
         }
 
         setEnviando(true);
         try {
-            const resposta = await api.post('/auth/primeiro-acesso/', {
+            await api.post('/auth/register/', {
+                nome_completo: nomeCompleto,
                 cpf,
-                identificacao,
-                nova_senha: novaSenha,
-                confirmar_senha: confirmarSenha,
+                email_institucional: email,
+                lattes_url: lattes,
+                password: senha,
             });
-            aoConcluir(cpf, resposta.data.mensagem);
+            aoConcluir(cpf, 'Cadastro realizado com sucesso. Você já pode fazer login.');
         } catch (err) {
             const dados = err.response?.data;
-            if (err.response?.status === 429) {
-                setErro('Muitas tentativas. Aguarde um pouco e tente de novo.');
-            } else if (dados?.erro) {
-                setErro(dados.erro);
-            } else if (dados) {
+            if (dados) {
                 setErro(Object.values(dados).flat().join(' '));
             } else {
-                setErro('Não foi possível concluir o primeiro acesso. Tente novamente.');
+                setErro('Não foi possível realizar o cadastro. Verifique os dados e tente novamente.');
             }
         } finally {
             setEnviando(false);
@@ -51,62 +46,80 @@ function PrimeiroAcesso({ aoFechar, aoConcluir }) {
 
     return (
         <DialogoFormulario
-            titulo="Primeiro acesso"
-            aoSalvar={criarSenha}
+            titulo="Cadastrar-se"
+            aoSalvar={cadastrarUsuario}
             aoFechar={aoFechar}
             salvarDesabilitado={!preenchido || enviando}
             erro={erro}
         >
-            <p className="small text-body-secondary">
-                Use esta opção se você já tem cadastro na universidade mas ainda não
-                criou sua senha no sistema.
-            </p>
-
             <div className="mb-3">
-                <label className="form-label" htmlFor="pa-cpf">CPF *</label>
+                <label className="form-label" htmlFor="cad-nome">Nome Completo *</label>
                 <input
-                    id="pa-cpf"
+                    id="cad-nome"
                     type="text"
                     className="form-control"
-                    inputMode="numeric"
-                    value={cpf}
+                    value={nomeCompleto}
                     required
-                    onChange={(e) => setCpf(e.target.value)}
+                    onChange={(e) => setNomeCompleto(e.target.value)}
                 />
             </div>
 
+            <div className="row g-2 mb-3">
+                <div className="col-sm-6">
+                    <label className="form-label" htmlFor="cad-cpf">CPF *</label>
+                    <input
+                        id="cad-cpf"
+                        type="text"
+                        className="form-control"
+                        inputMode="numeric"
+                        value={cpf}
+                        required
+                        onChange={(e) => setCpf(e.target.value)}
+                    />
+                </div>
+                <div className="col-sm-6">
+                    <label className="form-label" htmlFor="cad-email">E-mail Institucional *</label>
+                    <input
+                        id="cad-email"
+                        type="email"
+                        className="form-control"
+                        value={email}
+                        required
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+                </div>
+            </div>
+
             <div className="mb-3">
-                <label className="form-label" htmlFor="pa-identificacao">Matrícula ou e-mail institucional *</label>
+                <label className="form-label" htmlFor="cad-lattes">Link do Currículo Lattes</label>
                 <input
-                    id="pa-identificacao"
-                    type="text"
+                    id="cad-lattes"
+                    type="url"
                     className="form-control"
-                    placeholder="Ex: 202520402012"
-                    value={identificacao}
-                    required
-                    onChange={(e) => setIdentificacao(e.target.value)}
+                    placeholder="Opcional"
+                    value={lattes}
+                    onChange={(e) => setLattes(e.target.value)}
                 />
-                <div className="form-text">Serve para confirmar que o CPF é seu.</div>
             </div>
 
             <div className="row g-2">
                 <div className="col-sm-6 mb-3">
-                    <label className="form-label" htmlFor="pa-senha">Nova senha *</label>
+                    <label className="form-label" htmlFor="cad-senha">Senha *</label>
                     <input
-                        id="pa-senha"
+                        id="cad-senha"
                         type="password"
                         className="form-control"
                         minLength={8}
-                        value={novaSenha}
+                        value={senha}
                         required
-                        onChange={(e) => setNovaSenha(e.target.value)}
+                        onChange={(e) => setSenha(e.target.value)}
                     />
                     <div className="form-text">Mínimo de 8 caracteres.</div>
                 </div>
                 <div className="col-sm-6 mb-3">
-                    <label className="form-label" htmlFor="pa-confirmar">Confirme a senha *</label>
+                    <label className="form-label" htmlFor="cad-confirmar">Confirme a senha *</label>
                     <input
-                        id="pa-confirmar"
+                        id="cad-confirmar"
                         type="password"
                         className="form-control"
                         minLength={8}
