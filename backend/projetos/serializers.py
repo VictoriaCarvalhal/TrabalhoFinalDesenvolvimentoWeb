@@ -1,6 +1,8 @@
 from django.db import transaction
 from rest_framework import serializers
 
+from core.serializers import mascarar_cpf
+
 from projetos.models import (
     DemandaBolsa, LocalRealizacao, MembroEquipe, ParceriaExterna,
     ParceriaInterna, PlanoTrabalho, ProjetoUnidade,
@@ -99,7 +101,7 @@ class ParceriaExternaSerializer(LinhaDoProjetoSerializer):
 
 class MembroEquipeSerializer(LinhaDoProjetoSerializer):
     nome = serializers.CharField(source='vinculo.pessoa.nome_completo', read_only=True)
-    cpf = serializers.CharField(source='vinculo.pessoa.cpf', read_only=True)
+    cpf = serializers.SerializerMethodField()
     matricula = serializers.CharField(source='vinculo.matricula', read_only=True)
     tipo_vinculo = serializers.CharField(source='vinculo.tipo_vinculo', read_only=True)
     tipo_vinculo_display = serializers.CharField(
@@ -114,6 +116,9 @@ class MembroEquipeSerializer(LinhaDoProjetoSerializer):
             'funcao', 'funcao_display', 'carga_horaria_semanal',
             'data_entrada', 'data_saida',
         ]
+
+    def get_cpf(self, membro):
+        return mascarar_cpf(membro.vinculo.pessoa.cpf)
 
     def validate(self, attrs):
         vinculo = self.valor(attrs, 'vinculo')

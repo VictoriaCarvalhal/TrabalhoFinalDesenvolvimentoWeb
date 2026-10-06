@@ -20,6 +20,15 @@ def _calcular_digito(digitos: str) -> int:
     soma = sum(int(d) * p for d, p in zip(digitos, pesos))
     return (soma * 10) % 11 % 10
 
+def mascarar_cpf(cpf) -> str:
+    digitos = ''.join(c for c in (cpf or '') if c.isdigit())
+    if len(digitos) == 11:
+        return f'***.{digitos[3:6]}.{digitos[6:9]}-**'
+    if len(digitos) >= 4:
+        return '*' * (len(digitos) - 3) + digitos[-3:]
+    return ''
+
+
 def validar_cpf(cpf: str) -> str:
     cpf_limpo = re.sub(r"\D", "", str(cpf))
 
@@ -196,10 +205,7 @@ class VinculoInstitucionalSerializer(serializers.ModelSerializer):
         ]
 
     def get_cpf(self, vinculo):
-        digitos = ''.join(c for c in (vinculo.pessoa.cpf or '') if c.isdigit())
-        if len(digitos) != 11:
-            return ''
-        return f'***.{digitos[3:6]}.{digitos[6:9]}-**'
+        return mascarar_cpf(vinculo.pessoa.cpf)
 
 
 class PeriodoExtensaoSerializer(serializers.ModelSerializer):
