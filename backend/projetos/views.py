@@ -9,7 +9,7 @@ from projetos.models import (
     DemandaBolsa, LocalRealizacao, MembroEquipe, ParceriaExterna,
     ParceriaInterna, PlanoTrabalho, ProjetoUnidade,
     ProjetoEndereco, ProjetoCaracterizacao, ProjetoDescricao,
-    ProjetoPalavraChave, ProjetoContato, Projeto
+    ProjetoPalavraChave, ProjetoContato, Projeto, SituacaoProjeto
 )
 from core.models import PeriodoExtensao
 from projetos.permissions import (
@@ -279,6 +279,25 @@ class ProjetoViewSet(viewsets.ModelViewSet):
         projeto.excluido = False
         projeto.save(update_fields=['excluido', 'updated_at'])
         return Response({'id': projeto.id, 'excluido': False})
+
+    @action(detail=True, methods=['post'], url_path='enviar')
+    def enviar(self, request, pk=None):
+        if _escrita_bloqueada(request.user):
+            return _resposta_periodo_fechado()
+        projeto = self.get_object()
+        if projeto.situacao != SituacaoProjeto.RASCUNHO:
+            return Response(
+                {'detail': 'Este projeto ja foi enviado.',
+                 'situacao': projeto.situacao},
+                status=status.HTTP_409_CONFLICT,
+            )
+        projeto.situacao = SituacaoProjeto.SUBMETIDO
+        projeto.save(update_fields=['situacao', 'updated_at'])
+        return Response({
+            'id': projeto.id,
+            'situacao': projeto.situacao,
+            'situacao_display': projeto.get_situacao_display(),
+        })
 
     @action(detail=True, methods=['get', 'put', 'patch'])
     def caracterizacao(self, request, pk=None):
