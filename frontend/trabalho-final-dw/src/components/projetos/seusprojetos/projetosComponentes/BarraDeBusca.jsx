@@ -35,9 +35,21 @@ function BarraDeBusca({ tipoBusca, onBuscar }) {
                 if (cancelado) return;
                 const dados = resposta.data;
                 const lista = Array.isArray(dados) ? dados : dados.results ?? [];
-                const itens = tipoBusca === 'unidade'
-                    ? lista.map((u) => ({ valor: u.sigla, rotulo: `${u.sigla} - ${u.nome}` }))
-                    : lista.map((d) => ({ valor: d.nome, rotulo: d.nome }));
+                let itens;
+                if (tipoBusca === 'unidade') {
+                    itens = lista.map((u) => ({ valor: u.sigla, rotulo: `${u.sigla} - ${u.nome}` }));
+                } else {
+                    const porNome = new Map();
+                    for (const d of lista) {
+                        const siglas = porNome.get(d.nome) ?? [];
+                        if (d.unidade_sigla) siglas.push(d.unidade_sigla);
+                        porNome.set(d.nome, siglas);
+                    }
+                    itens = [...porNome.entries()].map(([nome, siglas]) => ({
+                        valor: nome,
+                        rotulo: siglas.length > 1 ? `${nome} (${siglas.join(', ')})` : nome,
+                    }));
+                }
                 setOpcoes(itens);
             })
             .catch(() => { if (!cancelado) setOpcoes([]); });
