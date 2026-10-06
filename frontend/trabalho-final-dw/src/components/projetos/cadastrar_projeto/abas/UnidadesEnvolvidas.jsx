@@ -11,7 +11,10 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
     useEffect(() => {
         if (!projetoId) return;
         api.get(`/projetos/${projetoId}/unidades-envolvidas/`)
-            .then((r) => setLinhas(r.data))
+            .then((r) => setLinhas((atuais) => [
+                ...r.data,
+                ...atuais.filter((l) => !l.id),
+            ]))
             .catch(() => setErro('Não foi possível carregar as unidades já cadastradas.'));
     }, [projetoId]);
 
