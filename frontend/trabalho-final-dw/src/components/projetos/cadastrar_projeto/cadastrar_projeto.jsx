@@ -369,6 +369,37 @@ function CadastrarProjeto() {
     }, []);
 
     useEffect(() => {
+        if ((form.titulo && form.coordenador_vinculo) && !projetoId && !criandoRascunho.current) {
+            async function criarRascunho() {
+                try {
+                    setErroRascunho(null);
+                    criandoRascunho.current = true;
+                    const projeto_id = await criarProjeto({
+                        titulo: form.titulo,
+                        ano: new Date().getFullYear(),
+                        coordenador: form.coordenador_vinculo,
+                    });
+                    criandoRascunho.current = false;
+                    setProjetoId(projeto_id);
+                    localStorage.setItem('projetoRascunhoId', projeto_id);
+                } catch (err) {
+                    criandoRascunho.current = false;
+                    // mensagem de erro
+                }
+            }
+            criarRascunho();
+        }  
+    }, [form.titulo, form.coordenador_vinculo, projetoId]);
+
+    useEffect(() => {
+        if (editando) return;
+        const salvo = localStorage.getItem('projetoRascunhoId');
+        if (salvo) {
+            navigate(ROTAS.editarProjeto(salvo));
+        }
+    }, []);
+
+    useEffect(() => {
         if (!idDaUrl || !isAutenticado) return;
         if (periodoLoading || bloqueadoPorPeriodo) return;
         let cancelado = false;
@@ -826,7 +857,90 @@ function CadastrarProjeto() {
                     unidade_proponente: form.unidade ? Number(form.unidade) : null,
                     departamento_proponente: form.departamento ? Number(form.departamento) : null,
                 });
-                setProjetoId(id);
+                await Promise.all([
+                    atualizarEndereco(idDaUrl, enderecoDados),
+                    atualizarCaracterizacao(idDaUrl, caracterizacaoDados),
+                    atualizarDescricao(idDaUrl, descricaoDados),
+                ]);
+
+                const [palavrasResp, contatosResp, abasResp] = await Promise.all([
+                    api.get(`/projetos/${idDaUrl}/palavras_chave/`),
+                    api.get(`/projetos/${idDaUrl}/contatos/`),
+                    api.get(`/projetos/${idDaUrl}/abas/`),
+                ]);
+                const palavrasGravadas = (
+                    Array.isArray(palavrasResp.data) ? palavrasResp.data : palavrasResp.data.results ?? []
+                );
+                const palavrasForm = form.palavras_chave.map((p) => p.trim()).filter((p) => p);
+                const contaPalavrasForm = {};
+                for (const p of palavrasForm) {
+                    const chave = p.toLowerCase();
+                    contaPalavrasForm[chave] = (contaPalavrasForm[chave] ?? 0) + 1;
+                }
+                const contaPalavrasGravadas = {};
+                for (const p of palavrasGravadas) {
+                    const chave = p.palavra.trim().toLowerCase();
+                    contaPalavrasGravadas[chave] = (contaPalavrasGravadas[chave] ?? 0) + 1;
+                }
+                for (const p of palavrasGravadas) {
+                    const chave = p.palavra.trim().toLowerCase();
+                    if ((contaPalavrasForm[chave] ?? 0) < contaPalavrasGravadas[chave]) {
+                        contaPalavrasGravadas[chave] -= 1;
+                        await excluirPalavraChave(idDaUrl, p.id);
+                    }
+                }
+                for (const palavra of palavrasForm) {
+                    const chave = palavra.toLowerCase();
+                    if ((contaPalavrasGravadas[chave] ?? 0) > 0) {
+                        contaPalavrasGravadas[chave] -= 1;
+                    } else {
+                        await criarPalavraChave(idDaUrl, { palavra });
+                    }
+                }
+                const contatosLista = (
+                    Array.isArray(contatosResp.data) ? contatosResp.data : contatosResp.data.results ?? []
+                );
+                const contaContatosForm = {};
+                for (const c of contatosDados) {
+                    const chave = `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`;
+                    contaContatosForm[chave] = (contaContatosForm[chave] ?? 0) + 1;
+                }
+                const contaContatosGravados = {};
+                for (const c of contatosLista) {
+                    const chave = `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`;
+                    contaContatosGravados[chave] = (contaContatosGravados[chave] ?? 0) + 1;
+                }
+                for (const c of contatosLista) {
+                    const chave = `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`;
+                    if ((contaContatosForm[chave] ?? 0) < contaContatosGravados[chave]) {
+                        contaContatosGravados[chave] -= 1;
+                        await excluirContato(idDaUrl, c.id);
+                    }
+                }
+                for (const contato of contatosDados) {
+                    const chave = `${contato.tipo_contato}|${contato.valor.trim().toLowerCase()}`;
+                    if ((contaContatosGravados[chave] ?? 0) > 0) {
+                        contaContatosGravados[chave] -= 1;
+                    } else {
+                        await criarContato(idDaUrl, contato);
+                    }
+                }
+
+                const planos = abasResp.data?.planos_trabalho ?? [];
+                const planoDados = {
+                    ano: planos.length > 0 ? planos[0].ano : new Date().getFullYear(),
+                    resultados_esperados: form.resultados_esperados,
+                    cronograma_atividades: form.cronograma_atividades,
+                };
+                if (planos.length > 0) {
+                    await atualizarPlanoDeTrabalho(idDaUrl, planos[0].id, planoDados);
+                } else {
+                    await criarPlanoDeTrabalho(idDaUrl, planoDados);
+                }
+
+                navigate(ROTAS.BEMVINDO);
+                localStorage.removeItem('projetoRascunhoId');
+                return;
             }
             await sincronizarAbasIniciais(id, dados);
             setAvisoRascunho('Rascunho guardado. Você pode fechar a página e continuar depois.');
@@ -863,6 +977,7 @@ function CadastrarProjeto() {
 
             localStorage.removeItem('projetoRascunhoId');
             navigate(ROTAS.BEMVINDO);
+            localStorage.removeItem('projetoRascunhoId');
         } catch (erro) {
             tratarErroDeSalvamento(erro, 'Não foi possível salvar o projeto');
         } finally {
