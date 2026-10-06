@@ -175,7 +175,7 @@ function CadastrarProjeto() {
 
     function validarEtapa6(f){
         const erros = {};
-        if(!(f.demandasBolsa.length > 0 && f.demandasBolsa.every(item => item.tipo_bolsa && item.quantidade))) erros.demandasBolsa = "Adicione pelo menos 1 (uma) demanda por bolsa.";
+        if(!f.demandasBolsa.every(item => item.tipo_bolsa && item.quantidade)) erros.demandasBolsa = "Complete as demandas de bolsa que você adicionou, ou remova as que estiverem vazias.";
         return erros;
     }
 
