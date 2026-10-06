@@ -38,7 +38,8 @@ import {
     criarPlanoDeTrabalho,
     atualizarPlanoDeTrabalho,
     criarContato,
-    excluirContato
+    excluirContato,
+    enviarProjeto,
 } from '../../../services/projetoService';
 
 const ABAS = [
@@ -255,6 +256,8 @@ function CadastrarProjeto() {
 
 
     const [projetoId, setProjetoId] = useState(null);
+    const [salvandoRascunho, setSalvandoRascunho] = useState(false);
+    const [avisoRascunho, setAvisoRascunho] = useState(null);
     const [enviando, setEnviando] = useState(false);
     const [erroEnvio, setErroEnvio] = useState(null);
     const [carregandoEdicao, setCarregandoEdicao] = useState(false);
@@ -562,7 +565,7 @@ function CadastrarProjeto() {
     const totalPendencias = errosPorAba.reduce(
         (total, erros) => total + Object.keys(erros).length, 0);
 
-    async function salvarDadosIdentificacao() {
+    function montarDadosDoFormulario() {
         const enderecoDados = {
             cep: form.cep,
             logradouro: form.logradouro,
@@ -626,132 +629,195 @@ function CadastrarProjeto() {
             membros_equipe: linhasDeMembrosEquipe(),
         };
 
-        setEnviando(true);
+        return { enderecoDados, contatosDados, caracterizacaoDados, descricaoDados, payload };
+    }
+
+    function palavrasDoFormulario() {
+        return form.palavras_chave.map((p) => p.trim()).filter((p) => p);
+    }
+
+    // As tres primeiras abas e o plano de trabalho ficam em recursos separados do
+    // projeto, entao cada salvamento precisa acertar um por um.
+    async function sincronizarAbasIniciais(id, dados) {
+        const { enderecoDados, contatosDados, caracterizacaoDados, descricaoDados } = dados;
+
+        await atualizarProjeto(id, {
+            titulo: form.titulo,
+            coordenador: form.coordenador_vinculo,
+            unidade_proponente: form.unidade ? Number(form.unidade) : null,
+            departamento_proponente: form.departamento ? Number(form.departamento) : null,
+        });
+        await Promise.all([
+            atualizarEndereco(id, enderecoDados),
+            atualizarCaracterizacao(id, caracterizacaoDados),
+            atualizarDescricao(id, descricaoDados),
+        ]);
+
+        const [palavrasResp, contatosResp, abasResp] = await Promise.all([
+            api.get(`/projetos/${id}/palavras_chave/`),
+            api.get(`/projetos/${id}/contatos/`),
+            api.get(`/projetos/${id}/abas/`),
+        ]);
+        const palavrasGravadas = (
+            Array.isArray(palavrasResp.data) ? palavrasResp.data : palavrasResp.data.results ?? []
+        );
+        const palavrasForm = form.palavras_chave.map((p) => p.trim()).filter((p) => p);
+        const contaPalavrasForm = {};
+        for (const p of palavrasForm) {
+            const chave = p.toLowerCase();
+            contaPalavrasForm[chave] = (contaPalavrasForm[chave] ?? 0) + 1;
+        }
+        const contaPalavrasGravadas = {};
+        for (const p of palavrasGravadas) {
+            const chave = p.palavra.trim().toLowerCase();
+            contaPalavrasGravadas[chave] = (contaPalavrasGravadas[chave] ?? 0) + 1;
+        }
+        for (const p of palavrasGravadas) {
+            const chave = p.palavra.trim().toLowerCase();
+            if ((contaPalavrasForm[chave] ?? 0) < contaPalavrasGravadas[chave]) {
+                contaPalavrasGravadas[chave] -= 1;
+                await excluirPalavraChave(id, p.id);
+            }
+        }
+        for (const palavra of palavrasForm) {
+            const chave = palavra.toLowerCase();
+            if ((contaPalavrasGravadas[chave] ?? 0) > 0) {
+                contaPalavrasGravadas[chave] -= 1;
+            } else {
+                await criarPalavraChave(id, { palavra });
+            }
+        }
+        const contatosLista = (
+            Array.isArray(contatosResp.data) ? contatosResp.data : contatosResp.data.results ?? []
+        );
+        const contaContatosForm = {};
+        for (const c of contatosDados) {
+            const chave = `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`;
+            contaContatosForm[chave] = (contaContatosForm[chave] ?? 0) + 1;
+        }
+        const contaContatosGravados = {};
+        for (const c of contatosLista) {
+            const chave = `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`;
+            contaContatosGravados[chave] = (contaContatosGravados[chave] ?? 0) + 1;
+        }
+        for (const c of contatosLista) {
+            const chave = `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`;
+            if ((contaContatosForm[chave] ?? 0) < contaContatosGravados[chave]) {
+                contaContatosGravados[chave] -= 1;
+                await excluirContato(id, c.id);
+            }
+        }
+        for (const contato of contatosDados) {
+            const chave = `${contato.tipo_contato}|${contato.valor.trim().toLowerCase()}`;
+            if ((contaContatosGravados[chave] ?? 0) > 0) {
+                contaContatosGravados[chave] -= 1;
+            } else {
+                await criarContato(id, contato);
+            }
+        }
+
+        const planos = abasResp.data?.planos_trabalho ?? [];
+        const planoDados = {
+            ano: planos.length > 0 ? planos[0].ano : new Date().getFullYear(),
+            resultados_esperados: form.resultados_esperados,
+            cronograma_atividades: form.cronograma_atividades,
+        };
+        const planoTemConteudo = Boolean(
+            form.resultados_esperados?.trim() || form.cronograma_atividades?.trim()
+        );
+        if (planos.length > 0) {
+            await atualizarPlanoDeTrabalho(id, planos[0].id, planoDados);
+        } else if (planoTemConteudo) {
+            await criarPlanoDeTrabalho(id, planoDados);
+        }
+    }
+
+    function tratarErroDeSalvamento(erro, titulo) {
+        const dadosErro = erro.response?.data;
+        if (erro.response?.status === 403 && dadosErro && dadosErro.aberto === false) {
+            setMostrarFeedbackPeriodo(true);
+            return;
+        }
+        const detalhes = formatarDetalhesErro(dadosErro);
+        setErroSalvamento({
+            titulo,
+            mensagem: detalhes.length > 0
+                ? 'O servidor recusou o envio com os seguintes erros:'
+                : 'Verifique a conexão e tente de novo.',
+            detalhes,
+        });
+    }
+
+    async function salvarRascunho() {
+        if (!form.titulo?.trim() || !form.coordenador_vinculo) {
+            setAvisoRascunho(null);
+            setErroSalvamento({
+                titulo: 'Ainda não é possível guardar',
+                mensagem: 'Preencha o título do projeto e o coordenador na aba Identificação antes de guardar.',
+                detalhes: [],
+            });
+            return;
+        }
+
+        const dados = montarDadosDoFormulario();
+        setSalvandoRascunho(true);
+        setAvisoRascunho(null);
         setErroEnvio(null);
-        setConfirmando(false);
         try {
-            if (editando && idDaUrl) {
-                await atualizarProjeto(idDaUrl, {
+            let id = idDaUrl ?? projetoId;
+            if (!id) {
+                // O projeto nasce so com o que ele exige, o resto das abas vai
+                // por cima logo depois.
+                id = await criarProjeto({
+                    ano: new Date().getFullYear(),
                     titulo: form.titulo,
                     coordenador: form.coordenador_vinculo,
                     unidade_proponente: form.unidade ? Number(form.unidade) : null,
                     departamento_proponente: form.departamento ? Number(form.departamento) : null,
                 });
-                await Promise.all([
-                    atualizarEndereco(idDaUrl, enderecoDados),
-                    atualizarCaracterizacao(idDaUrl, caracterizacaoDados),
-                    atualizarDescricao(idDaUrl, descricaoDados),
-                ]);
+                setProjetoId(id);
+            }
+            await sincronizarAbasIniciais(id, dados);
+            setAvisoRascunho('Rascunho guardado. Você pode fechar a página e continuar depois.');
+        } catch (erro) {
+            tratarErroDeSalvamento(erro, 'Não foi possível guardar o rascunho');
+        } finally {
+            setSalvandoRascunho(false);
+        }
+    }
 
-                const [palavrasResp, contatosResp, abasResp] = await Promise.all([
-                    api.get(`/projetos/${idDaUrl}/palavras_chave/`),
-                    api.get(`/projetos/${idDaUrl}/contatos/`),
-                    api.get(`/projetos/${idDaUrl}/abas/`),
-                ]);
-                const palavrasGravadas = (
-                    Array.isArray(palavrasResp.data) ? palavrasResp.data : palavrasResp.data.results ?? []
-                );
-                const palavrasForm = form.palavras_chave.map((p) => p.trim()).filter((p) => p);
-                const contaPalavrasForm = {};
-                for (const p of palavrasForm) {
-                    const chave = p.toLowerCase();
-                    contaPalavrasForm[chave] = (contaPalavrasForm[chave] ?? 0) + 1;
-                }
-                const contaPalavrasGravadas = {};
-                for (const p of palavrasGravadas) {
-                    const chave = p.palavra.trim().toLowerCase();
-                    contaPalavrasGravadas[chave] = (contaPalavrasGravadas[chave] ?? 0) + 1;
-                }
-                for (const p of palavrasGravadas) {
-                    const chave = p.palavra.trim().toLowerCase();
-                    if ((contaPalavrasForm[chave] ?? 0) < contaPalavrasGravadas[chave]) {
-                        contaPalavrasGravadas[chave] -= 1;
-                        await excluirPalavraChave(idDaUrl, p.id);
-                    }
-                }
-                for (const palavra of palavrasForm) {
-                    const chave = palavra.toLowerCase();
-                    if ((contaPalavrasGravadas[chave] ?? 0) > 0) {
-                        contaPalavrasGravadas[chave] -= 1;
-                    } else {
-                        await criarPalavraChave(idDaUrl, { palavra });
-                    }
-                }
-                const contatosLista = (
-                    Array.isArray(contatosResp.data) ? contatosResp.data : contatosResp.data.results ?? []
-                );
-                const contaContatosForm = {};
-                for (const c of contatosDados) {
-                    const chave = `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`;
-                    contaContatosForm[chave] = (contaContatosForm[chave] ?? 0) + 1;
-                }
-                const contaContatosGravados = {};
-                for (const c of contatosLista) {
-                    const chave = `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`;
-                    contaContatosGravados[chave] = (contaContatosGravados[chave] ?? 0) + 1;
-                }
-                for (const c of contatosLista) {
-                    const chave = `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`;
-                    if ((contaContatosForm[chave] ?? 0) < contaContatosGravados[chave]) {
-                        contaContatosGravados[chave] -= 1;
-                        await excluirContato(idDaUrl, c.id);
-                    }
-                }
-                for (const contato of contatosDados) {
-                    const chave = `${contato.tipo_contato}|${contato.valor.trim().toLowerCase()}`;
-                    if ((contaContatosGravados[chave] ?? 0) > 0) {
-                        contaContatosGravados[chave] -= 1;
-                    } else {
-                        await criarContato(idDaUrl, contato);
-                    }
-                }
+    async function salvarDadosIdentificacao() {
+        const dados = montarDadosDoFormulario();
+        const { payload } = dados;
 
-                const planos = abasResp.data?.planos_trabalho ?? [];
-                const planoDados = {
-                    ano: planos.length > 0 ? planos[0].ano : new Date().getFullYear(),
-                    resultados_esperados: form.resultados_esperados,
-                    cronograma_atividades: form.cronograma_atividades,
-                };
-                if (planos.length > 0) {
-                    await atualizarPlanoDeTrabalho(idDaUrl, planos[0].id, planoDados);
-                } else {
-                    await criarPlanoDeTrabalho(idDaUrl, planoDados);
+        setEnviando(true);
+        setErroEnvio(null);
+        setAvisoRascunho(null);
+        setConfirmando(false);
+        try {
+            let id = idDaUrl ?? projetoId;
+            if (id) {
+                await sincronizarAbasIniciais(id, dados);
+            } else {
+                id = await criarProjeto(payload);
+                setProjetoId(id);
+                for (const palavra of palavrasDoFormulario()) {
+                    await criarPalavraChave(id, { palavra });
                 }
-
-                navigate(ROTAS.BEMVINDO);
-                return;
             }
 
-            let projeto_id = projetoId;
-            if (!projeto_id) {
-                projeto_id = await criarProjeto(payload);
-                setProjetoId(projeto_id);
-            }
-
-            const palavras = form.palavras_chave.map((p) => p.trim()).filter((p) => p);
-            for (const palavra of palavras) {
-                await criarPalavraChave(projeto_id, { palavra });
+            if (!editando) {
+                await enviarProjeto(id);
             }
 
             navigate(ROTAS.BEMVINDO);
         } catch (erro) {
-            const dadosErro = erro.response?.data;
-            if (erro.response?.status === 403 && dadosErro && dadosErro.aberto === false) {
-                setMostrarFeedbackPeriodo(true);
-            } else {
-                const detalhes = formatarDetalhesErro(dadosErro);
-                setErroSalvamento({
-                    titulo: 'Não foi possível salvar o projeto',
-                    mensagem: detalhes.length > 0
-                        ? 'O servidor recusou o envio com os seguintes erros:'
-                        : 'Verifique a conexão e tente de novo.',
-                    detalhes,
-                });
-            }
+            tratarErroDeSalvamento(erro, 'Não foi possível salvar o projeto');
         } finally {
             setEnviando(false);
         }
     }
+
 
 
     useEffect(() => {
@@ -975,6 +1041,12 @@ function CadastrarProjeto() {
                     />
                 </div>
 
+                {avisoRascunho && (
+                    <div className="alert alert-success py-2" role="status">
+                        {avisoRascunho}
+                    </div>
+                )}
+
                 <div className="d-flex justify-content-end gap-2">
                     {etapaAtual > 0 && (
                         <button
@@ -995,6 +1067,16 @@ function CadastrarProjeto() {
                             Avançar
                         </button>
                     )}
+
+                    <button
+                        type="button"
+                        className="btn btn-outline-primary"
+                        onClick={salvarRascunho}
+                        disabled={salvandoRascunho || enviando || carregandoEdicao}
+                        title="Guarda o que já está preenchido sem enviar o projeto"
+                    >
+                        {salvandoRascunho ? 'Guardando...' : 'Salvar rascunho'}
+                    </button>
 
                     <button
                         type="button"

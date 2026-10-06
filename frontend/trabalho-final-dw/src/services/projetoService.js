@@ -53,6 +53,11 @@ export async function excluirProjeto(projeto_id) {
     await api.delete(`/projetos/${projeto_id}/`);
 }
 
+export async function enviarProjeto(projeto_id) {
+    const resposta = await api.post(`/projetos/${projeto_id}/enviar/`);
+    return resposta.data;
+}
+
 export async function restaurarProjeto(projeto_id) {
     const resposta = await api.post(`/projetos/${projeto_id}/restaurar/`);
     return resposta.data;
