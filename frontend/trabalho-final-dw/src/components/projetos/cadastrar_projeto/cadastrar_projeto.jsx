@@ -331,6 +331,7 @@ function CadastrarProjeto() {
                     });
                     criandoRascunho.current = false;
                     setProjetoId(projeto_id);
+                    localStorage.setItem('projetoRascunhoId', projeto_id);
                 } catch (err) {
                     criandoRascunho.current = false;
                     // mensagem de erro
@@ -744,6 +745,7 @@ function CadastrarProjeto() {
                 }
 
                 navigate(ROTAS.BEMVINDO);
+                localStorage.removeItem('projetoRascunhoId');
                 return;
             }
 
@@ -759,6 +761,7 @@ function CadastrarProjeto() {
             }
 
             navigate(ROTAS.BEMVINDO);
+            localStorage.removeItem('projetoRascunhoId');
         } catch (erro) {
             const dadosErro = erro.response?.data;
             if (erro.response?.status === 403 && dadosErro && dadosErro.aberto === false) {
