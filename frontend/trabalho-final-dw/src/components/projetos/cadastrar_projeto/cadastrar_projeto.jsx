@@ -62,6 +62,8 @@ function CadastrarProjeto() {
     const isAdmin = useAuthStore((state) => state.isAdmin);
     const token = useAuthStore((state) => state.token);
 
+    const criandoRascunho = useRef(false);
+
     const { dados: periodo, aberto: periodoAberto, loading: periodoLoading } = usePeriodo();
     const bloqueadoPorPeriodo = !isAdmin && !periodoLoading && !periodoAberto;
     const [mostrarFeedbackPeriodo, setMostrarFeedbackPeriodo] = useState(false);
@@ -259,6 +261,7 @@ function CadastrarProjeto() {
     const [erroEnvio, setErroEnvio] = useState(null);
     const [carregandoEdicao, setCarregandoEdicao] = useState(false);
     const [erroCarregamento, setErroCarregamento] = useState(null);
+    const [erroRascunho,setErroRascunho] = useState(null);
 
     const [form, setForm] = useState({
         titulo: "",
@@ -314,6 +317,37 @@ function CadastrarProjeto() {
     });
 
     const simNao = (valor) => (valor ? "sim" : "nao");
+
+    useEffect(() => {
+        if ((form.titulo && form.coordenador_vinculo) && !projetoId && !criandoRascunho.current) {
+            async function criarRascunho() {
+                try {
+                    setErroRascunho(null);
+                    criandoRascunho.current = true;
+                    const projeto_id = await criarProjeto({
+                        titulo: form.titulo,
+                        ano: new Date().getFullYear(),
+                        coordenador: form.coordenador_vinculo,
+                    });
+                    criandoRascunho.current = false;
+                    setProjetoId(projeto_id);
+                    localStorage.setItem('projetoRascunhoId', projeto_id);
+                } catch (err) {
+                    criandoRascunho.current = false;
+                    // mensagem de erro
+                }
+            }
+            criarRascunho();
+        }  
+    }, [form.titulo, form.coordenador_vinculo, projetoId]);
+
+    useEffect(() => {
+        if (editando) return;
+        const salvo = localStorage.getItem('projetoRascunhoId');
+        if (salvo) {
+            navigate(ROTAS.editarProjeto(salvo));
+        }
+    }, []);
 
     useEffect(() => {
         if (!idDaUrl || !isAutenticado) return;
@@ -719,6 +753,7 @@ function CadastrarProjeto() {
                 }
 
                 navigate(ROTAS.BEMVINDO);
+                localStorage.removeItem('projetoRascunhoId');
                 return;
             }
 
@@ -734,6 +769,7 @@ function CadastrarProjeto() {
             }
 
             navigate(ROTAS.BEMVINDO);
+            localStorage.removeItem('projetoRascunhoId');
         } catch (erro) {
             const dadosErro = erro.response?.data;
             if (erro.response?.status === 403 && dadosErro && dadosErro.aberto === false) {
