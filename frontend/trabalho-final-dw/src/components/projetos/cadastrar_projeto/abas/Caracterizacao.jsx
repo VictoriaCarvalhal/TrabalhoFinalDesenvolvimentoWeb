@@ -88,9 +88,9 @@ function Caracterizacao({
         </div>
 
         <div className="mb-3">
-            <label className="form-label">Natureza</label>
+            <label className="form-label" htmlFor="car-natureza">Natureza</label>
 
-            <select
+            <select id="car-natureza"
                 className={`form-select ${errosValidacao?.natureza ? 'is-invalid' : ''}`}
                 value={form.natureza}
                 onChange={(e) => atualizarCampo("natureza", e.target.value)}
@@ -108,9 +108,9 @@ function Caracterizacao({
         </div>
 
         <div className="mb-3">
-            <label className="form-label">Abrangência</label>
+            <label className="form-label" htmlFor="car-abrangencia">Abrangência</label>
 
-            <select
+            <select id="car-abrangencia"
                 className={`form-select ${errosValidacao?.abrangencia ? 'is-invalid' : ''}`}
                 value={form.abrangencia}
                 onChange={(e) => atualizarCampo("abrangencia", e.target.value)}
@@ -125,8 +125,9 @@ function Caracterizacao({
         </div>
 
         <div className="mb-3">
-            <label className="form-label">Público Alvo</label>
+            <label className="form-label" htmlFor="car-publico-alvo">Público Alvo</label>
             <textarea
+                id="car-publico-alvo"
                 className={`form-control ${errosValidacao?.publico_alvo ? 'is-invalid' : ''}`}
                 value={form.publico_alvo}
                 onChange={(e) => atualizarCampo("publico_alvo", e.target.value)}
@@ -135,8 +136,8 @@ function Caracterizacao({
         </div>
 
         <div className="mb-3">
-            <label className="form-label">Grande Área de Conhecimento do CNPq</label>
-            <select
+            <label className="form-label" htmlFor="car-grande-area-de-conhecimento-do-cnpq">Grande Área de Conhecimento do CNPq</label>
+            <select id="car-grande-area-de-conhecimento-do-cnpq"
                 className={`form-select ${errosValidacao?.area_conhecimento_cnpq ? 'is-invalid' : ''}`}
                 value={form.area_conhecimento_cnpq}
                 onChange={(e) => atualizarCampo("area_conhecimento_cnpq", e.target.value)}
@@ -154,8 +155,8 @@ function Caracterizacao({
         </div>
 
         <div className="mb-3">
-            <label className="form-label">Área Temática Principal</label>
-            <select
+            <label className="form-label" htmlFor="car-area-tematica-principal">Área Temática Principal</label>
+            <select id="car-area-tematica-principal"
                 className={`form-select ${errosValidacao?.area_tematica_principal ? 'is-invalid' : ''}`}
                 value={form.area_tematica_principal}
                 onChange={(e) => atualizarCampo("area_tematica_principal", e.target.value)}
@@ -173,8 +174,8 @@ function Caracterizacao({
         </div>
 
         <div className="mb-3">
-            <label className="form-label">Área Temática Secundária</label>
-            <select
+            <label className="form-label" htmlFor="car-area-tematica-secundaria">Área Temática Secundária</label>
+            <select id="car-area-tematica-secundaria"
                 className={`form-select ${errosValidacao?.area_tematica_secundaria ? 'is-invalid' : ''}`}
                 value={form.area_tematica_secundaria}
                 onChange={(e) => atualizarCampo("area_tematica_secundaria", e.target.value)}
@@ -192,8 +193,8 @@ function Caracterizacao({
         </div>
 
         <div className="mb-3">
-            <label className="form-label">Linha de Extensão</label>
-            <select
+            <label className="form-label" htmlFor="car-linha-de-extensao">Linha de Extensão</label>
+            <select id="car-linha-de-extensao"
                 className={`form-select ${errosValidacao?.linha_extensao ? 'is-invalid' : ''}`}
                 value={form.linha_extensao}
                 onChange={(e) => atualizarCampo("linha_extensao", e.target.value)}
