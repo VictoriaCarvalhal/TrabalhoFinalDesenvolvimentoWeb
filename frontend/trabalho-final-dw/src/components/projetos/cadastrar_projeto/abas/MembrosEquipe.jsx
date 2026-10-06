@@ -14,8 +14,12 @@ const TIPOS_VINCULO = [
     { valor: 'EXTERNO', rotulo: 'Externo' },
 ];
 
+// Coordenador fica de fora da escolha: o projeto ja tem o seu, definido na aba
+// de identificacao, e so pode haver um. Continua na lista de rotulos porque
+// existe membro antigo gravado assim.
+const ROTULO_COORDENADOR = { valor: 'COORDENADOR', rotulo: 'Coordenador(a)' };
+
 const FUNCOES = [
-    { valor: 'COORDENADOR', rotulo: 'Coordenador(a)' },
     { valor: 'VICE_COORDENADOR', rotulo: 'Vice-Coordenador(a)' },
     { valor: 'DOCENTE_COLABORADOR', rotulo: 'Docente Colaborador(a)' },
     { valor: 'TECNICO', rotulo: 'Técnico(a)' },
@@ -202,7 +206,7 @@ function MembrosEquipe({ projetoId, coordenador, valor = [], onChange, errosVali
     }
 
     function nomeFuncao(linha) {
-        const f = FUNCOES.find((x) => x.valor === linha.funcao);
+        const f = [...FUNCOES, ROTULO_COORDENADOR].find((x) => x.valor === linha.funcao);
         return f ? f.rotulo : '—';
     }
 

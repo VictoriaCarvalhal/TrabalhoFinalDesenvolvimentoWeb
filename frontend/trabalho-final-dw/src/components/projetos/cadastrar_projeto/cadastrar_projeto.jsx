@@ -175,7 +175,7 @@ function CadastrarProjeto() {
 
     function validarEtapa6(f){
         const erros = {};
-        if(!(f.demandasBolsa.length > 0 && f.demandasBolsa.every(item => item.tipo_bolsa && item.quantidade))) erros.demandasBolsa = "Adicione pelo menos 1 (uma) demanda por bolsa.";
+        if(!f.demandasBolsa.every(item => item.tipo_bolsa && item.quantidade)) erros.demandasBolsa = "Complete as demandas de bolsa que você adicionou, ou remova as que estiverem vazias.";
         return erros;
     }
 
@@ -263,6 +263,13 @@ function CadastrarProjeto() {
     const [situacaoProjeto, setSituacaoProjeto] = useState(null);
     const [salvandoRascunho, setSalvandoRascunho] = useState(false);
     const [avisoRascunho, setAvisoRascunho] = useState(null);
+
+    // O aviso de rascunho guardado some sozinho, pra nao ficar no caminho.
+    useEffect(() => {
+        if (!avisoRascunho) return;
+        const relogio = setTimeout(() => setAvisoRascunho(null), 5000);
+        return () => clearTimeout(relogio);
+    }, [avisoRascunho]);
     const [enviando, setEnviando] = useState(false);
     const [erroEnvio, setErroEnvio] = useState(null);
     const [carregandoEdicao, setCarregandoEdicao] = useState(false);
