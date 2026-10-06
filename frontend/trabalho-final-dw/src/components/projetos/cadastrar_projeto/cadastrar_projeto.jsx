@@ -256,6 +256,7 @@ function CadastrarProjeto() {
 
 
     const [projetoId, setProjetoId] = useState(null);
+    const [situacaoProjeto, setSituacaoProjeto] = useState(null);
     const [salvandoRascunho, setSalvandoRascunho] = useState(false);
     const [avisoRascunho, setAvisoRascunho] = useState(null);
     const [enviando, setEnviando] = useState(false);
@@ -318,6 +319,10 @@ function CadastrarProjeto() {
 
     const simNao = (valor) => (valor ? "sim" : "nao");
 
+    // Um projeto que ainda e rascunho pode ser enviado, mesmo aberto pela
+    // lista de projetos. Depois de enviado, o botao so salva alteracoes.
+    const podeEnviar = !editando || situacaoProjeto === 'RASCUNHO';
+
     useEffect(() => {
         if (!idDaUrl || !isAutenticado) return;
         if (periodoLoading || bloqueadoPorPeriodo) return;
@@ -334,6 +339,7 @@ function CadastrarProjeto() {
             .then(([detalheRes, palavrasRes, abasRes]) => {
                 if (cancelado) return;
                 const d = detalheRes.data;
+                setSituacaoProjeto(d.situacao ?? null);
                 const endereco = d.endereco ?? {};
                 const carac = d.caracterizacao ?? {};
                 const desc = d.descricao ?? {};
@@ -806,7 +812,7 @@ function CadastrarProjeto() {
                 }
             }
 
-            if (!editando) {
+            if (podeEnviar) {
                 await enviarProjeto(id);
             }
 
@@ -1084,7 +1090,7 @@ function CadastrarProjeto() {
                         onClick={abrirConfirmacao}
                         disabled={enviando || carregandoEdicao}
                     >
-                        {enviando ? 'Salvando...' : editando ? 'Salvar alterações' : 'Enviar projeto'}
+                        {enviando ? 'Salvando...' : podeEnviar ? 'Enviar projeto' : 'Salvar alterações'}
                     </button>
                 </div>
             </div>
@@ -1123,14 +1129,14 @@ function CadastrarProjeto() {
                     <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-content">
                             <div className="modal-header">
-                                <h2 className="modal-title h5" id="titulo-confirmar-envio">{editando ? 'Salvar alterações?' : 'Enviar o projeto?'}</h2>
+                                <h2 className="modal-title h5" id="titulo-confirmar-envio">{podeEnviar ? 'Enviar o projeto?' : 'Salvar alterações?'}</h2>
                                 <button type="button" className="btn-close" aria-label="Fechar" onClick={() => setConfirmando(false)}></button>
                             </div>
                             <div className="modal-body">
                                 <p>
-                                    O projeto <strong>{form.titulo}</strong> será {editando ? 'atualizado.' : 'enviado para a Pró-Reitoria de Extensão e ficará como proposta aguardando documentação.'}
+                                    O projeto <strong>{form.titulo}</strong> será {podeEnviar ? 'enviado para a Pró-Reitoria de Extensão e ficará como proposta aguardando documentação.' : 'atualizado.'}
                                 </p>
-                                {editando ? (
+                                {!podeEnviar ? (
                                     <p className="mb-0">
                                         Confira se está tudo preenchido antes de enviar. Depois do envio,
                                         as mudanças passam pela lista de projetos.
@@ -1157,7 +1163,7 @@ function CadastrarProjeto() {
                                     onClick={salvarDadosIdentificacao}
                                     disabled={enviando || carregandoEdicao}
                                 >
-                                    {enviando ? 'Salvando...' : editando ? 'Confirmar alterações' : 'Concordo'}
+                                    {enviando ? 'Salvando...' : podeEnviar ? 'Concordo' : 'Confirmar alterações'}
                                 </button>
                             </div>
                         </div>
