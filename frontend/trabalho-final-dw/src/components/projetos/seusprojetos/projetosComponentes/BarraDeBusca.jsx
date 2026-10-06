@@ -1,5 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import api from '../../../../services/api';
+import { buscarUnidades, buscarDepartamentos } from '../../../../services/dominioService';
+
+const ROTULOS = {
+    nome: 'Pesquisar pelo nome do projeto...',
+    coordenador: 'Pesquisar pelo nome do coordenador...',
+    unidade: 'Escolha a unidade',
+    departamento: 'Escolha o departamento',
+};
 
 function BarraDeBusca({ tipoBusca, onBuscar }) {
     const [busca, setBusca] = useState('');
@@ -7,6 +15,40 @@ function BarraDeBusca({ tipoBusca, onBuscar }) {
     const [carregandoSugestoes, setCarregandoSugestoes] = useState(false);
     const [mostrarSugestoes, setMostrarSugestoes] = useState(false);
     const debounceTimeout = useRef(null);
+    const [opcoes, setOpcoes] = useState([]);
+    const porLista = tipoBusca === 'unidade' || tipoBusca === 'departamento';
+
+    // Unidade e departamento vem de listas fechadas, entao da pra escolher em
+    // vez de adivinhar como se escreve.
+    useEffect(() => {
+        let cancelado = false;
+        setBusca('');
+        setSugestoes([]);
+        setMostrarSugestoes(false);
+        if (!porLista) {
+            setOpcoes([]);
+            return;
+        }
+        const pedido = tipoBusca === 'unidade' ? buscarUnidades() : buscarDepartamentos();
+        pedido
+            .then((resposta) => {
+                if (cancelado) return;
+                const dados = resposta.data;
+                const lista = Array.isArray(dados) ? dados : dados.results ?? [];
+                const itens = tipoBusca === 'unidade'
+                    ? lista.map((u) => ({ valor: u.sigla, rotulo: `${u.sigla} - ${u.nome}` }))
+                    : lista.map((d) => ({ valor: d.nome, rotulo: d.nome }));
+                setOpcoes(itens);
+            })
+            .catch(() => { if (!cancelado) setOpcoes([]); });
+        return () => { cancelado = true; };
+    }, [tipoBusca]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const handleEscolher = (e) => {
+        const valor = e.target.value;
+        setBusca(valor);
+        onBuscar(valor);
+    };
 
     const handleBuscar = (e) => {
         e.preventDefault();
@@ -89,10 +131,24 @@ function BarraDeBusca({ tipoBusca, onBuscar }) {
                     <i className="bi bi-search h5 mb-0 text-muted"></i>
                 </div>
                 <div className="col position-relative">
+                    {porLista ? (
+                        <select
+                            className="form-select form-select-lg border-0 bg-transparent"
+                            aria-label={ROTULOS[tipoBusca]}
+                            value={busca}
+                            onChange={handleEscolher}
+                            style={{ boxShadow: 'none', color: 'var(--cor-texto)' }}
+                        >
+                            <option value="">{ROTULOS[tipoBusca]}</option>
+                            {opcoes.map((o) => (
+                                <option key={o.valor} value={o.valor}>{o.rotulo}</option>
+                            ))}
+                        </select>
+                    ) : (
                     <input 
                         className="form-control form-control-lg border-0 bg-transparent" 
                         type="search" 
-                        placeholder="Pesquisar projetos..."
+                        placeholder={ROTULOS[tipoBusca]}
                         value={busca}
                         onChange={handleBuscaChange}
                         onFocus={() => {
@@ -101,7 +157,8 @@ function BarraDeBusca({ tipoBusca, onBuscar }) {
                         onBlur={() => setTimeout(() => setMostrarSugestoes(false), 200)}
                         style={{ boxShadow: 'none', color: 'var(--cor-texto)' }}
                     />
-                    {mostrarSugestoes && (
+                    )}
+                    {!porLista && mostrarSugestoes && (
                         <ul className="list-group position-absolute w-100 shadow" style={{ top: '100%', left: 0, zIndex: 1000 }}>
                             {carregandoSugestoes && (
                                 <li className="list-group-item text-muted text-center py-2">

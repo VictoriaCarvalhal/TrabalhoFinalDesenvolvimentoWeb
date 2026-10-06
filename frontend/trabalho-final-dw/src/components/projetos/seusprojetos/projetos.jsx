@@ -204,6 +204,7 @@ function Projetos() {
 
     const handleTipoBuscaChange = (novoTipo) => {
         setTipoBusca(novoTipo);
+        setBuscaAplicada('');
         setPaginaAtual(1);
     };
 
