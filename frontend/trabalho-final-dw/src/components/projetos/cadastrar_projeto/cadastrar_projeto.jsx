@@ -263,6 +263,13 @@ function CadastrarProjeto() {
     const [situacaoProjeto, setSituacaoProjeto] = useState(null);
     const [salvandoRascunho, setSalvandoRascunho] = useState(false);
     const [avisoRascunho, setAvisoRascunho] = useState(null);
+
+    // O aviso de rascunho guardado some sozinho, pra nao ficar no caminho.
+    useEffect(() => {
+        if (!avisoRascunho) return;
+        const relogio = setTimeout(() => setAvisoRascunho(null), 5000);
+        return () => clearTimeout(relogio);
+    }, [avisoRascunho]);
     const [enviando, setEnviando] = useState(false);
     const [erroEnvio, setErroEnvio] = useState(null);
     const [carregandoEdicao, setCarregandoEdicao] = useState(false);
