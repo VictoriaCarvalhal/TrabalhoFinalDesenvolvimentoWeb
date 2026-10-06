@@ -97,9 +97,16 @@ class EsqueciSenhaView(APIView):
                     'Falha ao enviar e-mail de redefinição de senha'
                 )
 
-        return Response({
-            'mensagem': 'Se o e-mail estiver cadastrado, enviaremos as instruções para redefinir a senha.'
-        })
+        resposta = {
+            'mensagem': 'Se o e-mail estiver cadastrado, enviaremos as instruções para redefinir a senha.',
+            'email_configurado': settings.EMAIL_CONFIGURADO,
+        }
+        if not settings.EMAIL_CONFIGURADO:
+            resposta['aviso'] = (
+                'Este ambiente ainda não tem servidor de e-mail configurado, '
+                'então nenhuma mensagem é entregue de verdade.'
+            )
+        return Response(resposta)
 
 
 class RedefinirSenhaView(APIView):

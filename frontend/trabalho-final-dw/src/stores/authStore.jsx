@@ -74,6 +74,7 @@ export const useAuthStore = create((set) => ({
         localStorage.removeItem('nomeUsuario');
         localStorage.removeItem('isAdmin');
         localStorage.removeItem('perfil');
+        localStorage.removeItem('projetoRascunhoId');
 
         set({ 
             isAutenticado: false, 

@@ -38,7 +38,8 @@ import {
     criarPlanoDeTrabalho,
     atualizarPlanoDeTrabalho,
     criarContato,
-    excluirContato
+    excluirContato,
+    enviarProjeto,
 } from '../../../services/projetoService';
 
 const ABAS = [
@@ -257,6 +258,9 @@ function CadastrarProjeto() {
 
 
     const [projetoId, setProjetoId] = useState(null);
+    const [situacaoProjeto, setSituacaoProjeto] = useState(null);
+    const [salvandoRascunho, setSalvandoRascunho] = useState(false);
+    const [avisoRascunho, setAvisoRascunho] = useState(null);
     const [enviando, setEnviando] = useState(false);
     const [erroEnvio, setErroEnvio] = useState(null);
     const [carregandoEdicao, setCarregandoEdicao] = useState(false);
@@ -318,6 +322,52 @@ function CadastrarProjeto() {
 
     const simNao = (valor) => (valor ? "sim" : "nao");
 
+    // Um projeto que ainda e rascunho pode ser enviado, mesmo aberto pela
+    // lista de projetos. Depois de enviado, o botao so salva alteracoes.
+    const podeEnviar = !editando || situacaoProjeto === 'RASCUNHO';
+
+    useEffect(() => {
+        if ((form.titulo && form.coordenador_vinculo) && !projetoId && !criandoRascunho.current) {
+            async function criarRascunho() {
+                try {
+                    setErroRascunho(null);
+                    criandoRascunho.current = true;
+                    const projeto_id = await criarProjeto({
+                        titulo: form.titulo,
+                        ano: new Date().getFullYear(),
+                        coordenador: form.coordenador_vinculo,
+                    });
+                    criandoRascunho.current = false;
+                    setProjetoId(projeto_id);
+                    localStorage.setItem('projetoRascunhoId', projeto_id);
+                } catch (err) {
+                    criandoRascunho.current = false;
+                    // mensagem de erro
+                }
+            }
+            criarRascunho();
+        }  
+    }, [form.titulo, form.coordenador_vinculo, projetoId]);
+
+    useEffect(() => {
+        if (editando) return;
+        const salvo = localStorage.getItem('projetoRascunhoId');
+        if (!salvo) return;
+
+        // O id fica no navegador, que e o mesmo para todo mundo que usa a
+        // maquina. Antes de retomar, confirma que o rascunho ainda existe e
+        // que e desta pessoa, senao ela cairia na edicao de um projeto alheio.
+        let cancelado = false;
+        api.get(`/projetos/${salvo}/`)
+            .then(() => {
+                if (!cancelado) navigate(ROTAS.editarProjeto(salvo));
+            })
+            .catch(() => {
+                localStorage.removeItem('projetoRascunhoId');
+            });
+        return () => { cancelado = true; };
+    }, []);
+
     useEffect(() => {
         if ((form.titulo && form.coordenador_vinculo) && !projetoId && !criandoRascunho.current) {
             async function criarRascunho() {
@@ -365,6 +415,7 @@ function CadastrarProjeto() {
             .then(([detalheRes, palavrasRes, abasRes]) => {
                 if (cancelado) return;
                 const d = detalheRes.data;
+                setSituacaoProjeto(d.situacao ?? null);
                 const endereco = d.endereco ?? {};
                 const carac = d.caracterizacao ?? {};
                 const desc = d.descricao ?? {};
@@ -596,7 +647,7 @@ function CadastrarProjeto() {
     const totalPendencias = errosPorAba.reduce(
         (total, erros) => total + Object.keys(erros).length, 0);
 
-    async function salvarDadosIdentificacao() {
+    function montarDadosDoFormulario() {
         const enderecoDados = {
             cep: form.cep,
             logradouro: form.logradouro,
@@ -622,20 +673,20 @@ function CadastrarProjeto() {
             linha_extensao: form.linha_extensao || null,
         };
         const descricaoDados = {
-            resumo: form.resumo || null,
-            introducao: form.introducao || null,
-            justificativa: form.justificativa || null,
-            objetivo_geral: form.objetivo_geral || null,
-            objetivos_especificos: form.objetivos_especificos || null,
-            metodologia_avaliacao: form.metodologia_avaliacao || null,
+            resumo: form.resumo || '',
+            introducao: form.introducao || '',
+            justificativa: form.justificativa || '',
+            objetivo_geral: form.objetivo_geral || '',
+            objetivos_especificos: form.objetivos_especificos || '',
+            metodologia_avaliacao: form.metodologia_avaliacao || '',
             relacao_ensino: form.relacao_ensino === "sim",
             relacao_pesquisa: form.relacao_pesquisa === "sim",
-            interacao_dialogica: form.interacao_dialogica || null,
-            interdisciplinaridade: form.interdisciplinaridade || null,
-            impacto_formacao: form.impacto_formacao || null,
-            indissociabilidade: form.indissociabilidade || null,
-            impacto_social: form.impacto_social || null,
-            referencias_bibliograficas: form.referencias_bibliograficas || null,
+            interacao_dialogica: form.interacao_dialogica || '',
+            interdisciplinaridade: form.interdisciplinaridade || '',
+            impacto_formacao: form.impacto_formacao || '',
+            indissociabilidade: form.indissociabilidade || '',
+            impacto_social: form.impacto_social || '',
+            referencias_bibliograficas: form.referencias_bibliograficas || '',
         };
         const payload = {
             ano: new Date().getFullYear(),
@@ -660,12 +711,147 @@ function CadastrarProjeto() {
             membros_equipe: linhasDeMembrosEquipe(),
         };
 
-        setEnviando(true);
+        return { enderecoDados, contatosDados, caracterizacaoDados, descricaoDados, payload };
+    }
+
+    function palavrasDoFormulario() {
+        return form.palavras_chave.map((p) => p.trim()).filter((p) => p);
+    }
+
+    // As tres primeiras abas e o plano de trabalho ficam em recursos separados do
+    // projeto, entao cada salvamento precisa acertar um por um.
+    async function sincronizarAbasIniciais(id, dados) {
+        const { enderecoDados, contatosDados, caracterizacaoDados, descricaoDados } = dados;
+
+        await atualizarProjeto(id, {
+            titulo: form.titulo,
+            coordenador: form.coordenador_vinculo,
+            unidade_proponente: form.unidade ? Number(form.unidade) : null,
+            departamento_proponente: form.departamento ? Number(form.departamento) : null,
+        });
+        await Promise.all([
+            atualizarEndereco(id, enderecoDados),
+            atualizarCaracterizacao(id, caracterizacaoDados),
+            atualizarDescricao(id, descricaoDados),
+        ]);
+
+        const [palavrasResp, contatosResp, abasResp] = await Promise.all([
+            api.get(`/projetos/${id}/palavras_chave/`),
+            api.get(`/projetos/${id}/contatos/`),
+            api.get(`/projetos/${id}/abas/`),
+        ]);
+        const palavrasGravadas = (
+            Array.isArray(palavrasResp.data) ? palavrasResp.data : palavrasResp.data.results ?? []
+        );
+        const palavrasForm = form.palavras_chave.map((p) => p.trim()).filter((p) => p);
+        const contaPalavrasForm = {};
+        for (const p of palavrasForm) {
+            const chave = p.toLowerCase();
+            contaPalavrasForm[chave] = (contaPalavrasForm[chave] ?? 0) + 1;
+        }
+        const contaPalavrasGravadas = {};
+        for (const p of palavrasGravadas) {
+            const chave = p.palavra.trim().toLowerCase();
+            contaPalavrasGravadas[chave] = (contaPalavrasGravadas[chave] ?? 0) + 1;
+        }
+        for (const p of palavrasGravadas) {
+            const chave = p.palavra.trim().toLowerCase();
+            if ((contaPalavrasForm[chave] ?? 0) < contaPalavrasGravadas[chave]) {
+                contaPalavrasGravadas[chave] -= 1;
+                await excluirPalavraChave(id, p.id);
+            }
+        }
+        for (const palavra of palavrasForm) {
+            const chave = palavra.toLowerCase();
+            if ((contaPalavrasGravadas[chave] ?? 0) > 0) {
+                contaPalavrasGravadas[chave] -= 1;
+            } else {
+                await criarPalavraChave(id, { palavra });
+            }
+        }
+        const contatosLista = (
+            Array.isArray(contatosResp.data) ? contatosResp.data : contatosResp.data.results ?? []
+        );
+        const contaContatosForm = {};
+        for (const c of contatosDados) {
+            const chave = `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`;
+            contaContatosForm[chave] = (contaContatosForm[chave] ?? 0) + 1;
+        }
+        const contaContatosGravados = {};
+        for (const c of contatosLista) {
+            const chave = `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`;
+            contaContatosGravados[chave] = (contaContatosGravados[chave] ?? 0) + 1;
+        }
+        for (const c of contatosLista) {
+            const chave = `${c.tipo_contato}|${c.valor.trim().toLowerCase()}`;
+            if ((contaContatosForm[chave] ?? 0) < contaContatosGravados[chave]) {
+                contaContatosGravados[chave] -= 1;
+                await excluirContato(id, c.id);
+            }
+        }
+        for (const contato of contatosDados) {
+            const chave = `${contato.tipo_contato}|${contato.valor.trim().toLowerCase()}`;
+            if ((contaContatosGravados[chave] ?? 0) > 0) {
+                contaContatosGravados[chave] -= 1;
+            } else {
+                await criarContato(id, contato);
+            }
+        }
+
+        const planos = abasResp.data?.planos_trabalho ?? [];
+        const planoDados = {
+            ano: planos.length > 0 ? planos[0].ano : new Date().getFullYear(),
+            resultados_esperados: form.resultados_esperados,
+            cronograma_atividades: form.cronograma_atividades,
+        };
+        const planoTemConteudo = Boolean(
+            form.resultados_esperados?.trim() || form.cronograma_atividades?.trim()
+        );
+        if (planos.length > 0) {
+            await atualizarPlanoDeTrabalho(id, planos[0].id, planoDados);
+        } else if (planoTemConteudo) {
+            await criarPlanoDeTrabalho(id, planoDados);
+        }
+    }
+
+    function tratarErroDeSalvamento(erro, titulo) {
+        const dadosErro = erro.response?.data;
+        if (erro.response?.status === 403 && dadosErro && dadosErro.aberto === false) {
+            setMostrarFeedbackPeriodo(true);
+            return;
+        }
+        const detalhes = formatarDetalhesErro(dadosErro);
+        setErroSalvamento({
+            titulo,
+            mensagem: detalhes.length > 0
+                ? 'O servidor recusou o envio com os seguintes erros:'
+                : 'Verifique a conexão e tente de novo.',
+            detalhes,
+        });
+    }
+
+    async function salvarRascunho() {
+        if (!form.titulo?.trim() || !form.coordenador_vinculo) {
+            setAvisoRascunho(null);
+            setErroSalvamento({
+                titulo: 'Ainda não é possível guardar',
+                mensagem: 'Preencha o título do projeto e o coordenador na aba Identificação antes de guardar.',
+                detalhes: [],
+            });
+            return;
+        }
+
+        const dados = montarDadosDoFormulario();
+        setSalvandoRascunho(true);
+        setAvisoRascunho(null);
         setErroEnvio(null);
-        setConfirmando(false);
         try {
-            if (editando && idDaUrl) {
-                await atualizarProjeto(idDaUrl, {
+            let id = idDaUrl ?? projetoId;
+            if (!id) {
+                // O projeto nasce so com o que ele exige, o resto das abas vai
+                // por cima logo depois.
+                id = await criarProjeto({
+                    ano: new Date().getFullYear(),
                     titulo: form.titulo,
                     coordenador: form.coordenador_vinculo,
                     unidade_proponente: form.unidade ? Number(form.unidade) : null,
@@ -756,38 +942,49 @@ function CadastrarProjeto() {
                 localStorage.removeItem('projetoRascunhoId');
                 return;
             }
+            await sincronizarAbasIniciais(id, dados);
+            setAvisoRascunho('Rascunho guardado. Você pode fechar a página e continuar depois.');
+        } catch (erro) {
+            tratarErroDeSalvamento(erro, 'Não foi possível guardar o rascunho');
+        } finally {
+            setSalvandoRascunho(false);
+        }
+    }
 
-            let projeto_id = projetoId;
-            if (!projeto_id) {
-                projeto_id = await criarProjeto(payload);
-                setProjetoId(projeto_id);
+    async function salvarDadosIdentificacao() {
+        const dados = montarDadosDoFormulario();
+        const { payload } = dados;
+
+        setEnviando(true);
+        setErroEnvio(null);
+        setAvisoRascunho(null);
+        setConfirmando(false);
+        try {
+            let id = idDaUrl ?? projetoId;
+            if (id) {
+                await sincronizarAbasIniciais(id, dados);
+            } else {
+                id = await criarProjeto(payload);
+                setProjetoId(id);
+                for (const palavra of palavrasDoFormulario()) {
+                    await criarPalavraChave(id, { palavra });
+                }
             }
 
-            const palavras = form.palavras_chave.map((p) => p.trim()).filter((p) => p);
-            for (const palavra of palavras) {
-                await criarPalavraChave(projeto_id, { palavra });
+            if (podeEnviar) {
+                await enviarProjeto(id);
             }
 
+            localStorage.removeItem('projetoRascunhoId');
             navigate(ROTAS.BEMVINDO);
             localStorage.removeItem('projetoRascunhoId');
         } catch (erro) {
-            const dadosErro = erro.response?.data;
-            if (erro.response?.status === 403 && dadosErro && dadosErro.aberto === false) {
-                setMostrarFeedbackPeriodo(true);
-            } else {
-                const detalhes = formatarDetalhesErro(dadosErro);
-                setErroSalvamento({
-                    titulo: 'Não foi possível salvar o projeto',
-                    mensagem: detalhes.length > 0
-                        ? 'O servidor recusou o envio com os seguintes erros:'
-                        : 'Verifique a conexão e tente de novo.',
-                    detalhes,
-                });
-            }
+            tratarErroDeSalvamento(erro, 'Não foi possível salvar o projeto');
         } finally {
             setEnviando(false);
         }
     }
+
 
 
     useEffect(() => {
@@ -1011,6 +1208,12 @@ function CadastrarProjeto() {
                     />
                 </div>
 
+                {avisoRascunho && (
+                    <div className="alert alert-success py-2" role="status">
+                        {avisoRascunho}
+                    </div>
+                )}
+
                 <div className="d-flex justify-content-end gap-2">
                     {etapaAtual > 0 && (
                         <button
@@ -1034,11 +1237,21 @@ function CadastrarProjeto() {
 
                     <button
                         type="button"
+                        className="btn btn-outline-primary"
+                        onClick={salvarRascunho}
+                        disabled={salvandoRascunho || enviando || carregandoEdicao}
+                        title="Guarda o que já está preenchido sem enviar o projeto"
+                    >
+                        {salvandoRascunho ? 'Guardando...' : 'Salvar rascunho'}
+                    </button>
+
+                    <button
+                        type="button"
                         className="btn btn-primary"
                         onClick={abrirConfirmacao}
                         disabled={enviando || carregandoEdicao}
                     >
-                        {enviando ? 'Salvando...' : editando ? 'Salvar alterações' : 'Enviar projeto'}
+                        {enviando ? 'Salvando...' : podeEnviar ? 'Enviar projeto' : 'Salvar alterações'}
                     </button>
                 </div>
             </div>
@@ -1077,14 +1290,14 @@ function CadastrarProjeto() {
                     <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-content">
                             <div className="modal-header">
-                                <h2 className="modal-title h5" id="titulo-confirmar-envio">{editando ? 'Salvar alterações?' : 'Enviar o projeto?'}</h2>
+                                <h2 className="modal-title h5" id="titulo-confirmar-envio">{podeEnviar ? 'Enviar o projeto?' : 'Salvar alterações?'}</h2>
                                 <button type="button" className="btn-close" aria-label="Fechar" onClick={() => setConfirmando(false)}></button>
                             </div>
                             <div className="modal-body">
                                 <p>
-                                    O projeto <strong>{form.titulo}</strong> será {editando ? 'atualizado.' : 'enviado para a Pró-Reitoria de Extensão e ficará como proposta aguardando documentação.'}
+                                    O projeto <strong>{form.titulo}</strong> será {podeEnviar ? 'enviado para a Pró-Reitoria de Extensão e ficará como proposta aguardando documentação.' : 'atualizado.'}
                                 </p>
-                                {editando ? (
+                                {!podeEnviar ? (
                                     <p className="mb-0">
                                         Confira se está tudo preenchido antes de enviar. Depois do envio,
                                         as mudanças passam pela lista de projetos.
@@ -1111,7 +1324,7 @@ function CadastrarProjeto() {
                                     onClick={salvarDadosIdentificacao}
                                     disabled={enviando || carregandoEdicao}
                                 >
-                                    {enviando ? 'Salvando...' : editando ? 'Confirmar alterações' : 'Concordo'}
+                                    {enviando ? 'Salvando...' : podeEnviar ? 'Concordo' : 'Confirmar alterações'}
                                 </button>
                             </div>
                         </div>

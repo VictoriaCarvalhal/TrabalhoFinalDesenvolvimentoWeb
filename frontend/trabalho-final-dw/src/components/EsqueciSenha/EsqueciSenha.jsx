@@ -6,6 +6,7 @@ function EsqueciSenha() {
     const [email, setEmail] = useState('');
     const [mensagem, setMensagem] = useState('');
     const [erro, setErro] = useState('');
+    const [aviso, setAviso] = useState('');
     const [enviando, setEnviando] = useState(false);
 
     const enviarEmail = async (event) => {
@@ -13,6 +14,7 @@ function EsqueciSenha() {
 
         setMensagem('');
         setErro('');
+        setAviso('');
         setEnviando(true);
 
         try {
@@ -21,6 +23,7 @@ function EsqueciSenha() {
             });
 
             setMensagem(resposta.data.mensagem);
+            setAviso(resposta.data.aviso || '');
             setEmail('');
         } catch (err) {
             const detalhe = err.response?.data?.email?.join(' ')
@@ -45,6 +48,12 @@ function EsqueciSenha() {
                 {mensagem && (
                     <div className="alert alert-success py-2">
                         {mensagem}
+                    </div>
+                )}
+
+                {aviso && (
+                    <div className="alert alert-warning py-2" role="status">
+                        {aviso}
                     </div>
                 )}
 

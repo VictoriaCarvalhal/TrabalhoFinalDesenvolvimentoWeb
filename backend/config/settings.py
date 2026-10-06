@@ -192,12 +192,17 @@ FRONTEND_URL = os.environ.get(
 
 PASSWORD_RESET_TIMEOUT = 1800
 
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+
+# Com servidor de e-mail configurado o envio e de verdade. Sem ele, cai no
+# console, que no Vercel significa que o e-mail fica no log e ninguem recebe.
+EMAIL_CONFIGURADO = bool(EMAIL_HOST)
+
 EMAIL_BACKEND = os.environ.get(
     'EMAIL_BACKEND',
-    'django.core.mail.backends.console.EmailBackend'
+    'django.core.mail.backends.smtp.EmailBackend' if EMAIL_CONFIGURADO
+    else 'django.core.mail.backends.console.EmailBackend'
 )
-
-EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
 
 
 def _email_port():

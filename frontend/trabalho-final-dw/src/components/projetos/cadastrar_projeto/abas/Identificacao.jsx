@@ -63,8 +63,8 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
             <fieldset className="border rounded p-3 m-2">
                 <legend>Projeto</legend>
                 <div className="mb-3">
-                    <label className="form-label">Título do projeto</label>
-                    <input
+                    <label className="form-label" htmlFor="id-titulo-do-projeto">Título do projeto</label>
+                    <input id="id-titulo-do-projeto"
                     type="text"
                     className={`form-control ${errosValidacao?.titulo ? 'is-invalid' : ''}`}
                     value={form.titulo}
@@ -76,8 +76,8 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
             <fieldset className="border rounded p-3 m-2">
                 <legend>Coordenador</legend>
                 <div className="mb-3">
-                    <label className="form-label">Matrícula</label>
-                    <select
+                    <label className="form-label" htmlFor="id-matricula">Matrícula</label>
+                    <select id="id-matricula"
                         className={`form-select ${errosValidacao?.coordenador_vinculo ? 'is-invalid' : ''}`}
                         value={form.coordenador_vinculo}
                         onChange={(e) => {
@@ -168,8 +168,8 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
             <fieldset className="border rounded p-3 m-2">
                 <legend>Unidade</legend>
                 <div className="mb-3">
-                    <label className="form-label">Unidade</label>
-                    <select
+                    <label className="form-label" htmlFor="id-unidade">Unidade</label>
+                    <select id="id-unidade"
                         className={`form-select ${errosValidacao?.unidade ? 'is-invalid' : ''}`}
                         value={form.unidade}
                         onChange={(e) => {
@@ -187,8 +187,8 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
                     {errosValidacao?.unidade && <div className="invalid-feedback">{errosValidacao.unidade}</div>}
                 </div>
                 <div className="mb-3">
-                    <label className="form-label">Departamento</label>
-                    <select
+                    <label className="form-label" htmlFor="id-departamento">Departamento</label>
+                    <select id="id-departamento"
                         className={`form-select ${errosValidacao?.departamento ? 'is-invalid' : ''}`}
                         value={form.departamento}
                         disabled={!form.unidade || semDepartamento}
@@ -251,7 +251,7 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
             <fieldset className="border rounded p-3 m-2">
                 <legend>Endereço</legend>
                     <div className="mb-3">
-                        <label className="form-label">CEP</label>
+                        <label className="form-label" htmlFor="cep">CEP</label>
                         <input
                             className={`form-control ${errosValidacao?.cep ? 'is-invalid' : ''}`}
                             id="cep"
@@ -268,7 +268,7 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
                             {errosValidacao?.cep && <div className="invalid-feedback">{errosValidacao.cep}</div>}
                         </div>
                         <div className="mb-3">
-                            <label className="form-label">Logradouro</label>
+                            <label className="form-label" htmlFor="logradouro">Logradouro</label>
                             <input
                                 className={`form-control ${errosValidacao?.logradouro ? 'is-invalid' : ''}`}
                                 id="logradouro"
@@ -278,7 +278,7 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
                             {errosValidacao?.logradouro && <div className="invalid-feedback">{errosValidacao.logradouro}</div>}
                         </div>
                         <div className="mb-3">
-                            <label className="form-label">Bairro</label>
+                            <label className="form-label" htmlFor="bairro">Bairro</label>
                             <input
                                 className={`form-control ${errosValidacao?.bairro ? 'is-invalid' : ''}`}
                                 id="bairro"
@@ -305,7 +305,7 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
                             {errosValidacao?.municipio && <div className="invalid-feedback">{errosValidacao.municipio}</div>}
                         </div>
                         <div className="mb-3">
-                            <label className="form-label">Numero</label>
+                            <label className="form-label" htmlFor="numero">Numero</label>
                             <input
                                 className={`form-control ${errosValidacao?.numero ? 'is-invalid' : ''}`}
                                 id="numero"
@@ -315,7 +315,7 @@ function Identificacao({ form, atualizarCampo, vinculosCoordenador, carregandoVi
                             {errosValidacao?.numero && <div className="invalid-feedback">{errosValidacao.numero}</div>}
                         </div>
                         <div className="mb-3">
-                            <label className="form-label">Complemento</label>
+                            <label className="form-label" htmlFor="complemento">Complemento</label>
                                 <input
                                 className="form-control"
                                 id="complemento"
