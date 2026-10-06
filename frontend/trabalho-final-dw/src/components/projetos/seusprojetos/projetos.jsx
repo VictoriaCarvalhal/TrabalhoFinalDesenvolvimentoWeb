@@ -43,6 +43,7 @@ function Projetos() {
     const [mostrarFeedbackPeriodo, setMostrarFeedbackPeriodo] = useState(false);
     const periodoFechadoParaComum = !isAdmin && !periodoLoading && !periodoAberto;
     const buscaIdRef = useRef(0);
+    const [recarga, setRecarga] = useState(0);
 
     function redirecionaProCadastro() {
         navigate(ROTAS.NOVO_PROJETO);
@@ -113,6 +114,7 @@ function Projetos() {
         setConfirmacaoPendente(null);
         if (sucesso) {
             setToast(pendente.tipo === 'excluir' ? 'Projeto excluído.' : 'Projeto restaurado.');
+            setRecarga((n) => n + 1);
         }
     }
 
@@ -172,6 +174,10 @@ function Projetos() {
                     setTotalProjetos(lista.length);
                 }
                 setProjetos(isAdmin ? lista : lista.filter((p) => !p.excluido));
+
+                if (lista.length === 0 && paginaAtual > 1) {
+                    setPaginaAtual((atual) => atual - 1);
+                }
             } catch (err) {
                 if (buscaIdRef.current !== buscaId) {
                     return;
@@ -189,7 +195,7 @@ function Projetos() {
         }
 
         buscarProjetos();
-    }, [isAutenticado, isAdmin, mostrandoExcluidos, paginaAtual, buscaAplicada, tipoBusca, ordemAlfabetica, ordemCronologica]);
+    }, [isAutenticado, isAdmin, mostrandoExcluidos, paginaAtual, buscaAplicada, tipoBusca, ordemAlfabetica, ordemCronologica, recarga]);
 
     const handleAplicarBusca = (termo) => {
         setPaginaAtual(1);
