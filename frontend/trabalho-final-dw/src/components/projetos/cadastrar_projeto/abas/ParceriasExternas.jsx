@@ -32,7 +32,10 @@ function ParceriasExternas({ projetoId, valor = [], onChange, tituloOculto = fal
     useEffect(() => {
         if (!projetoId) return;
         api.get(`/projetos/${projetoId}/parcerias-externas/`)
-            .then((r) => setLinhas(r.data))
+            .then((r) => setLinhas((atuais) => [
+                ...r.data,
+                ...atuais.filter((l) => !l.id),
+            ]))
             .catch(() => setErro('Não foi possível carregar as parcerias já cadastradas.'));
     }, [projetoId]);
 

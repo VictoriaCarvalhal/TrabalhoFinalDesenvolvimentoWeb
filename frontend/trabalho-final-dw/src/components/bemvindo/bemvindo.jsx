@@ -10,15 +10,12 @@ function Bemvindo() {
 
     return (
         <div>
-            <div>
-                <h1>Bem Vindo, {nomeUsuario ? `${nomeUsuario}` : ''}</h1>
-            </div>
+            <p className="h6 text-body-secondary mb-1">
+                Bem Vindo, {nomeUsuario ? `${nomeUsuario}` : ''}
+            </p>
 
-
-            <div className ="mt-5">
-                <h3 className = "mb-3">Seus Projetos</h3>
-                <Projetos key={chaveLista} />
-            </div>
+            <h2 className="h4 mb-3">Seus Projetos</h2>
+            <Projetos key={chaveLista} />
         </div>
     );
 }

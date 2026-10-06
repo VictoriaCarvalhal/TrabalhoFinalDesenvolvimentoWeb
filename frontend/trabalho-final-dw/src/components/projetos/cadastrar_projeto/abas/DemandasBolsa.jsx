@@ -25,7 +25,10 @@ function DemandasBolsa({ projetoId, valor = [], onChange, errosValidacao }) {
     useEffect(() => {
         if (!projetoId) return;
         api.get(`/projetos/${projetoId}/demandas-bolsa/`)
-            .then((r) => setLinhas(r.data))
+            .then((r) => setLinhas((atuais) => [
+                ...r.data,
+                ...atuais.filter((l) => !l.id),
+            ]))
             .catch(() => setErro('Não foi possível carregar as demandas já cadastradas.'));
     }, [projetoId]);
 

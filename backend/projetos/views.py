@@ -1,3 +1,4 @@
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, viewsets, status, filters
 from rest_framework.decorators import action
@@ -83,7 +84,15 @@ class AbaDoProjetoViewSet(ProjetoDaUrlMixin, viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         if _escrita_bloqueada(request.user):
             return _resposta_periodo_fechado()
-        return super().create(request, *args, **kwargs)
+        try:
+            return super().create(request, *args, **kwargs)
+        except IntegrityError:
+            # Dois pedidos para a mesma linha podem passar pela validacao juntos
+            # e so esbarrar um no outro la no banco.
+            return Response(
+                {'detail': 'Este item já foi adicionado neste projeto.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     def update(self, request, *args, **kwargs):
         if _escrita_bloqueada(request.user):
