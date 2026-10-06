@@ -239,57 +239,80 @@ function Projetos() {
             <div className="container mt-4 mb-5 pb-4">
                 <h1 className="visually-hidden">Seus projetos</h1>
 
-                {isAutenticado && (
-                    <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                        {isAdmin ? (
-                            <div className="btn-group" role="group" aria-label="Filtrar projetos ativos ou excluídos">
-                                <button
-                                    type="button"
-                                    className={`btn ${!mostrandoExcluidos ? 'btn-secondary' : 'btn-outline-secondary'}`}
-                                    onClick={() => handleTrocarAba(false)}
-                                >
-                                    Ativos
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`btn ${mostrandoExcluidos ? 'btn-secondary' : 'btn-outline-secondary'}`}
-                                    onClick={() => handleTrocarAba(true)}
-                                >
-                                    <i className="bi bi-trash me-1" aria-hidden="true"></i>
-                                    Excluídos
-                                </button>
+                {isAutenticado && !erro && (
+                    <div className="row g-2 align-items-center">
+                        {isAdmin && (
+                            <div className="col-12 col-lg-auto">
+                                <div className="btn-group w-100" role="group" aria-label="Filtrar projetos ativos ou excluídos">
+                                    <button
+                                        type="button"
+                                        className={`btn ${!mostrandoExcluidos ? 'btn-secondary' : 'btn-outline-secondary'}`}
+                                        onClick={() => handleTrocarAba(false)}
+                                    >
+                                        Ativos
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`btn ${mostrandoExcluidos ? 'btn-secondary' : 'btn-outline-secondary'}`}
+                                        onClick={() => handleTrocarAba(true)}
+                                    >
+                                        <i className="bi bi-trash me-1" aria-hidden="true"></i>
+                                        Excluídos
+                                    </button>
+                                </div>
                             </div>
-                        ) : (
-                            <span />
                         )}
-                        {periodoFechadoParaComum ? (
-                            <button
-                                type="button"
-                                className="btn btn-outline-secondary"
-                                title="Criação indisponível fora do período de extensão"
-                                aria-label="Criação de projeto indisponível fora do período de extensão. Ativar para ver o motivo."
-                                onClick={() => setMostrarFeedbackPeriodo(true)}
-                            >
-                                <i className="bi bi-lock-fill me-2" aria-hidden="true"></i>
-                                Novo projeto
-                            </button>
-                        ) : (
-                            <button
-                                type="button"
-                                className="btn btn-primary"
-                                onClick={redirecionaProCadastro}
-                            >
-                                <i className="bi bi-plus-lg me-2" aria-hidden="true"></i>
-                                Novo projeto
-                            </button>
-                        )}
+
+                        <div className="col-12 col-lg">
+                            {(projetos.length > 0 || buscaAplicada || carregando) && (
+                                <BarraDeBusca
+                                    tipoBusca={tipoBusca}
+                                    onBuscar={handleAplicarBusca}
+                                />
+                            )}
+                        </div>
+
+                        <div className="col-12 col-lg-auto">
+                            {periodoFechadoParaComum ? (
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-secondary w-100"
+                                    title="Criação indisponível fora do período de extensão"
+                                    aria-label="Criação de projeto indisponível fora do período de extensão. Ativar para ver o motivo."
+                                    onClick={() => setMostrarFeedbackPeriodo(true)}
+                                >
+                                    <i className="bi bi-lock-fill me-2" aria-hidden="true"></i>
+                                    Novo projeto
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    className="btn btn-primary w-100"
+                                    onClick={redirecionaProCadastro}
+                                >
+                                    <i className="bi bi-plus-lg me-2" aria-hidden="true"></i>
+                                    Novo projeto
+                                </button>
+                            )}
+                        </div>
                     </div>
+                )}
+
+                {isAutenticado && !erro && (projetos.length > 0 || buscaAplicada || carregando) && (
+                    <FiltrosDeOrdenacao
+                        tipoBusca={tipoBusca}
+                        onTipoBuscaChange={handleTipoBuscaChange}
+                        ordemAlfabetica={ordemAlfabetica}
+                        onOrdemAlfabeticaChange={handleOrdemAlfabeticaChange}
+                        ordemCronologica={ordemCronologica}
+                        onOrdemCronologicaChange={handleOrdemCronologicaChange}
+                        isAdmin={isAdmin}
+                    />
                 )}
 
                 {isAutenticado && !erro && (carregando || projetos.length > 0 || buscaAplicada) && (
                     <p className="text-muted small mt-2 mb-0" role="status">{textoContador}</p>
                 )}
-
 
                 {!isAutenticado && (
                     <div className="alert alert-warning mt-3">
@@ -324,28 +347,6 @@ function Projetos() {
                     <div className="alert alert-danger mt-3">{erro}</div>
                 )}
 
-                {isAutenticado && !erro && (projetos.length > 0 || buscaAplicada || carregando) && (
-                    <div className="container mt-4 mb-4 px-0">
-                        <div className="row justify-content-center">
-                            <div className="col-12 col-md-10 col-lg-8">
-                                <BarraDeBusca
-                                    tipoBusca={tipoBusca}
-                                    onBuscar={handleAplicarBusca}
-                                />
-
-                                <FiltrosDeOrdenacao
-                                    tipoBusca={tipoBusca}
-                                    onTipoBuscaChange={handleTipoBuscaChange}
-                                    ordemAlfabetica={ordemAlfabetica}
-                                    onOrdemAlfabeticaChange={handleOrdemAlfabeticaChange}
-                                    ordemCronologica={ordemCronologica}
-                                    onOrdemCronologicaChange={handleOrdemCronologicaChange}
-                                    isAdmin={isAdmin}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 {isAutenticado && carregando && projetos.length === 0 && (
                     <div className="mt-3" role="status">
