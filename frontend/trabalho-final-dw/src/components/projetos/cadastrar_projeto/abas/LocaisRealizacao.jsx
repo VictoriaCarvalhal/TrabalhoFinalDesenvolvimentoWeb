@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import api from '../../../../services/api';
 import { MUNICIPIOS_RJ } from '../../../../dados/municipiosRJ';
 import CartaoItem from '../CartaoItem';
@@ -7,6 +7,7 @@ import ModalAlerta from '../../../comum/ModalAlerta';
 function LocaisRealizacao({ projetoId, valor = [], onChange, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
+    const gravandoLinha = useRef(new Set());
     const [exclusaoPendente, setExclusaoPendente] = useState(null);
 
     useEffect(() => {
@@ -31,9 +32,11 @@ function LocaisRealizacao({ projetoId, valor = [], onChange, errosValidacao }) {
         setLinhas((atuais) => atuais.map((l, i) => (i === indice ? { ...l, [campo]: valorCampo } : l)));
     }
 
-    async function gravar(indice) {
-        const linha = linhas[indice];
+    async function gravar(indice, linhaForcada) {
+        const linha = linhaForcada ?? linhas[indice];
+        if (gravandoLinha.current.has(indice)) return;
         if (!projetoId || !linha.nome_local || !linha.municipio) return;
+        gravandoLinha.current.add(indice);
         try {
             setErro(null);
             const corpo = { nome_local: linha.nome_local, municipio: linha.municipio };
@@ -44,6 +47,8 @@ function LocaisRealizacao({ projetoId, valor = [], onChange, errosValidacao }) {
         } catch (err) {
             const detalhe = err.response?.data;
             setErro(detalhe ? Object.values(detalhe).flat().join(' ') : 'Erro ao gravar o local.');
+        } finally {
+            gravandoLinha.current.delete(indice);
         }
     }
 
@@ -120,7 +125,13 @@ function LocaisRealizacao({ projetoId, valor = [], onChange, errosValidacao }) {
                                     className="form-select"
                                     value={linha.municipio}
                                     required
-                                    onChange={(e) => editar(i, 'municipio', e.target.value)}
+                                    onChange={(e) => {
+                                        const novoMunicipio = e.target.value;
+                                        editar(i, 'municipio', novoMunicipio);
+                                        if (novoMunicipio && linha.nome_local) {
+                                            gravar(i, { ...linha, municipio: novoMunicipio });
+                                        }
+                                    }}
                                     onBlur={() => gravar(i)}
                                 >
                                     <option value="">[Selecione]</option>

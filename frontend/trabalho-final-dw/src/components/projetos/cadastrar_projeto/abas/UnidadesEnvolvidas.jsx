@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import api from '../../../../services/api';
 import CartaoItem from '../CartaoItem';
 import ModalAlerta from '../../../comum/ModalAlerta';
@@ -6,6 +6,7 @@ import ModalAlerta from '../../../comum/ModalAlerta';
 function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], onChange, errosValidacao }) {
     const [linhas, setLinhas] = useState(valor);
     const [erro, setErro] = useState(null);
+    const gravandoLinha = useRef(new Set());
     const [exclusaoPendente, setExclusaoPendente] = useState(null);
 
     useEffect(() => {
@@ -30,9 +31,11 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
         setLinhas((atuais) => atuais.map((l, i) => (i === indice ? { ...l, [campo]: valorCampo } : l)));
     }
 
-    async function gravar(indice) {
-        const linha = linhas[indice];
+    async function gravar(indice, linhaForcada) {
+        const linha = linhaForcada ?? linhas[indice];
+        if (gravandoLinha.current.has(indice)) return;
         if (!projetoId || !linha.unidade) return;
+        gravandoLinha.current.add(indice);
         try {
             setErro(null);
             const corpo = { unidade: linha.unidade };
@@ -43,6 +46,8 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
         } catch (err) {
             const detalhe = err.response?.data;
             setErro(detalhe ? Object.values(detalhe).flat().join(' ') : 'Erro ao gravar a unidade.');
+        } finally {
+            gravandoLinha.current.delete(indice);
         }
     }
 
@@ -111,6 +116,9 @@ function UnidadesEnvolvidas({ projetoId, unidades, departamentos, valor = [], on
                                         setLinhas((atuais) =>
                                             atuais.map((l, idx) => (idx === i ? { ...l, unidade: novaUnidade, departamento: '' } : l))
                                         );
+                                        if (novaUnidade) {
+                                            gravar(i, { ...linha, unidade: novaUnidade, departamento: '' });
+                                        }
                                     }}
                                     onBlur={() => gravar(i)}
                                 >
