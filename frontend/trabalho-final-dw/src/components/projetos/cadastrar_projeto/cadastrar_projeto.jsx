@@ -352,9 +352,20 @@ function CadastrarProjeto() {
     useEffect(() => {
         if (editando) return;
         const salvo = localStorage.getItem('projetoRascunhoId');
-        if (salvo) {
-            navigate(ROTAS.editarProjeto(salvo));
-        }
+        if (!salvo) return;
+
+        // O id fica no navegador, que e o mesmo para todo mundo que usa a
+        // maquina. Antes de retomar, confirma que o rascunho ainda existe e
+        // que e desta pessoa, senao ela cairia na edicao de um projeto alheio.
+        let cancelado = false;
+        api.get(`/projetos/${salvo}/`)
+            .then(() => {
+                if (!cancelado) navigate(ROTAS.editarProjeto(salvo));
+            })
+            .catch(() => {
+                localStorage.removeItem('projetoRascunhoId');
+            });
+        return () => { cancelado = true; };
     }, []);
 
     useEffect(() => {
