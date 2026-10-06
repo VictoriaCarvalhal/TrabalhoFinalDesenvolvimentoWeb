@@ -342,6 +342,14 @@ function CadastrarProjeto() {
     }, [form.titulo, form.coordenador_vinculo, projetoId]);
 
     useEffect(() => {
+        if (editando) return;
+        const salvo = localStorage.getItem('projetoRascunhoId');
+        if (salvo) {
+            navigate(ROTAS.editarProjeto(salvo));
+        }
+    }, []);
+
+    useEffect(() => {
         if (!idDaUrl || !isAutenticado) return;
         if (periodoLoading || bloqueadoPorPeriodo) return;
         let cancelado = false;
