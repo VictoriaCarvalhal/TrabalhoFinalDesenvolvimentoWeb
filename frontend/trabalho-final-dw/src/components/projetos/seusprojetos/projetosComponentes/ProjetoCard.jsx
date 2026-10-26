@@ -38,7 +38,7 @@ function ProjetoCard({ projeto, excluindo, baixando, onVer, onBaixar, onEditar, 
                     <div className="acoes-card d-flex gap-2 justify-content-end mt-auto pt-3 border-top">
                         <button
                             type="button"
-                            className="btn btn-outline-secondary flex-grow-1"
+                            className="btn btn-outline-info flex-grow-1"
                             title="Ver os dados do projeto"
                             aria-label={`Ver os dados do projeto ${projeto.titulo}`}
                             onClick={() => onVer(projeto.id)}
@@ -47,7 +47,7 @@ function ProjetoCard({ projeto, excluindo, baixando, onVer, onBaixar, onEditar, 
                         </button>
                         <button
                             type="button"
-                            className="btn btn-outline-secondary flex-grow-1"
+                            className="btn btn-outline-success flex-grow-1"
                             title="Baixar projeto em PDF"
                             aria-label={`Baixar projeto ${projeto.titulo} em PDF`}
                             disabled={baixando}
@@ -89,7 +89,7 @@ function ProjetoCard({ projeto, excluindo, baixando, onVer, onBaixar, onEditar, 
                             ? (podeExcluir && (
                                 <button
                                     type="button"
-                                    className="btn btn-outline-success flex-grow-1"
+                                    className="btn btn-success flex-grow-1"
                                     title="Restaurar projeto"
                                     aria-label={`Restaurar projeto ${projeto.titulo}`}
                                     disabled={excluindo}
