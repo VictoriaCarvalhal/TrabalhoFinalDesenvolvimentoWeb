@@ -168,7 +168,7 @@ function CadastrarProjeto() {
 
     function validarEtapa5(f){
         const erros = {};
-        if(!(f.parceriasInternas.length > 0 && f.parceriasInternas.every(item => (item.nome_instituicao ?? '').trim() && (item.sigla_instituicao ?? '').trim() && item.unidade))) erros.parceriasInternas = "Adicione pelo menos 1 (uma) Parceria Interna";
+        if(!(f.parceriasInternas.length > 0 && f.parceriasInternas.every(item => (item.nome_instituicao ?? '').trim() && item.unidade))) erros.parceriasInternas = "Adicione pelo menos 1 (uma) Parceria Interna";
         if(!(f.parceriasExternas.length > 0 && f.parceriasExternas.every(item => (item.nome_instituicao ?? '').trim() && item.tipo_instituicao))) erros.parceriasExternas = "Adicione pelo menos 1 (uma) Parceria Externa";
         return erros;
     }

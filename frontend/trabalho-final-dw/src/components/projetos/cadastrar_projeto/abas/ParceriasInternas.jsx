@@ -214,7 +214,6 @@ function ParceriasInternas({ projetoId, unidades, departamentos, valor = [], onC
                             className="form-control"
                             value={dados.sigla_instituicao}
                             maxLength={50}
-                            required
                             onChange={(e) => mudarCampo({ sigla_instituicao: e.target.value })}
                         />
                     </div>
